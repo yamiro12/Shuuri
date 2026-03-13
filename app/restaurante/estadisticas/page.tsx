@@ -1,107 +1,160 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { formatARS } from '@/components/shared/utils';
-import { RESTAURANTES, OTS, LIQUIDACIONES } from '@/data/mock';
+import { OTS, TECNICOS, RESTAURANTES } from '@/data/mock';
+import { RUBRO_LABELS } from '@/types/shuuri';
+import type { Rubro, OrdenTrabajo } from '@/types/shuuri';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import {
-  TrendingUp, Wrench, DollarSign, Clock,
-  CheckCircle2, AlertTriangle, Star, ArrowUpRight,
-} from 'lucide-react';
+import { Download, ChevronRight, ChevronDown } from 'lucide-react';
 
-// ─── DATOS MOCK HISTÓRICOS ────────────────────────────────────────────────────
+const TASA = 1050;
+const ESTADOS_CERRADOS = ['CERRADA_CONFORME', 'CERRADA_SIN_CONFORMIDAD', 'FACTURADA', 'LIQUIDADA', 'CANCELADA'];
 
-const MESES_OTS = [
-  { mes: 'Sep', ots: 2, gasto: 180 },
-  { mes: 'Oct', ots: 1, gasto: 95 },
-  { mes: 'Nov', ots: 3, gasto: 410 },
-  { mes: 'Dic', ots: 1, gasto: 130 },
-  { mes: 'Ene', ots: 4, gasto: 520 },
-  { mes: 'Feb', ots: 2, gasto: 240 },
-  { mes: 'Mar', ots: 1, gasto: 90 },
-];
+type Periodo = '1m' | '3m' | '6m' | '12m';
 
-const RUBROS_DIST = [
-  { name: 'Frío comercial',    value: 5, color: '#2698D1' },
-  { name: 'Calor / gas',       value: 3, color: '#0D0D0D' },
-  { name: 'Café / bebidas',    value: 2, color: '#94a3b8' },
-  { name: 'Lavado industrial', value: 2, color: '#64748b' },
-  { name: 'Otros',             value: 2, color: '#cbd5e1' },
-];
+function getStart(p: Periodo): Date {
+  const n = new Date();
+  const months = p === '1m' ? 1 : p === '3m' ? 3 : p === '6m' ? 6 : 12;
+  return new Date(n.getFullYear(), n.getMonth() - (months - 1), 1);
+}
+function inPeriod(iso: string, start: Date): boolean { return new Date(iso) >= start; }
 
-const TIEMPO_RESOLUCION = [
-  { mes: 'Sep', dias: 3.2 },
-  { mes: 'Oct', dias: 2.8 },
-  { mes: 'Nov', dias: 4.1 },
-  { mes: 'Dic', dias: 2.5 },
-  { mes: 'Ene', dias: 3.8 },
-  { mes: 'Feb', dias: 2.1 },
-  { mes: 'Mar', dias: 1.9 },
-];
-
-// ─── CUSTOM TOOLTIP ───────────────────────────────────────────────────────────
-
-function TooltipCustom({ active, payload, label, prefix = '', suffix = '' }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border bg-white px-3 py-2.5 shadow-lg text-xs">
-      <p className="font-bold text-gray-500 mb-1">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} style={{ color: p.color }} className="font-bold">
-          {prefix}{p.value}{suffix}
-        </p>
-      ))}
-    </div>
-  );
+function downloadCSV(headers: string[], rows: string[][], filename: string) {
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
 }
 
-// ─── KPI CARD ─────────────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, sub, icon: Icon, color, bg, trend }: {
-  label: string; value: string | number; sub?: string;
-  icon: React.ElementType; color: string; bg: string; trend?: string;
+function SectionCard({ title, onExport, children }: {
+  title: string; onExport: () => void; children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between mb-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg}`}>
-          <Icon className={`h-5 w-5 ${color}`} />
-        </div>
-        {trend && (
-          <span className="flex items-center gap-1 text-xs font-bold text-green-600">
-            <ArrowUpRight className="h-3 w-3" />{trend}
-          </span>
-        )}
+    <div className="rounded-xl border bg-white shadow-sm p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-[#0D0D0D] text-base">{title}</h3>
+        <button
+          onClick={onExport}
+          className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Exportar CSV
+        </button>
       </div>
-      <p className="text-2xl font-black text-[#0D0D0D]">{value}</p>
-      <p className="text-sm text-gray-500 mt-0.5">{label}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      {children}
     </div>
   );
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+function EstadoBadge({ estado }: { estado: string }) {
+  const colors: Record<string, string> = {
+    LIQUIDADA: 'bg-green-100 text-green-700',
+    FACTURADA: 'bg-blue-100 text-blue-700',
+    CERRADA_CONFORME: 'bg-emerald-100 text-emerald-700',
+    CERRADA_SIN_CONFORMIDAD: 'bg-orange-100 text-orange-700',
+    CANCELADA: 'bg-red-100 text-red-700',
+  };
+  const cls = colors[estado] ?? 'bg-gray-100 text-gray-600';
+  return (
+    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>
+      {estado.replace(/_/g, ' ')}
+    </span>
+  );
+}
 
 export default function RestauranteEstadisticas() {
   const searchParams = useSearchParams();
-  const id           = searchParams.get('id') ?? 'R001';
-  const restaurante  = RESTAURANTES.find(r => r.id === id) ?? RESTAURANTES[0];
-  const [rango, setRango] = useState<'3m' | '6m' | '12m'>('6m');
+  const id = searchParams.get('id') ?? 'R001';
+  const restaurante = RESTAURANTES.find(r => r.id === id) ?? RESTAURANTES[0];
+  const [periodo, setPeriodo] = useState<Periodo>('6m');
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  const misOTs   = OTS.filter(ot => ot.restauranteId === restaurante.id);
-  const misLiqs  = LIQUIDACIONES.filter(l =>
-    misOTs.some(ot => ot.id === l.otId)
+  const start = useMemo(() => getStart(periodo), [periodo]);
+
+  const misOTs = useMemo(
+    () => OTS.filter(ot => ot.restauranteId === restaurante.id && inPeriod(ot.fechaCreacion, start)),
+    [restaurante.id, start]
   );
 
-  const otsCerradas    = misOTs.filter(o => ['CERRADA_CONFORME','FACTURADA','LIQUIDADA'].includes(o.estado));
-  const otsEnCurso     = misOTs.filter(o => !['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','FACTURADA','LIQUIDADA','CANCELADA'].includes(o.estado));
-  const gastoTotal     = misLiqs.reduce((s, l) => s + l.montoTotalFacturado, 0);
-  const dataMeses      = rango === '3m' ? MESES_OTS.slice(-3) : rango === '6m' ? MESES_OTS.slice(-6) : MESES_OTS;
+  // Sección 1 — Por activo (equipoTipo)
+  const porActivo = useMemo(() => {
+    const map = new Map<string, OrdenTrabajo[]>();
+    misOTs.forEach(ot => {
+      const key = ot.equipoTipo;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(ot);
+    });
+    return Array.from(map.entries()).map(([equipoTipo, ots]) => {
+      const fallas = ots.filter(o => o.urgencia === 'ALTA' || o.urgencia === 'CRITICA').length;
+      const preventivos = ots.filter(o => o.urgencia === 'BAJA').length;
+      const costoARS = ots.reduce((s, o) => s + (o.cotizacion.totalDefinitivo ?? 0) * TASA, 0);
+      const finalizaciones = ots
+        .map(o => o.fechaFinalizacion)
+        .filter(Boolean)
+        .sort()
+        .reverse();
+      const ultimoService = finalizaciones[0]?.slice(0, 10) ?? '—';
+      return { equipoTipo, ots, fallas, preventivos, costoARS, ultimoService };
+    });
+  }, [misOTs]);
+
+  // Sección 2 — Por rubro
+  const porRubro = useMemo(() => {
+    const map = new Map<Rubro, number>();
+    misOTs.forEach(ot => {
+      map.set(ot.rubro, (map.get(ot.rubro) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).map(([rubro, cantidad]) => ({
+      name: RUBRO_LABELS[rubro as Rubro],
+      cantidad,
+      rubro,
+    })).sort((a, b) => b.cantidad - a.cantidad);
+  }, [misOTs]);
+
+  // Sección 3 — Por técnico
+  const porTecnico = useMemo(() => {
+    const map = new Map<string, OrdenTrabajo[]>();
+    misOTs.forEach(ot => {
+      const key = ot.tecnicoId ?? '';
+      if (!key) return;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(ot);
+    });
+    return Array.from(map.entries()).map(([tecnicoId, ots]) => {
+      const tecnico = TECNICOS.find(t => t.id === tecnicoId);
+      const importe = ots.reduce((s, o) => s + (o.cotizacion.totalDefinitivo ?? 0) * TASA, 0);
+      return {
+        tecnicoId,
+        nombre: tecnico?.nombre ?? tecnicoId,
+        rating: tecnico?.score ?? 0,
+        otsRealizadas: ots.length,
+        importeARS: importe,
+      };
+    }).sort((a, b) => b.otsRealizadas - a.otsRealizadas);
+  }, [misOTs]);
+
+  // Sección 4 — Tiempo promedio
+  const tiempoPromedio = useMemo(() => {
+    const map = new Map<Rubro, number[]>();
+    misOTs.forEach(ot => {
+      if (!ot.fechaFinalizacion) return;
+      const dias = (new Date(ot.fechaFinalizacion).getTime() - new Date(ot.fechaCreacion).getTime()) / (1000 * 60 * 60 * 24);
+      if (!map.has(ot.rubro)) map.set(ot.rubro, []);
+      map.get(ot.rubro)!.push(dias);
+    });
+    return Array.from(map.entries()).map(([rubro, vals]) => ({
+      rubro,
+      label: RUBRO_LABELS[rubro as Rubro],
+      dias: parseFloat((vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1)),
+    }));
+  }, [misOTs]);
+
+  const PERIODOS: Periodo[] = ['1m', '3m', '6m', '12m'];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -110,126 +163,214 @@ export default function RestauranteEstadisticas() {
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
         <main className="p-8">
 
+          {/* Header + period filter */}
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-black text-[#0D0D0D]">Estadísticas</h1>
-              <p className="text-sm text-gray-400">{restaurante.nombre} · histórico de servicios y gastos</p>
+              <p className="text-sm text-gray-400">{restaurante.nombre} · histórico de servicios</p>
             </div>
             <div className="flex items-center gap-1 rounded-xl border bg-white p-1">
-              {(['3m','6m','12m'] as const).map(r => (
-                <button key={r} onClick={() => setRango(r)}
+              {PERIODOS.map(p => (
+                <button key={p} onClick={() => setPeriodo(p)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                    rango === r ? 'bg-[#0D0D0D] text-white' : 'text-gray-500 hover:text-gray-700'
-                  }`}>{r}</button>
+                    periodo === p ? 'bg-[#0D0D0D] text-white' : 'text-gray-500 hover:text-gray-700'
+                  }`}>{p.toUpperCase()}</button>
               ))}
             </div>
           </div>
 
-          {/* KPIs */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <KpiCard label="OTs totales"      value={misOTs.length}          icon={Wrench}       color="text-[#2698D1]" bg="bg-blue-50"   sub="Desde el inicio" />
-            <KpiCard label="En curso"          value={otsEnCurso.length}      icon={Clock}        color="text-amber-600" bg="bg-amber-50"  sub="Activas ahora" />
-            <KpiCard label="Gasto total"       value={`USD ${gastoTotal}`}    icon={DollarSign}   color="text-purple-600" bg="bg-purple-50" trend="+12% vs mes ant." />
-            <KpiCard label="Resueltas"         value={otsCerradas.length}     icon={CheckCircle2} color="text-green-600" bg="bg-green-50"  sub={`${misOTs.length > 0 ? Math.round(otsCerradas.length / misOTs.length * 100) : 0}% del total`} />
-          </div>
+          {/* Sección 1 — Por Activo */}
+          <SectionCard
+            title="Por Activo"
+            onExport={() => downloadCSV(
+              ['activo', 'totalOTs', 'fallas', 'preventivos', 'costoARS', 'ultimoService'],
+              porActivo.map(r => [r.equipoTipo, String(r.ots.length), String(r.fallas), String(r.preventivos), String(Math.round(r.costoARS)), r.ultimoService]),
+              'activos.csv'
+            )}
+          >
+            {porActivo.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Sin datos en el período seleccionado</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-gray-500">
+                      <th className="text-left pb-2 font-semibold">Activo</th>
+                      <th className="text-center pb-2 font-semibold">Total OTs</th>
+                      <th className="text-center pb-2 font-semibold">Fallas</th>
+                      <th className="text-center pb-2 font-semibold">Preventivos</th>
+                      <th className="text-right pb-2 font-semibold">Costo total</th>
+                      <th className="text-right pb-2 font-semibold">Último service</th>
+                      <th className="w-8" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {porActivo.map(row => (
+                      <React.Fragment key={row.equipoTipo}>
+                        <tr
+                          className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => setExpandedRow(expandedRow === row.equipoTipo ? null : row.equipoTipo)}
+                        >
+                          <td className="py-3 font-medium text-[#0D0D0D]">{row.equipoTipo}</td>
+                          <td className="py-3 text-center text-gray-600">{row.ots.length}</td>
+                          <td className="py-3 text-center text-red-600 font-semibold">{row.fallas}</td>
+                          <td className="py-3 text-center text-green-600 font-semibold">{row.preventivos}</td>
+                          <td className="py-3 text-right text-gray-700 font-medium">{formatARS(row.costoARS)}</td>
+                          <td className="py-3 text-right text-gray-500 text-xs">{row.ultimoService}</td>
+                          <td className="py-3 text-center text-gray-400">
+                            {expandedRow === row.equipoTipo
+                              ? <ChevronDown className="h-4 w-4 inline" />
+                              : <ChevronRight className="h-4 w-4 inline" />}
+                          </td>
+                        </tr>
+                        {expandedRow === row.equipoTipo && (
+                          <tr>
+                            <td colSpan={7} className="bg-gray-50 px-4 pb-3 pt-2">
+                              <p className="text-xs font-semibold text-gray-500 mb-2">Historial de OTs</p>
+                              <div className="space-y-1.5">
+                                {row.ots.map(ot => {
+                                  const tec = TECNICOS.find(t => t.id === (ot.tecnicoId ?? ''));
+                                  return (
+                                    <div key={ot.id} className="flex items-center gap-3 text-xs">
+                                      <span className="font-mono text-gray-400 w-16">{ot.id}</span>
+                                      <span className="text-gray-500 w-24">{ot.fechaCreacion.slice(0, 10)}</span>
+                                      <span className="text-gray-600 flex-1">{tec?.nombre ?? '—'}</span>
+                                      <EstadoBadge estado={ot.estado} />
+                                      <span className="text-right font-medium text-gray-700 w-28">
+                                        {formatARS((ot.cotizacion.totalDefinitivo ?? 0) * TASA)}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </SectionCard>
 
-          <div className="grid grid-cols-3 gap-6 mb-6">
-
-            {/* OTs por mes */}
-            <div className="col-span-2 rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-1">OTs y gasto por mes</h3>
-              <p className="text-xs text-gray-400 mb-5">Cantidad de servicios y monto facturado</p>
+          {/* Sección 2 — Por Rubro */}
+          <SectionCard
+            title="Fallas por rubro"
+            onExport={() => downloadCSV(
+              ['rubro', 'cantidad'],
+              porRubro.map(r => [r.name, String(r.cantidad)]),
+              'rubros.csv'
+            )}
+          >
+            {porRubro.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Sin datos en el período seleccionado</p>
+            ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={dataMeses} barGap={4}>
+                <BarChart data={porRubro} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<TooltipCustom />} />
-                  <Bar yAxisId="left"  dataKey="ots"   name="OTs"         fill="#2698D1" radius={[4,4,0,0]} />
-                  <Bar yAxisId="right" dataKey="gasto" name="Gasto (USD)" fill="#0D0D0D" radius={[4,4,0,0]} opacity={0.15} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip formatter={(value: any) => [String(value), '']} />
+                  <Bar dataKey="cantidad" fill="#2698D1" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            )}
+          </SectionCard>
 
-            {/* Distribución por rubro */}
-            <div className="rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-1">Por rubro</h3>
-              <p className="text-xs text-gray-400 mb-4">Distribución de servicios</p>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie data={RUBROS_DIST} cx="50%" cy="50%" innerRadius={45} outerRadius={70}
-                    dataKey="value" paddingAngle={3}>
-                    {RUBROS_DIST.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
+          {/* Sección 3 — Por Técnico */}
+          <SectionCard
+            title="Por Técnico"
+            onExport={() => downloadCSV(
+              ['tecnico', 'otsRealizadas', 'rating', 'importeARS'],
+              porTecnico.map(r => [r.nombre, String(r.otsRealizadas), String(r.rating), String(Math.round(r.importeARS))]),
+              'tecnicos.csv'
+            )}
+          >
+            {porTecnico.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Sin datos en el período seleccionado</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-gray-500">
+                      <th className="text-left pb-2 font-semibold">Técnico</th>
+                      <th className="text-center pb-2 font-semibold">OTs realizadas</th>
+                      <th className="text-center pb-2 font-semibold">Rating</th>
+                      <th className="text-right pb-2 font-semibold">Importe total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {porTecnico.map(row => (
+                      <tr key={row.tecnicoId} className="border-b hover:bg-gray-50">
+                        <td className="py-3 font-medium text-[#0D0D0D]">{row.nombre}</td>
+                        <td className="py-3 text-center text-gray-600 font-bold">{row.otsRealizadas}</td>
+                        <td className="py-3 text-center">
+                          <span className="text-amber-500 font-bold">★ {row.rating}</span>
+                        </td>
+                        <td className="py-3 text-right font-medium text-gray-700">{formatARS(row.importeARS)}</td>
+                      </tr>
                     ))}
-                  </Pie>
-                  <Tooltip formatter={(v: any) => [`${v} OTs`, '']} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-3 space-y-1.5">
-                {RUBROS_DIST.map(r => (
-                  <div key={r.name} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full" style={{ background: r.color }} />
-                      <span className="text-gray-500">{r.name}</span>
-                    </div>
-                    <span className="font-bold text-gray-700">{r.value}</span>
-                  </div>
-                ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </div>
+            )}
+          </SectionCard>
 
-          {/* Tiempo resolución */}
-          <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-2 rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-1">Tiempo promedio de resolución</h3>
-              <p className="text-xs text-gray-400 mb-5">Días desde apertura hasta cierre conforme</p>
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={TIEMPO_RESOLUCION}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} domain={[0, 6]} />
-                  <Tooltip content={<TooltipCustom suffix=" días" />} />
-                  <Line type="monotone" dataKey="dias" stroke="#2698D1" strokeWidth={2.5}
-                    dot={{ fill: '#2698D1', r: 4 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Métricas de servicio */}
-            <div className="rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-4 text-sm">Métricas de servicio</h3>
-              <div className="space-y-4">
-                {[
-                  { label: 'Conformidad',     val: 92,  color: 'bg-green-400' },
-                  { label: 'Primer visita OK', val: 78,  color: 'bg-[#2698D1]' },
-                  { label: 'SLA cumplido',    val: 85,  color: 'bg-purple-400' },
-                  { label: 'Sin reincidencia', val: 94,  color: 'bg-amber-400' },
-                ].map(m => (
-                  <div key={m.label}>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-gray-500">{m.label}</span>
-                      <span className="font-bold text-gray-700">{m.val}%</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-gray-100">
-                      <div className={`h-1.5 rounded-full ${m.color} transition-all duration-500`}
-                        style={{ width: `${m.val}%` }} />
-                    </div>
-                  </div>
-                ))}
+          {/* Sección 4 — Tiempo promedio de resolución */}
+          <SectionCard
+            title="Tiempo promedio de resolución por rubro"
+            onExport={() => downloadCSV(
+              ['rubro', 'diasPromedio'],
+              tiempoPromedio.map(r => [r.label, String(r.dias)]),
+              'tiempo_resolucion.csv'
+            )}
+          >
+            {tiempoPromedio.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Sin OTs cerradas en el período</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-gray-500">
+                      <th className="text-left pb-2 font-semibold">Rubro</th>
+                      <th className="text-center pb-2 font-semibold">Días promedio</th>
+                      <th className="text-left pb-2 font-semibold">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tiempoPromedio.map(row => {
+                      const verde = row.dias < 3;
+                      const amarillo = row.dias >= 3 && row.dias <= 7;
+                      const semColor = verde
+                        ? 'bg-green-500'
+                        : amarillo
+                        ? 'bg-yellow-400'
+                        : 'bg-red-500';
+                      const textColor = verde
+                        ? 'text-green-700'
+                        : amarillo
+                        ? 'text-yellow-700'
+                        : 'text-red-700';
+                      const label = verde ? 'Óptimo' : amarillo ? 'Aceptable' : 'Lento';
+                      return (
+                        <tr key={row.rubro} className="border-b hover:bg-gray-50">
+                          <td className="py-3 font-medium text-[#0D0D0D]">{row.label}</td>
+                          <td className="py-3 text-center text-gray-700 font-bold">{row.dias}d</td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-block h-2.5 w-2.5 rounded-full ${semColor}`} />
+                              <span className={`text-xs font-semibold ${textColor}`}>{label}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-
-              <div className="mt-5 rounded-xl bg-gray-50 p-3 text-center">
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                  <span className="text-xl font-black text-[#0D0D0D]">4.7</span>
-                </div>
-                <p className="text-xs text-gray-400">Score promedio técnicos</p>
-              </div>
-            </div>
-          </div>
+            )}
+          </SectionCard>
 
         </main>
       </div>

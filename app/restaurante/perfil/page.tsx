@@ -7,6 +7,7 @@ import { RESTAURANTES, getOTsByRestaurante, getEquiposByRestaurante } from '@/da
 import {
   Building2, Phone, Mail, Clock, User, Edit3, Save, X,
   Shield, CreditCard, MapPin, FileText, Layers, ClipboardList,
+  Link2, Calendar, Wallet,
 } from 'lucide-react';
 
 // ─── CAMPO EDITABLE ───────────────────────────────────────────────────────────
@@ -40,7 +41,7 @@ export default function RestaurantePerfil() {
 
   const [editando, setEditando] = useState(false);
   const [toast,    setToast]    = useState<string | null>(null);
-  const [tab,      setTab]      = useState<'empresa' | 'operaciones' | 'pagos'>('empresa');
+  const [tab,      setTab]      = useState<'empresa' | 'operaciones' | 'pagos' | 'integraciones'>('empresa');
 
   const ots     = getOTsByRestaurante(restaurante.id);
   const equipos = getEquiposByRestaurante(restaurante.id);
@@ -89,9 +90,10 @@ export default function RestaurantePerfil() {
   };
 
   const tabs = [
-    { key: 'empresa',      label: 'Empresa' },
-    { key: 'operaciones',  label: 'Operaciones' },
-    { key: 'pagos',        label: 'Pagos' },
+    { key: 'empresa',        label: 'Empresa' },
+    { key: 'operaciones',    label: 'Operaciones' },
+    { key: 'pagos',          label: 'Pagos' },
+    { key: 'integraciones',  label: 'Integraciones' },
   ] as const;
 
   return (
@@ -253,6 +255,63 @@ export default function RestaurantePerfil() {
                 ) : (
                   <p className="text-sm text-gray-400">Local único</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {tab === 'integraciones' && (
+            <div className="max-w-2xl space-y-5">
+              {/* MEDIOS DE PAGO */}
+              <div className="rounded-xl border bg-white shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Wallet className="h-4 w-4 text-[#2698D1]" />
+                  <h3 className="font-bold text-[#0D0D0D]">Medios de pago</h3>
+                </div>
+                {[
+                  { nombre: 'MercadoPago', desc: 'Conectá tu cuenta para pagar servicios y repuestos desde la plataforma.', logo: '🔵' },
+                  { nombre: 'MODO', desc: 'Pagos instantáneos con débito interbancario argentino.', logo: '💳' },
+                ].map(int => (
+                  <div key={int.nombre} className="flex items-center justify-between py-3 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{int.logo}</span>
+                      <div>
+                        <p className="text-sm font-bold text-[#0D0D0D]">{int.nombre}</p>
+                        <p className="text-xs text-gray-400">{int.desc}</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-500">Próximamente</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* CALENDARIOS */}
+              <div className="rounded-xl border bg-white shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="h-4 w-4 text-[#2698D1]" />
+                  <h3 className="font-bold text-[#0D0D0D]">Calendarios</h3>
+                </div>
+                {[
+                  { nombre: 'Google Calendar', desc: 'Sincronizá visitas técnicas programadas con tu Google Calendar.', logo: '📅' },
+                  { nombre: 'Microsoft Outlook', desc: 'Recibí alertas de OTs en tu calendario de Outlook.', logo: '📆' },
+                  { nombre: 'Apple Calendar', desc: 'Integración con iCal para dispositivos Apple.', logo: '🍎' },
+                ].map(int => (
+                  <div key={int.nombre} className="flex items-center justify-between py-3 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{int.logo}</span>
+                      <div>
+                        <p className="text-sm font-bold text-[#0D0D0D]">{int.nombre}</p>
+                        <p className="text-xs text-gray-400">{int.desc}</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-500">Próximamente</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-xl border border-[#2698D1]/20 bg-blue-50 p-5">
+                <Link2 className="h-5 w-5 text-[#2698D1] mb-2" />
+                <p className="text-sm font-bold text-[#2698D1] mb-1">Más integraciones en camino</p>
+                <p className="text-xs text-blue-600">Estamos trabajando para conectar SHUURI con las herramientas que ya usás en tu negocio.</p>
               </div>
             </div>
           )}

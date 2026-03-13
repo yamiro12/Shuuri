@@ -1,78 +1,204 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { formatARS } from '@/components/shared/utils';
-import { TECNICOS, OTS, LIQUIDACIONES } from '@/data/mock';
+import { OTS, TECNICOS, LIQUIDACIONES } from '@/data/mock';
 import { RUBRO_LABELS } from '@/types/shuuri';
-import type { Rubro } from '@/types/shuuri';
+import type { Rubro, OrdenTrabajo } from '@/types/shuuri';
 import {
-  BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid,
-  PolarAngleAxis, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import {
-  Star, TrendingUp, Wrench, DollarSign, CheckCircle2,
-  Award, Clock, ArrowUpRight, Zap,
-} from 'lucide-react';
+import { Download } from 'lucide-react';
 
-// ─── DATA MOCK ────────────────────────────────────────────────────────────────
+const TASA = 1050;
+const ESTADOS_CERRADOS = ['CERRADA_CONFORME', 'CERRADA_SIN_CONFORMIDAD', 'FACTURADA', 'LIQUIDADA', 'CANCELADA'];
+const COLORS = ['#2698D1', '#22c55e', '#ef4444', '#f59e0b', '#a855f7', '#f97316', '#10b981', '#6366f1'];
 
-const INGRESOS_MENSUALES = [
-  { mes: 'Sep', neto: 820,  ots: 6 },
-  { mes: 'Oct', neto: 1050, ots: 7 },
-  { mes: 'Nov', neto: 930,  ots: 6 },
-  { mes: 'Dic', neto: 780,  ots: 5 },
-  { mes: 'Ene', neto: 1240, ots: 9 },
-  { mes: 'Feb', neto: 1380, ots: 10 },
-  { mes: 'Mar', neto: 650,  ots: 4 },
-];
+type Periodo = '1m' | '3m' | '6m' | '12m';
 
-const RADAR_PERFORMANCE = [
-  { subject: 'Puntualidad',    A: 92 },
-  { subject: 'Diagnóstico',    A: 88 },
-  { subject: 'Comunicación',   A: 95 },
-  { subject: 'Resolución',     A: 84 },
-  { subject: 'Documentación',  A: 78 },
-  { subject: 'Conformidades',  A: 91 },
-];
+function getStart(p: Periodo): Date {
+  const n = new Date();
+  const months = p === '1m' ? 1 : p === '3m' ? 3 : p === '6m' ? 6 : 12;
+  return new Date(n.getFullYear(), n.getMonth() - (months - 1), 1);
+}
+function inPeriod(iso: string, start: Date): boolean { return new Date(iso) >= start; }
 
-const RUBROS_PERF = [
-  { rubro: 'Frío comercial',    ots: 67, pct: 47 },
-  { rubro: 'Calor / gas',       ots: 31, pct: 22 },
-  { rubro: 'Campanas',          ots: 22, pct: 15 },
-  { rubro: 'Lavado ind.',       ots: 14, pct: 10 },
-  { rubro: 'Otros',             ots: 9,  pct: 6  },
-];
+function downloadCSV(headers: string[], rows: string[][], filename: string) {
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 
-function TooltipCustom({ active, payload, label, prefix = '', suffix = '' }: any) {
-  if (!active || !payload?.length) return null;
+function SectionCard({ title, onExport, children }: {
+  title: string; onExport: () => void; children: React.ReactNode;
+}) {
   return (
-    <div className="rounded-xl border bg-white px-3 py-2.5 shadow-lg text-xs">
-      <p className="font-bold text-gray-500 mb-1">{label}</p>
-      {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color }} className="font-bold">
-          {prefix}{p.value}{suffix}
-        </p>
-      ))}
+    <div className="rounded-xl border bg-white shadow-sm p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-[#0D0D0D] text-base">{title}</h3>
+        <button
+          onClick={onExport}
+          className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Exportar CSV
+        </button>
+      </div>
+      {children}
     </div>
   );
 }
 
+function StatCard({ label, value, sub, color }: {
+  label: string; value: string; sub?: string; color?: string;
+}) {
+  return (
+    <div className="rounded-xl border bg-gray-50 p-5 flex flex-col justify-center">
+      <p className={`text-3xl font-black ${color ?? 'text-[#0D0D0D]'}`}>{value}</p>
+      <p className="text-sm font-semibold text-gray-600 mt-1">{label}</p>
+      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
+// Build last 12 months labels
+function getLast12Months(): { year: number; month: number; label: string }[] {
+  const today = new Date();
+  const months: { year: number; month: number; label: string }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const label = d.toLocaleString('es-AR', { month: 'short', year: '2-digit' });
+    months.push({ year: d.getFullYear(), month: d.getMonth(), label });
+  }
+  return months;
+}
+
 export default function TecnicoEstadisticas() {
   const searchParams = useSearchParams();
-  const tecnicoId    = searchParams.get('id') ?? 'T001';
-  const tecnico      = TECNICOS.find(t => t.id === tecnicoId) ?? TECNICOS[0];
-  const [rango, setRango] = useState<'3m' | '6m' | 'todo'>('6m');
+  const tecnicoId = searchParams.get('id') ?? 'T001';
+  const tecnico = TECNICOS.find(t => t.id === tecnicoId) ?? TECNICOS[0];
+  const [periodo, setPeriodo] = useState<Periodo>('6m');
 
-  const misOTs  = OTS.filter(ot => ot.tecnicoId === tecnico.id);
-  const misLiqs = LIQUIDACIONES.filter(l => l.tecnicoId === tecnico.id);
+  const start = useMemo(() => getStart(periodo), [periodo]);
+  const last12 = useMemo(() => getLast12Months(), []);
 
-  const ingresoTotal   = misLiqs.reduce((s, l) => s + l.pagoTecnico, 0);
-  const otsCerradas    = misOTs.filter(o => ['CERRADA_CONFORME','FACTURADA','LIQUIDADA'].includes(o.estado));
-  const otsEnCurso     = misOTs.filter(o => ['TECNICO_ASIGNADO','EN_VISITA','EN_EJECUCION','AUTORIZADA','REPUESTO_SOLICITADO'].includes(o.estado));
-  const dataMeses      = rango === '3m' ? INGRESOS_MENSUALES.slice(-3) : rango === '6m' ? INGRESOS_MENSUALES.slice(-6) : INGRESOS_MENSUALES;
-  const ingresoPromedio = dataMeses.length > 0 ? Math.round(dataMeses.reduce((s, m) => s + m.neto, 0) / dataMeses.length) : 0;
+  const misOTs = useMemo(
+    () => OTS.filter(ot => (ot.tecnicoId ?? '') === tecnico.id),
+    [tecnico.id]
+  );
+
+  const misOTsPeriodo = useMemo(
+    () => misOTs.filter(ot => inPeriod(ot.fechaCreacion, start)),
+    [misOTs, start]
+  );
+
+  const misLiqs = useMemo(
+    () => LIQUIDACIONES.filter(l => l.tecnicoId === tecnico.id),
+    [tecnico.id]
+  );
+
+  // Sección 1 — Productividad
+
+  // A: OTs completadas por mes (12 meses)
+  const otsPorMes = useMemo(() => {
+    return last12.map(({ year, month, label }) => {
+      const completadas = misOTs.filter(ot => {
+        if (!ESTADOS_CERRADOS.includes(ot.estado)) return false;
+        if (ot.estado === 'CANCELADA') return false;
+        const d = new Date(ot.fechaCreacion);
+        return d.getFullYear() === year && d.getMonth() === month;
+      }).length;
+      return { mes: label, completadas };
+    });
+  }, [misOTs, last12]);
+
+  // B: Tasa de conformidad
+  const conformidad = useMemo(() => {
+    const totalCerradas = misOTs.filter(ot =>
+      ['CERRADA_CONFORME', 'CERRADA_SIN_CONFORMIDAD', 'FACTURADA', 'LIQUIDADA'].includes(ot.estado)
+    );
+    const conformes = totalCerradas.filter(ot => ot.estado === 'CERRADA_CONFORME').length;
+    const sinConf = totalCerradas.filter(ot => ot.estado === 'CERRADA_SIN_CONFORMIDAD').length;
+    const tasa = totalCerradas.length > 0 ? (conformes / totalCerradas.length) * 100 : 0;
+    return { tasa: Math.round(tasa * 10) / 10, conformes, sinConf, total: totalCerradas.length };
+  }, [misOTs]);
+
+  // C: Tiempo promedio de ejecución (horas)
+  const tiempoPromHoras = useMemo(() => {
+    const vals = misOTsPeriodo
+      .filter(ot => ot.fechaFinalizacion)
+      .map(ot => (new Date(ot.fechaFinalizacion!).getTime() - new Date(ot.fechaCreacion).getTime()) / (1000 * 60 * 60));
+    if (vals.length === 0) return null;
+    return parseFloat((vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1));
+  }, [misOTsPeriodo]);
+
+  const conformidadColor = conformidad.tasa >= 85
+    ? 'text-green-600'
+    : conformidad.tasa >= 70
+    ? 'text-amber-500'
+    : 'text-red-600';
+
+  // Sección 2 — Ingresos
+
+  // A: Liquidaciones por mes
+  const liqPorMes = useMemo(() => {
+    return last12.map(({ year, month, label }) => {
+      const pago = misLiqs
+        .filter(l => {
+          if (!l.fechaDevengado) return false;
+          const d = new Date(l.fechaDevengado);
+          return d.getFullYear() === year && d.getMonth() === month;
+        })
+        .reduce((s, l) => s + l.pagoTecnico * TASA, 0);
+      return { mes: label, pago: Math.round(pago) };
+    });
+  }, [misLiqs, last12]);
+
+  // B: Mano de obra vs repuestos
+  const desgloseIngresos = useMemo(() => {
+    const ots = misOTsPeriodo;
+    const manoDeObra = ots.reduce((s, ot) => s + ot.cotizacion.manoDeObra * TASA, 0);
+    const repuestos = ots.reduce((s, ot) => {
+      const r = ot.cotizacion.itemsRepuestos.reduce((sr, i) => sr + i.precioUnitario * i.cantidad, 0);
+      return s + r * TASA;
+    }, 0);
+    return { manoDeObra: Math.round(manoDeObra), repuestos: Math.round(repuestos) };
+  }, [misOTsPeriodo]);
+
+  // C: Proyección próximo mes (últimas 3 liquidaciones por mes)
+  const proyeccion = useMemo(() => {
+    const last3months = getLast12Months().slice(-3);
+    const totals = last3months.map(({ year, month }) => {
+      return misLiqs
+        .filter(l => {
+          if (!l.fechaDevengado) return false;
+          const d = new Date(l.fechaDevengado);
+          return d.getFullYear() === year && d.getMonth() === month;
+        })
+        .reduce((s, l) => s + l.pagoTecnico * TASA, 0);
+    });
+    const avg = totals.reduce((s, v) => s + v, 0) / 3;
+    return Math.round(avg);
+  }, [misLiqs]);
+
+  // Sección 3 — Por Rubro
+  const porRubro = useMemo(() => {
+    const map = new Map<Rubro, number>();
+    misOTs.forEach(ot => {
+      map.set(ot.rubro, (map.get(ot.rubro) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).map(([rubro, value]) => ({
+      name: RUBRO_LABELS[rubro as Rubro],
+      value,
+      rubro,
+    })).sort((a, b) => b.value - a.value);
+  }, [misOTs]);
+
+  const PERIODOS: Periodo[] = ['1m', '3m', '6m', '12m'];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -81,128 +207,182 @@ export default function TecnicoEstadisticas() {
         <Header userRole="TECNICO" userName={tecnico.nombre} />
         <main className="p-8">
 
+          {/* Header + period filter */}
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-black text-[#0D0D0D]">Mis estadísticas</h1>
               <p className="text-sm text-gray-400">{tecnico.nombre} · rendimiento y facturación</p>
             </div>
             <div className="flex items-center gap-1 rounded-xl border bg-white p-1">
-              {(['3m','6m','todo'] as const).map(r => (
-                <button key={r} onClick={() => setRango(r)}
+              {PERIODOS.map(p => (
+                <button key={p} onClick={() => setPeriodo(p)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                    rango === r ? 'bg-[#0D0D0D] text-white' : 'text-gray-500 hover:text-gray-700'
-                  }`}>{r}</button>
+                    periodo === p ? 'bg-[#0D0D0D] text-white' : 'text-gray-500 hover:text-gray-700'
+                  }`}>{p.toUpperCase()}</button>
               ))}
             </div>
           </div>
 
-          {/* KPIs */}
-          <div className="grid grid-cols-5 gap-4 mb-6">
-            {[
-              { label: 'OTs completadas', value: tecnico.otsCompletadas, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', trend: '+8 este mes' },
-              { label: 'Score',           value: tecnico.score,           icon: Star,         color: 'text-amber-500', bg: 'bg-amber-50', trend: '↑ 0.2' },
-              { label: 'En curso',        value: otsEnCurso.length,       icon: Clock,        color: 'text-blue-600',  bg: 'bg-blue-50' },
-              { label: 'Ingreso total',   value: `USD ${ingresoTotal}`,   icon: DollarSign,   color: 'text-purple-600', bg: 'bg-purple-50', trend: '+15%' },
-              { label: 'Prom. mensual',   value: `USD ${ingresoPromedio}`,icon: TrendingUp,   color: 'text-[#2698D1]', bg: 'bg-blue-50' },
-            ].map(kpi => (
-              <div key={kpi.label} className="rounded-xl border bg-white p-5 shadow-sm">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${kpi.bg}`}>
-                    <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+          {/* Sección 1 — Productividad */}
+          <SectionCard
+            title="Productividad"
+            onExport={() => downloadCSV(
+              ['mes', 'completadas'],
+              otsPorMes.map(r => [r.mes, String(r.completadas)]),
+              'productividad.csv'
+            )}
+          >
+            <div className="grid grid-cols-3 gap-6">
+              {/* A: LineChart */}
+              <div className="col-span-2">
+                <p className="text-xs font-semibold text-gray-500 mb-3">OTs completadas por mes (12 meses)</p>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={otsPorMes}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="mes" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip formatter={(value: any) => [String(value), '']} />
+                    <Line type="monotone" dataKey="completadas" stroke="#2698D1" strokeWidth={2.5}
+                      dot={{ fill: '#2698D1', r: 3 }} activeDot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* B + C: stats */}
+              <div className="flex flex-col gap-4">
+                {/* B: Tasa de conformidad */}
+                <div className="rounded-xl border bg-gray-50 p-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Tasa de conformidad</p>
+                  <p className={`text-4xl font-black ${conformidadColor}`}>
+                    {conformidad.tasa}%
+                  </p>
+                  <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+                    <p>Conformes: <span className="font-bold text-green-600">{conformidad.conformes}</span></p>
+                    <p>Sin conformidad: <span className="font-bold text-red-500">{conformidad.sinConf}</span></p>
                   </div>
-                  {kpi.trend && (
-                    <span className="text-xs font-bold text-green-600">{kpi.trend}</span>
-                  )}
                 </div>
-                <p className="text-2xl font-black text-[#0D0D0D]">{kpi.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-3 gap-6 mb-6">
-
-            {/* Ingresos y OTs por mes */}
-            <div className="col-span-2 rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-1">Ingresos netos y OTs por mes</h3>
-              <p className="text-xs text-gray-400 mb-5">USD cobrado después de comisión SHUURI</p>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={dataMeses} barGap={4}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} domain={[0, 15]} />
-                  <Tooltip content={<TooltipCustom />} />
-                  <Bar yAxisId="left"  dataKey="neto" name="USD neto" fill="#2698D1" radius={[4,4,0,0]} />
-                  <Bar yAxisId="right" dataKey="ots"  name="OTs"      fill="#0D0D0D" radius={[4,4,0,0]} opacity={0.15} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Radar performance */}
-            <div className="rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-1">Performance</h3>
-              <p className="text-xs text-gray-400 mb-2">Evaluación multidimensional</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <RadarChart data={RADAR_PERFORMANCE}>
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: '#94a3b8' }} />
-                  <Radar dataKey="A" stroke="#2698D1" fill="#2698D1" fillOpacity={0.2} strokeWidth={2} />
-                </RadarChart>
-              </ResponsiveContainer>
-              <div className="flex items-center justify-center gap-2 mt-1">
-                <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                <span className="text-xl font-black text-[#0D0D0D]">{tecnico.score}</span>
-                <span className="text-xs text-gray-400">/ 5.0</span>
+                {/* C: Tiempo promedio */}
+                <StatCard
+                  label="Tiempo prom. ejecución"
+                  value={tiempoPromHoras !== null ? `${tiempoPromHoras}h` : '—'}
+                  sub="Promedio en el período"
+                />
               </div>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Rubros + Certificaciones */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-4">OTs por rubro</h3>
-              <div className="space-y-3">
-                {RUBROS_PERF.map(r => (
-                  <div key={r.rubro}>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-gray-600 font-medium">{r.rubro}</span>
-                      <span className="text-gray-400">{r.ots} OTs · {r.pct}%</span>
+          {/* Sección 2 — Ingresos */}
+          <SectionCard
+            title="Ingresos"
+            onExport={() => downloadCSV(
+              ['mes', 'pagoARS'],
+              liqPorMes.map(r => [r.mes, String(r.pago)]),
+              'ingresos.csv'
+            )}
+          >
+            <div className="grid grid-cols-3 gap-6">
+              {/* A: Liquidaciones por mes */}
+              <div className="col-span-2">
+                <p className="text-xs font-semibold text-gray-500 mb-3">Liquidaciones por mes (ARS)</p>
+                {liqPorMes.every(m => m.pago === 0) ? (
+                  <p className="text-sm text-gray-400 py-8 text-center">Sin datos en el período seleccionado</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={liqPorMes}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="mes" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={70}
+                        tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(value: any) => [formatARS(Number(value)), 'Pago']} />
+                      <Bar dataKey="pago" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              {/* B + C: desglose + proyección */}
+              <div className="flex flex-col gap-4">
+                {/* B: Mano de obra vs repuestos */}
+                <div className="rounded-xl border bg-gray-50 p-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Desglose en el período</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Mano de obra</span>
+                      <span className="font-bold text-[#2698D1]">{formatARS(desgloseIngresos.manoDeObra)}</span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-gray-100">
-                      <div className="h-2 rounded-full bg-[#2698D1] transition-all duration-500"
-                        style={{ width: `${r.pct}%` }} />
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Repuestos</span>
+                      <span className="font-bold text-purple-600">{formatARS(desgloseIngresos.repuestos)}</span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between items-center font-bold">
+                      <span className="text-gray-700">Total bruto</span>
+                      <span className="text-[#0D0D0D]">{formatARS(desgloseIngresos.manoDeObra + desgloseIngresos.repuestos)}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            <div className="rounded-xl border bg-white shadow-sm p-6">
-              <h3 className="font-bold text-[#0D0D0D] mb-4">Certificaciones activas</h3>
-              <div className="space-y-2">
-                {tecnico.rubros.map(r => {
-                  const estado = tecnico.certPorRubro[r as Rubro];
-                  const ok     = estado === 'vigente';
-                  const warn   = estado === 'por_vencer';
-                  return (
-                    <div key={r} className={`flex items-center justify-between rounded-xl px-4 py-3 ${
-                      ok ? 'bg-green-50 border border-green-100' :
-                      warn ? 'bg-amber-50 border border-amber-100' :
-                      'bg-red-50 border border-red-100'
-                    }`}>
-                      <span className={`text-xs font-medium ${ok ? 'text-green-700' : warn ? 'text-amber-700' : 'text-red-700'}`}>
-                        {RUBRO_LABELS[r as Rubro]}
-                      </span>
-                      <span className={`text-xs font-black ${ok ? 'text-green-600' : warn ? 'text-amber-600' : 'text-red-600'}`}>
-                        {ok ? '✓ Vigente' : warn ? '⚠ Por vencer' : '✗ Vencida'}
-                      </span>
-                    </div>
-                  );
-                })}
+                {/* C: Proyección */}
+                <div className={`rounded-xl p-4 ${proyeccion > 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border'}`}>
+                  <p className="text-xs font-semibold text-gray-500 mb-1">Proyección próximo mes</p>
+                  <p className={`text-xl font-black ${proyeccion > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+                    {proyeccion > 0 ? formatARS(proyeccion) : '—'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Basado en promedio últimos 3 meses</p>
+                </div>
               </div>
             </div>
-          </div>
+          </SectionCard>
+
+          {/* Sección 3 — Por Rubro */}
+          <SectionCard
+            title="Distribución por rubro"
+            onExport={() => downloadCSV(
+              ['rubro', 'cantidad'],
+              porRubro.map(r => [r.name, String(r.value)]),
+              'rubros.csv'
+            )}
+          >
+            {porRubro.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Sin datos en el período seleccionado</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-6 items-center">
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={porRubro}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      dataKey="value"
+                      label={({ name, percent }: any) =>
+                        percent > 0.05 ? `${name} ${(percent * 100).toFixed(0)}%` : ''
+                      }
+                      labelLine={false}
+                    >
+                      {porRubro.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: any) => [String(value), 'OTs']} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2">
+                  {porRubro.map((r, i) => (
+                    <div key={r.rubro} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                          style={{ background: COLORS[i % COLORS.length] }}
+                        />
+                        <span className="text-gray-600">{r.name}</span>
+                      </div>
+                      <span className="font-bold text-gray-800">{r.value} OTs</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </SectionCard>
 
         </main>
       </div>

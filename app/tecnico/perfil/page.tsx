@@ -4,7 +4,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { TECNICOS } from '@/data/mock';
 import { LegajoTecnico, RUBRO_LABELS, TODOS_LOS_RUBROS } from '@/types/shuuri';
-import { User, MapPin, Users, Star, Phone, CreditCard, FileText, Edit3, Save, CheckCircle, ShieldCheck } from 'lucide-react';
+import { User, MapPin, Users, Star, Phone, CreditCard, FileText, Edit3, Save, CheckCircle, ShieldCheck, Calendar } from 'lucide-react';
 
 const TECNICO = TECNICOS[0];
 
@@ -46,14 +46,15 @@ const LEGAJO_VACIO: LegajoTecnico = {
 };
 
 const SECCIONES = [
-  { id: 'tipo',        label: 'Tipo de alta',      icon: User },
-  { id: 'fiscal',      label: 'Datos fiscales',    icon: FileText },
-  { id: 'cobertura',   label: 'Cobertura',         icon: MapPin },
-  { id: 'equipo',      label: 'Equipo de trabajo', icon: Users },
-  { id: 'experiencia', label: 'Experiencia',       icon: Star },
-  { id: 'contacto',    label: 'Contacto',          icon: Phone },
-  { id: 'facturacion', label: 'Facturación',       icon: CreditCard },
-  { id: 'certs',       label: 'Certificaciones',   icon: ShieldCheck },
+  { id: 'tipo',           label: 'Tipo de alta',      icon: User },
+  { id: 'fiscal',         label: 'Datos fiscales',    icon: FileText },
+  { id: 'cobertura',      label: 'Cobertura',         icon: MapPin },
+  { id: 'equipo',         label: 'Equipo de trabajo', icon: Users },
+  { id: 'experiencia',    label: 'Experiencia',       icon: Star },
+  { id: 'contacto',       label: 'Contacto',          icon: Phone },
+  { id: 'facturacion',    label: 'Facturación',       icon: CreditCard },
+  { id: 'certs',          label: 'Certificaciones',   icon: ShieldCheck },
+  { id: 'integraciones',  label: 'Integraciones',     icon: Calendar },
 ];
 
 const ZONAS = ['CABA', 'GBA Norte', 'GBA Sur', 'GBA Oeste', 'Interior Buenos Aires', 'Nacional'];
@@ -447,6 +448,39 @@ export default function TecnicoPerfil() {
 
                   <div className="rounded-lg border border-dashed border-gray-300 p-4 text-center">
                     <p className="text-xs text-gray-400">Para cargar nuevas certificaciones, completá el onboarding.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* INTEGRACIONES */}
+              {seccion === 'integraciones' && (
+                <div className="space-y-6">
+                  <h2 className="font-black text-[#0D0D0D]">Integraciones</h2>
+                  <p className="text-sm text-gray-500">Conectá SHUURI con tus calendarios para sincronizar visitas técnicas.</p>
+
+                  <div className="space-y-3">
+                    {[
+                      { nombre: 'Google Calendar', desc: 'Sincronizá visitas y OTs con Google Calendar.', logo: '📅' },
+                      { nombre: 'Microsoft Outlook', desc: 'Recibí recordatorios de OTs en tu calendario de Outlook.', logo: '📆' },
+                      { nombre: 'Apple Calendar', desc: 'Integración con iCal para iPhone y Mac.', logo: '🍎' },
+                    ].map(int => (
+                      <div key={int.nombre} className="flex items-center justify-between rounded-xl border bg-white px-4 py-3 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{int.logo}</span>
+                          <div>
+                            <p className="text-sm font-bold text-[#0D0D0D]">{int.nombre}</p>
+                            <p className="text-xs text-gray-400">{int.desc}</p>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-500">Próximamente</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-xl border border-[#2698D1]/20 bg-blue-50 p-5">
+                    <Calendar className="h-5 w-5 text-[#2698D1] mb-2" />
+                    <p className="text-sm font-bold text-[#2698D1] mb-1">Más integraciones en camino</p>
+                    <p className="text-xs text-blue-600">Estamos trabajando para que puedas gestionar tu agenda de SHUURI desde las herramientas que ya usás.</p>
                   </div>
                 </div>
               )}
