@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, PlusCircle, ClipboardList, Wrench, Utensils,
   CreditCard, Calendar, Package, ShieldCheck, Users, LogOut,
-  BarChart3, Settings, Truck, BookOpen, UserCircle
+  BarChart3, Settings, Truck, BookOpen, UserCircle, ShoppingBag
 } from 'lucide-react';
 import { UserRole } from '@/types/shuuri';
 
@@ -21,6 +21,7 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
         { label: 'Reportar falla',  href: '/restaurante/reportar', icon: PlusCircle },
         { label: 'Mis OTs',         href: '/restaurante/ots',      icon: ClipboardList },
         { label: 'Mis Equipos',     href: '/restaurante/equipos',  icon: Utensils },
+        { label: 'Marketplace',     href: '/restaurante/marketplace', icon: ShoppingBag },
       ],
     },
     {
