@@ -29,7 +29,7 @@ export default function TecnicoDashboard() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={TECNICO.nombre} />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={TECNICO.nombre} />
         <main className="p-8">
 

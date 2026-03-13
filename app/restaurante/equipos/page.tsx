@@ -138,7 +138,7 @@ export default function EquiposPage() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="RESTAURANTE" userName={RESTAURANTE.nombre} />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={RESTAURANTE.nombre} />
         <main className="p-8">
     <div className="max-w-5xl mx-auto space-y-6">

@@ -259,7 +259,7 @@ export default function RestauranteDashboardPage() {
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="RESTAURANTE" userName={restaurante.contactoNombre} />
 
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="sidebar-push flex-1 flex flex-col">
         <Header userRole="RESTAURANTE" userName={restaurante.contactoNombre} />
 
         <main className="flex-1 p-8 space-y-8">

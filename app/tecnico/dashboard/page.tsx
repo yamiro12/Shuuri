@@ -239,7 +239,7 @@ export default function TecnicoDashboardPage() {
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={tecnico.nombre} />
 
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="sidebar-push flex-1 flex flex-col">
         <Header userRole="TECNICO" userName={tecnico.nombre} />
 
         <main className="flex-1 p-8 space-y-8">

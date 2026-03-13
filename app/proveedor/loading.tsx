@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <div className="w-64 shrink-0 bg-[#0D0D0D]" />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <div className="sticky top-0 z-30 h-16 border-b bg-white" />
         <main className="p-8">
           <div className="mb-8 h-8 w-48 rounded-lg bg-gray-200 animate-pulse" />

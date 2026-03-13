@@ -154,7 +154,7 @@ export default function TecnicoOTs() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={tecnico.nombre} />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={tecnico.nombre} />
         <main className="p-8">
 

@@ -234,7 +234,7 @@ export default function AdminIntegraciones() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="Admin SHUURI" />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin SHUURI" />
         <main className="p-8">
 

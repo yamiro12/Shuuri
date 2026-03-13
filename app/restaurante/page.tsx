@@ -89,7 +89,7 @@ export default function RestaurantePerfil() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
         <main className="p-8">
 

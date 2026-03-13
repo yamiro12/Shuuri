@@ -502,7 +502,7 @@ export default function MarketplacePage() {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
-        <div className="flex-1 ml-64 flex flex-col">
+        <div className="flex-1 sidebar-push flex flex-col">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex-1 flex items-center justify-center p-8">
             <div className="bg-white rounded-2xl shadow-lg p-12 max-w-lg w-full text-center">
@@ -535,7 +535,7 @@ export default function MarketplacePage() {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
-        <div className="flex-1 ml-64 flex flex-col">
+        <div className="flex-1 sidebar-push flex flex-col">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex-1 overflow-y-auto p-8">
             <div className="max-w-2xl mx-auto">
@@ -626,7 +626,7 @@ export default function MarketplacePage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
-      <div className="flex-1 ml-64 flex flex-col">
+      <div className="flex-1 sidebar-push flex flex-col">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
         <main className="flex-1 overflow-y-auto p-8">
 

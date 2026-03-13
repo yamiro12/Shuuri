@@ -30,7 +30,7 @@ export default function AdminOTDetalle() {
     return (
       <div className="flex min-h-screen bg-[#F7F8FA]">
         <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
-        <div className="flex-1 ml-64">
+        <div className="flex-1 sidebar-push">
           <Header userRole="SHUURI_ADMIN" userName="Admin" />
           <main className="p-8 text-center">
             <p className="text-gray-500">OT no encontrada.</p>
@@ -48,7 +48,7 @@ export default function AdminOTDetalle() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
         <main className="p-8">
 

@@ -273,7 +273,7 @@ export default function ReportarFalla() {
     return (
       <div className="flex min-h-screen bg-[#F7F8FA]">
         <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
-        <div className="flex-1 ml-64">
+        <div className="flex-1 sidebar-push">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-8">
             <div className="w-full max-w-md text-center">
@@ -333,7 +333,7 @@ export default function ReportarFalla() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
         <main className="p-8">
 

@@ -43,7 +43,7 @@ export default function AdminTecnicoDetalle({ params }: { params: { id: string }
   if (!tecnico) return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
-      <div className="flex-1 ml-64 p-8">
+      <div className="flex-1 sidebar-push p-8">
         <p className="text-gray-500 mb-4">Técnico no encontrado.</p>
         <Link href="/admin/tecnicos" className="text-[#2698D1] text-sm font-bold">← Volver</Link>
       </div>
@@ -66,7 +66,7 @@ export default function AdminTecnicoDetalle({ params }: { params: { id: string }
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
         <main className="p-8 max-w-5xl">
 

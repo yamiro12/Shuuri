@@ -229,7 +229,7 @@ export default function TecnicoAgenda() {
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={tecnicoNombre} />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={tecnicoNombre} />
         <main className="p-8">
 
