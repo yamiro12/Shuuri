@@ -190,7 +190,7 @@ function TecnicoComplianceCard({ tecnico }: { tecnico: typeof TECNICOS[0] }) {
 
           {/* Acción */}
           <div className="mt-4 flex justify-end">
-            <Link href="/tecnico/perfil"
+            <Link href={`/tecnico/perfil?id=${tecnico.id}`}
               className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:border-[#2698D1] hover:text-[#2698D1] transition-colors">
               Ver legajo completo →
             </Link>

@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { 
-  Thermometer, Flame, Wind, Coffee, Wrench, Zap, 
+import {
+  Thermometer, Flame, Wind, Coffee, Wrench, Zap,
   Droplets, ShieldCheck, Cpu, ChevronRight, Plus,
   AlertTriangle, CheckCircle, Clock, XCircle,
-  Calendar, Package, BarChart2
+  Calendar, Package, BarChart2, X,
 } from 'lucide-react';
 import { EQUIPOS, getOTsByRestaurante } from '@/data/mock';
-import { RUBRO_LABELS } from '@/types/shuuri';
-import type { Equipo } from '@/types/shuuri';
+import { RUBRO_LABELS, TODOS_LOS_RUBROS } from '@/types/shuuri';
+import type { Equipo, Rubro } from '@/types/shuuri';
 
 const RESTAURANTE_ID = 'R001';
 
@@ -73,27 +73,54 @@ function formatDate(iso?: string) {
   return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+const EQUIPO_VACIO = { tipo: '', marca: '', modelo: '', rubro: 'frio_comercial' as Rubro };
+
 export default function EquiposPage() {
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
-  const equipos = EQUIPOS.filter(e => e.restauranteId === RESTAURANTE_ID);
+  const [equiposLocal, setEquiposLocal] = useState<Equipo[]>(
+    () => EQUIPOS.filter(e => e.restauranteId === RESTAURANTE_ID)
+  );
+  const [modalOpen,   setModalOpen]   = useState(false);
+  const [nuevoEquipo, setNuevoEquipo] = useState(EQUIPO_VACIO);
+
   const allOTs = getOTsByRestaurante(RESTAURANTE_ID);
 
   const filtrados = filtroEstado === 'todos'
-    ? equipos
-    : equipos.filter(e => e.estado === filtroEstado);
+    ? equiposLocal
+    : equiposLocal.filter(e => e.estado === filtroEstado);
 
   const counts = {
-    todos: equipos.length,
-    operativo: equipos.filter(e => e.estado === 'operativo').length,
-    en_servicio: equipos.filter(e => e.estado === 'en_servicio').length,
-    fuera_de_servicio: equipos.filter(e => e.estado === 'fuera_de_servicio').length,
+    todos: equiposLocal.length,
+    operativo: equiposLocal.filter(e => e.estado === 'operativo').length,
+    en_servicio: equiposLocal.filter(e => e.estado === 'en_servicio').length,
+    fuera_de_servicio: equiposLocal.filter(e => e.estado === 'fuera_de_servicio').length,
   };
 
-  const preventivosUrgentes = equipos.filter(e => {
+  const preventivosUrgentes = equiposLocal.filter(e => {
     if (!e.proximoPreventivo) return false;
     const diff = new Date(e.proximoPreventivo).getTime() - Date.now();
     return diff < 30 * 86400000;
   }).length;
+
+  function handleAgregarEquipo() {
+    if (!nuevoEquipo.tipo || !nuevoEquipo.marca) return;
+    const nuevo: Equipo = {
+      id:              `EQ-NEW-${Date.now()}`,
+      restauranteId:   RESTAURANTE_ID,
+      tipo:            nuevoEquipo.tipo,
+      marca:           nuevoEquipo.marca,
+      modelo:          nuevoEquipo.modelo,
+      serie:           '—',
+      anioInstalacion: new Date().getFullYear(),
+      rubro:           nuevoEquipo.rubro,
+      garantiaVigente: false,
+      otIds:           [],
+      estado:          'operativo',
+    };
+    setEquiposLocal(prev => [...prev, nuevo]);
+    setNuevoEquipo(EQUIPO_VACIO);
+    setModalOpen(false);
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -103,10 +130,13 @@ export default function EquiposPage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Mis equipos</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {equipos.length} equipos registrados · {allOTs.length} OTs históricas
+            {equiposLocal.length} equipos registrados · {allOTs.length} OTs históricas
           </p>
         </div>
-        <button className="flex items-center gap-2 bg-gray-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-2 bg-gray-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
           <Plus className="w-4 h-4" />
           Agregar equipo
         </button>
@@ -202,14 +232,11 @@ export default function EquiposPage() {
               {/* Bottom row */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-3">
-                  {/* Estado */}
                   <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${estadoConf.class}`}>
                     {estadoConf.icon}
                     {estadoConf.label}
                   </span>
                 </div>
-
-                {/* Preventivo */}
                 {prevStatus && (
                   <div className={`flex items-center gap-1 text-xs ${prevStatus.class}`}>
                     <Calendar className="w-3.5 h-3.5" />
@@ -236,7 +263,7 @@ export default function EquiposPage() {
           {
             label: 'Último servicio más antiguo',
             value: (() => {
-              const sorted = equipos
+              const sorted = equiposLocal
                 .filter(e => e.fechaUltimoServicio)
                 .sort((a, b) => new Date(a.fechaUltimoServicio!).getTime() - new Date(b.fechaUltimoServicio!).getTime());
               return sorted[0] ? formatDate(sorted[0].fechaUltimoServicio) : '—';
@@ -263,6 +290,82 @@ export default function EquiposPage() {
           </div>
         ))}
       </div>
+
+      {/* MODAL AGREGAR EQUIPO */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+
+            <div className="flex items-center justify-between px-6 py-5 border-b">
+              <h3 className="font-black text-[#0D0D0D]">Agregar equipo</h3>
+              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Tipo de equipo *</label>
+                <input
+                  value={nuevoEquipo.tipo}
+                  onChange={e => setNuevoEquipo(p => ({ ...p, tipo: e.target.value }))}
+                  placeholder="Ej: Cámara frigorífica"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Marca *</label>
+                <input
+                  value={nuevoEquipo.marca}
+                  onChange={e => setNuevoEquipo(p => ({ ...p, marca: e.target.value }))}
+                  placeholder="Ej: Frider"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Modelo</label>
+                <input
+                  value={nuevoEquipo.modelo}
+                  onChange={e => setNuevoEquipo(p => ({ ...p, modelo: e.target.value }))}
+                  placeholder="Ej: CF-300"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Rubro</label>
+                <select
+                  value={nuevoEquipo.rubro}
+                  onChange={e => setNuevoEquipo(p => ({ ...p, rubro: e.target.value as Rubro }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors bg-white"
+                >
+                  {TODOS_LOS_RUBROS.map(r => (
+                    <option key={r} value={r}>{RUBRO_LABELS[r]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 border-t px-6 py-4">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAgregarEquipo}
+                disabled={!nuevoEquipo.tipo || !nuevoEquipo.marca}
+                className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-bold text-white hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Agregar equipo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

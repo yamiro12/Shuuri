@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge } from '@/components/shared/utils';
@@ -102,6 +103,7 @@ const urgenciaColor: Record<string, { bg: string; border: string; text: string }
 
 // ─── MODAL DETALLE OT ────────────────────────────────────────────────────────
 function ModalOT({ ot, onClose }: { ot: OTAgenda; onClose: () => void }) {
+  const router      = useRouter();
   const restaurante = getRestauranteById(ot.restauranteId);
   const col         = urgenciaColor[ot.urgencia] ?? urgenciaColor.BAJA;
   const horaFin     = new Date(ot.fechaVisitaReal);
@@ -179,7 +181,10 @@ function ModalOT({ ot, onClose }: { ot: OTAgenda; onClose: () => void }) {
           >
             Cerrar
           </button>
-          <button className="flex-1 rounded-lg bg-[#2698D1] py-2.5 text-sm font-bold text-white hover:bg-[#2698D1]/90">
+          <button
+            onClick={() => { onClose(); router.push(`/tecnico/ots/${ot.id}?id=${TECNICO_ID}`); }}
+            className="flex-1 rounded-lg bg-[#2698D1] py-2.5 text-sm font-bold text-white hover:bg-[#2698D1]/90"
+          >
             Ir a la OT
           </button>
         </div>

@@ -102,14 +102,16 @@ export default function RestauranteOTDetail() {
   const router = useRouter();
   const ot = getOTById(id);
 
-  const [cotAprobadaLocal, setCotAprobadaLocal] = useState(false);
+  const [cotAprobadaLocal,   setCotAprobadaLocal]   = useState(false);
+  const [cotRechazadaLocal,  setCotRechazadaLocal]  = useState(false);
   const [conformidadFirmada, setConformidadFirmada] = useState(false);
+  const [sinConformidadLocal, setSinConformidadLocal] = useState(false);
 
   if (!ot) {
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500">OT no encontrada.</p>
-        <Link href="/restaurante/ots" className="text-blue-600 text-sm mt-2 inline-block">← Volver</Link>
+        <Link href="/restaurante/ots?id=R001" className="text-blue-600 text-sm mt-2 inline-block">← Volver</Link>
       </div>
     );
   }
@@ -122,7 +124,7 @@ export default function RestauranteOTDetail() {
   const tieneEstimacion          = (cot?.estimacionMin ?? 0) > 0;
   const tieneCotizacion          = (cot?.totalDefinitivo ?? 0) > 0;
   const aprobadaFase2            = (cot?.aprobadaFase2 ?? false) || cotAprobadaLocal;
-  const pendienteAprobacionFase2 = faseActual === 'fase2' && !aprobadaFase2;
+  const pendienteAprobacionFase2 = faseActual === 'fase2' && !aprobadaFase2 && !cotRechazadaLocal;
   const slaBreach                = ot.slaBreachAt && new Date(ot.slaBreachAt) < new Date();
 
   return (
@@ -321,7 +323,7 @@ export default function RestauranteOTDetail() {
                           <ThumbsUp size={15} /> Aprobar trabajo
                         </button>
                         <button
-                          onClick={() => router.back()}
+                          onClick={() => setCotRechazadaLocal(true)}
                           className="flex items-center justify-center gap-2 bg-white text-red-600 text-sm font-semibold py-3 rounded-xl border border-red-200 hover:bg-red-50 transition-colors">
                           <ThumbsDown size={15} /> Rechazar
                         </button>
@@ -331,6 +333,12 @@ export default function RestauranteOTDetail() {
                     {aprobadaFase2 && (
                       <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2 border border-green-100">
                         <CheckCircle2 size={13} /> Aprobado — trabajo autorizado
+                      </div>
+                    )}
+
+                    {cotRechazadaLocal && (
+                      <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2 border border-red-100">
+                        <ThumbsDown size={13} /> Cotización rechazada
                       </div>
                     )}
                   </div>
@@ -374,7 +382,7 @@ export default function RestauranteOTDetail() {
                     )}
                   </div>
                 )}
-                {ot.estado === 'PENDIENTE_CONFORMIDAD' && !conformidadFirmada && (
+                {ot.estado === 'PENDIENTE_CONFORMIDAD' && !conformidadFirmada && !sinConformidadLocal && (
                   <div className="mt-3 space-y-2">
                     <p className="text-xs text-gray-500">El técnico finalizó el trabajo. ¿Confirmás que quedó resuelto?</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -384,7 +392,7 @@ export default function RestauranteOTDetail() {
                         <CheckCircle2 size={14} /> Dar conformidad
                       </button>
                       <button
-                        onClick={() => setConformidadFirmada(true)}
+                        onClick={() => setSinConformidadLocal(true)}
                         className="flex items-center justify-center gap-2 bg-white text-red-600 text-sm font-semibold py-2.5 rounded-xl border border-red-200 hover:bg-red-50 transition-colors">
                         <ThumbsDown size={14} /> Sin conformidad
                       </button>
@@ -394,6 +402,11 @@ export default function RestauranteOTDetail() {
                 {conformidadFirmada && (
                   <div className="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2 border border-green-100">
                     <CheckCircle2 size={13} /> Conformidad registrada
+                  </div>
+                )}
+                {sinConformidadLocal && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-orange-700 bg-orange-50 rounded-lg px-3 py-2 border border-orange-100">
+                    <ThumbsDown size={13} /> Sin conformidad — SHUURI fue notificado
                   </div>
                 )}
               </TimelineStep>

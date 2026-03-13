@@ -589,7 +589,7 @@ export default function AdminOTs() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <Link
-                            href={`/restaurante/ots/${ot.id}`}
+                            href={`/admin/ots/${ot.id}`}
                             className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:border-[#2698D1] hover:text-[#2698D1] transition-colors"
                           >
                             Ver

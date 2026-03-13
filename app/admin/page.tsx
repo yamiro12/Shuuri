@@ -1,30 +1,34 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { formatARS } from '@/components/shared/utils';
-import { RESTAURANTES, getOTsByRestaurante, getEquiposByRestaurante } from '@/data/mock';
-import { Building2, Search, PlusCircle, ChevronRight, MapPin, Phone, Layers } from 'lucide-react';
+import { OTS, TECNICOS, RESTAURANTES } from '@/data/mock';
+import {
+  ClipboardList, Wrench, Utensils, AlertTriangle,
+  TrendingUp, CheckCircle2, Clock, XCircle, ChevronRight,
+} from 'lucide-react';
 
-const TIER_COLOR: Record<string, string> = {
-  FREEMIUM: 'bg-gray-100 text-gray-700',
-  CADENA_CHICA: 'bg-blue-100 text-blue-700',
-  CADENA_GRANDE: 'bg-purple-100 text-purple-700',
-};
+// Estados cerrados/finales
+const ESTADOS_CERRADOS = ['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','FACTURADA','LIQUIDADA','CANCELADA'] as const;
 
-export default function AdminRestaurantes() {
-  const [busqueda, setBusqueda] = useState('');
-  const [filtroTier, setFiltroTier] = useState<'todos' | 'FREEMIUM' | 'CADENA_CHICA' | 'CADENA_GRANDE'>('todos');
+export default function AdminDashboard() {
+  const otsActivas  = OTS.filter(o => !ESTADOS_CERRADOS.includes(o.estado as typeof ESTADOS_CERRADOS[number]));
+  const otsCerradas = OTS.filter(o =>  ESTADOS_CERRADOS.includes(o.estado as typeof ESTADOS_CERRADOS[number]));
 
-  const filtrados = RESTAURANTES.filter(r => {
-    if (busqueda) {
-      const q = busqueda.toLowerCase();
-      if (!r.nombre.toLowerCase().includes(q) && !r.zona.toLowerCase().includes(q)) return false;
-    }
-    if (filtroTier !== 'todos' && r.tier !== filtroTier) return false;
-    return true;
-  });
+  const tecnicosActivos  = TECNICOS.filter(t => !t.bloqueado);
+  const tecnicosBloqueados = TECNICOS.filter(t => t.bloqueado);
+  const tecnicosAlerta   = TECNICOS.filter(t =>
+    t.certStatusGlobal === 'vencida' || t.certStatusGlobal === 'por_vencer'
+  );
+
+  // Agrupación de OTs activas por estado
+  const porEstado = otsActivas.reduce<Record<string, number>>((acc, o) => {
+    acc[o.estado] = (acc[o.estado] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const urgenciaCritica = OTS.filter(o => o.urgencia === 'CRITICA' && !ESTADOS_CERRADOS.includes(o.estado as typeof ESTADOS_CERRADOS[number]));
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -34,137 +38,167 @@ export default function AdminRestaurantes() {
         <main className="p-8">
 
           {/* TÍTULO */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-black text-[#0D0D0D]">Restaurantes</h1>
-              <p className="text-gray-500">{filtrados.length} de {RESTAURANTES.length} establecimientos</p>
-            </div>
-            <Link href="/restaurante/onboarding"
-              className="flex items-center gap-2 rounded-lg bg-[#2698D1] px-4 py-2 text-sm font-bold text-white hover:bg-[#2698D1]/90">
-              <PlusCircle className="h-4 w-4" /> Alta restaurante
-            </Link>
+          <div className="mb-8">
+            <h1 className="text-2xl font-black text-[#0D0D0D]">Dashboard Global</h1>
+            <p className="text-gray-500">Visión general de la operación SHUURI</p>
           </div>
 
-          {/* FILTROS */}
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-                placeholder="Buscar por nombre o zona..." className="text-sm outline-none w-52" />
-            </div>
-            <div className="flex items-center gap-1 rounded-lg border bg-white p-1">
-              {([
-                { key: 'todos', label: 'Todos' },
-                { key: 'FREEMIUM', label: 'Freemium' },
-                { key: 'CADENA_CHICA', label: 'Cadena chica' },
-                { key: 'CADENA_GRANDE', label: 'Cadena grande' },
-              ] as const).map(tab => (
-                <button key={tab.key} onClick={() => setFiltroTier(tab.key)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
-                    filtroTier === tab.key ? 'bg-[#0D0D0D] text-white' : 'text-gray-500 hover:text-gray-700'
-                  }`}>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* KPIs RÁPIDOS */}
+          {/* KPIs GLOBALES */}
           <div className="mb-6 grid grid-cols-4 gap-4">
             {[
-              { label: 'Total', value: RESTAURANTES.length, color: 'text-gray-700' },
-              { label: 'Freemium', value: RESTAURANTES.filter(r => r.tier === 'FREEMIUM').length, color: 'text-gray-600' },
-              { label: 'Cadena chica', value: RESTAURANTES.filter(r => r.tier === 'CADENA_CHICA').length, color: 'text-blue-600' },
-              { label: 'Cadena grande', value: RESTAURANTES.filter(r => r.tier === 'CADENA_GRANDE').length, color: 'text-purple-600' },
+              { label: 'OTs activas',       value: otsActivas.length,       color: 'text-blue-600',   bg: 'bg-blue-50',   icon: ClipboardList },
+              { label: 'OTs totales',       value: OTS.length,              color: 'text-gray-700',   bg: 'bg-gray-50',   icon: TrendingUp },
+              { label: 'Técnicos activos',  value: tecnicosActivos.length,  color: 'text-green-600',  bg: 'bg-green-50',  icon: Wrench },
+              { label: 'Restaurantes',      value: RESTAURANTES.length,     color: 'text-purple-600', bg: 'bg-purple-50', icon: Utensils },
             ].map(kpi => (
-              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm p-4">
-                <p className="text-xs text-gray-400 mb-1">{kpi.label}</p>
-                <p className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</p>
+              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm p-5 flex items-center gap-4">
+                <div className={`h-12 w-12 rounded-xl ${kpi.bg} flex items-center justify-center`}>
+                  <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">{kpi.label}</p>
+                  <p className={`text-3xl font-black ${kpi.color}`}>{kpi.value}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* TABLA */}
-          <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Restaurante</th>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Contacto</th>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Zona</th>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Tier</th>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Locales</th>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">OTs activas</th>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Equipos</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">
-                      Sin resultados para la búsqueda
-                    </td>
-                  </tr>
-                ) : filtrados.map(r => {
-                  const ots = getOTsByRestaurante(r.id);
-                  const otsActivas = ots.filter(o => !['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','FACTURADA','LIQUIDADA','CANCELADA'].includes(o.estado));
-                  const equipos = getEquiposByRestaurante(r.id);
-                  return (
-                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <Building2 className="h-4 w-4 text-gray-500" />
+          <div className="grid grid-cols-3 gap-6">
+
+            {/* OTs POR ESTADO */}
+            <div className="col-span-2 rounded-xl border bg-white shadow-sm">
+              <div className="border-b px-6 py-4 flex items-center justify-between">
+                <h2 className="font-bold text-[#0D0D0D]">OTs activas por estado</h2>
+                <Link href="/admin/ots" className="text-xs font-bold text-[#2698D1] hover:underline flex items-center gap-1">
+                  Ver todas <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <div className="p-6">
+                {Object.keys(porEstado).length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-4">Sin OTs activas</p>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(porEstado)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([estado, count]) => (
+                        <div key={estado} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="text-sm text-gray-700 font-medium min-w-0 truncate">
+                              {estado.replace(/_/g, ' ')}
+                            </span>
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-2 bg-[#2698D1] rounded-full"
+                                style={{ width: `${(count / otsActivas.length) * 100}%` }}
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-[#0D0D0D]">{r.nombre}</p>
-                            <p className="text-xs text-gray-400">{r.razonSocial}</p>
-                          </div>
+                          <span className="ml-3 text-sm font-bold text-[#0D0D0D] w-6 text-right">{count}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm text-gray-700">{r.contactoNombre}</p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                          <Phone className="h-3 w-3" />{r.telefono}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="flex items-center gap-1 text-sm text-gray-600">
-                          <MapPin className="h-3.5 w-3.5 text-gray-400" />{r.zona}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${TIER_COLOR[r.tier] ?? 'bg-gray-100 text-gray-600'}`}>
-                          {r.tier}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-700 text-center">{r.cantidadLocales}</td>
-                      <td className="px-4 py-4">
-                        {otsActivas.length > 0 ? (
-                          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700">
-                            {otsActivas.length} activas
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="flex items-center gap-1 text-sm text-gray-600">
-                          <Layers className="h-3.5 w-3.5 text-gray-400" />{equipos.length}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <Link href={`/admin/restaurantes/${r.id}`}
-                          className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:border-[#2698D1] hover:text-[#2698D1] transition-colors whitespace-nowrap">
-                          Ver legajo <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* OTs CERRADAS RESUMEN */}
+              <div className="border-t px-6 py-4 grid grid-cols-3 gap-4">
+                {[
+                  { label: 'Cerradas conformes',  value: OTS.filter(o => o.estado === 'CERRADA_CONFORME').length,          icon: CheckCircle2, color: 'text-green-600' },
+                  { label: 'Sin conformidad',      value: OTS.filter(o => o.estado === 'CERRADA_SIN_CONFORMIDAD').length,   icon: XCircle,      color: 'text-red-500' },
+                  { label: 'Canceladas',           value: OTS.filter(o => o.estado === 'CANCELADA').length,                icon: Clock,        color: 'text-gray-400' },
+                ].map(item => (
+                  <div key={item.label} className="text-center">
+                    <item.icon className={`h-5 w-5 mx-auto mb-1 ${item.color}`} />
+                    <p className={`text-xl font-black ${item.color}`}>{item.value}</p>
+                    <p className="text-xs text-gray-400">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PANEL DERECHO */}
+            <div className="space-y-5">
+
+              {/* ALERTAS COMPLIANCE */}
+              <div className="rounded-xl border bg-white shadow-sm">
+                <div className="border-b px-5 py-4 flex items-center justify-between">
+                  <h2 className="font-bold text-[#0D0D0D] text-sm">Compliance</h2>
+                  <Link href="/admin/compliance" className="text-xs font-bold text-[#2698D1] hover:underline">Ver →</Link>
+                </div>
+                <div className="p-5 space-y-3">
+                  {tecnicosAlerta.length === 0 ? (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-sm font-medium">Todo en orden</span>
+                    </div>
+                  ) : (
+                    tecnicosAlerta.slice(0, 4).map(t => (
+                      <div key={t.id} className="flex items-start gap-2">
+                        <AlertTriangle className={`h-4 w-4 mt-0.5 shrink-0 ${t.certStatusGlobal === 'vencida' ? 'text-red-500' : 'text-amber-500'}`} />
+                        <div>
+                          <p className="text-xs font-bold text-[#0D0D0D]">{t.nombre}</p>
+                          <p className={`text-xs ${t.certStatusGlobal === 'vencida' ? 'text-red-500' : 'text-amber-600'}`}>
+                            Cert. {t.certStatusGlobal === 'vencida' ? 'vencida' : 'por vencer'}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {tecnicosAlerta.length > 4 && (
+                    <p className="text-xs text-gray-400">+{tecnicosAlerta.length - 4} más</p>
+                  )}
+                </div>
+              </div>
+
+              {/* URGENCIAS CRÍTICAS */}
+              <div className="rounded-xl border bg-white shadow-sm">
+                <div className="border-b px-5 py-4 flex items-center justify-between">
+                  <h2 className="font-bold text-[#0D0D0D] text-sm">OTs críticas</h2>
+                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
+                    {urgenciaCritica.length}
+                  </span>
+                </div>
+                <div className="p-5 space-y-3">
+                  {urgenciaCritica.length === 0 ? (
+                    <p className="text-xs text-gray-400">Sin OTs críticas activas</p>
+                  ) : (
+                    urgenciaCritica.slice(0, 4).map(ot => (
+                      <div key={ot.id} className="flex items-start gap-2">
+                        <div className="mt-1 h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold text-[#0D0D0D]">{ot.equipoTipo}</p>
+                          <p className="text-xs text-gray-400 truncate max-w-[160px]">{ot.descripcionFalla}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* TÉCNICOS */}
+              <div className="rounded-xl border bg-white shadow-sm p-5">
+                <h2 className="font-bold text-[#0D0D0D] text-sm mb-3">Técnicos</h2>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Activos</span>
+                    <span className="text-xs font-bold text-green-600">{tecnicosActivos.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Bloqueados</span>
+                    <span className="text-xs font-bold text-red-500">{tecnicosBloqueados.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Con alertas cert.</span>
+                    <span className="text-xs font-bold text-amber-600">{tecnicosAlerta.length}</span>
+                  </div>
+                </div>
+                <Link href="/admin/tecnicos"
+                  className="mt-4 flex items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-xs font-bold text-gray-600 hover:border-[#2698D1] hover:text-[#2698D1] transition-colors">
+                  Ver técnicos <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+            </div>
           </div>
 
         </main>

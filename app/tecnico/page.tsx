@@ -12,7 +12,7 @@ const MIS_OTS = OTS.filter(o => o.tecnicoId === TECNICO.id);
 
 export default function TecnicoDashboard() {
   const activas = MIS_OTS.filter(o => !['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','CANCELADA','LIQUIDADA'].includes(o.estado));
-  const hoy = MIS_OTS.filter(o => o.fechaVisitaProgramada?.startsWith('2024-03-12'));
+  const hoy = MIS_OTS.filter(o => o.fechaVisitaProgramada?.startsWith(new Date().toISOString().slice(0, 10)));
 
   return (
     <div className="flex min-h-screen bg-gray-50">
