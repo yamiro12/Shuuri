@@ -36,7 +36,7 @@ export default function AdminRestaurantes() {
           {/* TÍTULO */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-black text-[#0D0D0D]">Restaurantes</h1>
+              <h1 className="text-2xl font-black text-[#0D0D0D]">Gastronómicos</h1>
               <p className="text-gray-500">{filtrados.length} de {RESTAURANTES.length} establecimientos</p>
             </div>
             <Link href="/restaurante/onboarding"
@@ -89,7 +89,7 @@ export default function AdminRestaurantes() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Restaurante</th>
+                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Gastronómico</th>
                   <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Contacto</th>
                   <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Zona</th>
                   <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Tier</th>

@@ -372,7 +372,7 @@ export default function TecnicoDashboardPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   <tr>
-                    <th className="px-6 py-3 text-left">Restaurante</th>
+                    <th className="px-6 py-3 text-left">Gastronómico</th>
                     <th className="px-6 py-3 text-left">Activo</th>
                     <th className="px-6 py-3 text-left">Hora visita</th>
                     <th className="px-6 py-3 text-left">Estado</th>

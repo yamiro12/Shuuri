@@ -335,7 +335,7 @@ export default function ProveedorDashboard() {
                       <tr className="border-b bg-gray-50 text-left">
                         <th className="px-4 py-3 text-xs font-semibold text-gray-500">Número</th>
                         <th className="px-4 py-3 text-xs font-semibold text-gray-500">Tipo</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-gray-500">Restaurante</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-500">Gastronómico</th>
                         <th className="px-4 py-3 text-xs font-semibold text-gray-500">Importe ARS</th>
                         <th className="px-4 py-3 text-xs font-semibold text-gray-500">Estado</th>
                         <th className="px-4 py-3 text-xs font-semibold text-gray-500">Fecha</th>

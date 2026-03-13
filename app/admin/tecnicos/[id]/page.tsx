@@ -183,7 +183,7 @@ export default function AdminTecnicoDetalle({ params }: { params: { id: string }
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      {['OT', 'Restaurante', 'Rubro', 'Estado', 'Fecha', 'Monto', ''].map(h => (
+                      {['OT', 'Gastronómico', 'Rubro', 'Estado', 'Fecha', 'Monto', ''].map(h => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">{h}</th>
                       ))}
                     </tr>

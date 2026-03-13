@@ -144,7 +144,7 @@ export default function AdminOTDetalle() {
               <section className="rounded-xl border bg-white shadow-sm p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Building2 className="h-4 w-4 text-[#2698D1]" />
-                  <h2 className="font-bold text-[#0D0D0D] text-sm">Restaurante</h2>
+                  <h2 className="font-bold text-[#0D0D0D] text-sm">Gastronómico</h2>
                 </div>
                 {restaurante ? (
                   <div className="space-y-2">
@@ -164,7 +164,7 @@ export default function AdminOTDetalle() {
                     </Link>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400">Restaurante no encontrado</p>
+                  <p className="text-xs text-gray-400">Gastronómico no encontrado</p>
                 )}
               </section>
 

@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 const PORTAL_LABELS: Record<UserRole, string> = {
-  RESTAURANTE:  'Restaurante',
+  RESTAURANTE:  'Gastronómico',
   TECNICO:      'Técnico',
   PROVEEDOR:    'Proveedor',
   SHUURI_ADMIN: 'Admin',
@@ -54,7 +54,7 @@ const PAGE_LABELS: Record<string, string> = {
   '/admin':                          'Dashboard',
   '/admin/ots':                      'Todas las OTs',
   '/admin/tecnicos':                 'Técnicos',
-  '/admin/restaurantes':             'Restaurantes',
+  '/admin/restaurantes':             'Gastronómicos',
   '/admin/proveedores':              'Proveedores',
   '/admin/compliance':               'Compliance',
   '/admin/liquidaciones':            'Liquidaciones',

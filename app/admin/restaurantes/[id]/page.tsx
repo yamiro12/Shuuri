@@ -39,7 +39,7 @@ export default function AdminRestauranteDetalle({ params }: { params: { id: stri
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 sidebar-push p-8">
-        <p className="text-gray-500 mb-4">Restaurante no encontrado.</p>
+        <p className="text-gray-500 mb-4">Gastronómico no encontrado.</p>
         <Link href="/admin/restaurantes" className="text-[#2698D1] text-sm font-bold">← Volver</Link>
       </div>
     </div>
@@ -63,7 +63,7 @@ export default function AdminRestauranteDetalle({ params }: { params: { id: stri
 
           <Link href="/admin/restaurantes"
             className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#0D0D0D] mb-6 w-fit">
-            <ArrowLeft className="h-4 w-4" /> Restaurantes
+            <ArrowLeft className="h-4 w-4" /> Gastronómicos
           </Link>
 
           {/* HEADER */}

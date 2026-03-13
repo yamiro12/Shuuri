@@ -54,7 +54,7 @@ export default function AdminEstadisticas() {
 
   function exportCrecimiento() {
     downloadCSV(
-      ['Mes', 'Restaurantes nuevos', 'Técnicos nuevos', 'Proveedores nuevos'],
+      ['Mes', 'Gastronómicos nuevos', 'Técnicos nuevos', 'Proveedores nuevos'],
       crecimientoFiltrado.map(m => [m.mes, String(m.restaurantes), String(m.tecnicos), String(m.proveedores)]),
       'crecimiento_plataforma.csv'
     );

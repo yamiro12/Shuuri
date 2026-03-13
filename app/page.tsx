@@ -8,7 +8,7 @@ import { Wrench, UtensilsCrossed, Package, ShieldCheck, ChevronRight, ArrowRight
 const PERFILES = [
   {
     rol:         'RESTAURANTE' as const,
-    titulo:      'Restaurante / Cadena',
+    titulo:      'Gastronómico / Cadena',
     subtitulo:   'Reportá fallas, seguí tus OTs, gestioná equipos',
     icon:        UtensilsCrossed,
     color:       '#2698D1',
@@ -215,10 +215,10 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             {[
-              { paso: '1', label: 'Restaurante reporta falla',     ruta: '/restaurante/reportar',    color: '#2698D1' },
+              { paso: '1', label: 'Gastronómico reporta falla',     ruta: '/restaurante/reportar',    color: '#2698D1' },
               { paso: '2', label: 'Admin asigna técnico',           ruta: '/admin/ots',               color: '#7c3aed' },
               { paso: '3', label: 'Técnico ejecuta la visita',      ruta: '/tecnico/ots',             color: '#0D0D0D' },
-              { paso: '4', label: 'Restaurante aprueba cotización', ruta: '/restaurante/ots',         color: '#2698D1' },
+              { paso: '4', label: 'Gastronómico aprueba cotización', ruta: '/restaurante/ots',         color: '#2698D1' },
               { paso: '5', label: 'Admin liquida la OT',            ruta: '/admin/liquidaciones',     color: '#7c3aed' },
             ].map((p, i, arr) => (
               <React.Fragment key={p.paso}>

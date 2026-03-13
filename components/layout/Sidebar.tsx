@@ -102,14 +102,14 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
       group: 'Actores',
       items: [
         { label: 'Técnicos',     href: '/admin/tecnicos',     icon: Wrench },
-        { label: 'Restaurantes', href: '/admin/restaurantes', icon: Utensils },
+        { label: 'Gastronómicos', href: '/admin/restaurantes', icon: Utensils },
         { label: 'Proveedores',  href: '/admin/proveedores',  icon: Truck },
       ],
     },
     {
       group: 'Alta de actores',
       items: [
-        { label: 'Alta Restaurante', href: '/restaurante/onboarding', icon: PlusCircle },
+        { label: 'Alta Gastronómico', href: '/restaurante/onboarding', icon: PlusCircle },
         { label: 'Alta Técnico',     href: '/tecnico/onboarding',     icon: PlusCircle },
         { label: 'Alta Proveedor',   href: '/proveedor/onboarding',   icon: PlusCircle },
       ],

@@ -515,7 +515,7 @@ export default function AdminOTs() {
             <table className="w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
-                  {['OT', 'Estado', 'Urgencia', 'Equipo / Rubro', 'Restaurante', 'Técnico', 'Fecha', 'Acciones'].map(h => (
+                  {['OT', 'Estado', 'Urgencia', 'Equipo / Rubro', 'Gastronómico', 'Técnico', 'Fecha', 'Acciones'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500">{h}</th>
                   ))}
                 </tr>

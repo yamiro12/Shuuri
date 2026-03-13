@@ -55,7 +55,7 @@ const CONDICION_IVA_LABELS: Record<CondicionIVA, string> = {
 };
 
 const TIPO_ESTABLECIMIENTO_LABELS: Record<TipoEstablecimiento, string> = {
-  restaurante: "Restaurante",
+  restaurante: "Gastronómico",
   bar_cafe: "Bar / Café",
   hotel: "Hotel",
   catering_dark_kitchen: "Catering / Dark Kitchen",
