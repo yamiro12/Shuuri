@@ -14,6 +14,12 @@ import type {
   OrdenCompra,
   Liquidacion,
   Rubro,
+  ProductoMarketplace,
+  Repuesto,
+  Insumo,
+  Remate,
+  Activo,
+  OrdenCompraRepuesto,
 } from '../types/shuuri';
 
 // ─── RESTAURANTES ─────────────────────────────────────────────────────────────
@@ -1614,4 +1620,606 @@ export function tecnicoPuedeAtenderRubro(tecnico: Tecnico, rubro: Rubro): boolea
 
 export function getTecnicosDisponiblesParaRubro(rubro: Rubro): Tecnico[] {
   return TECNICOS.filter(t => tecnicoPuedeAtenderRubro(t, rubro));
+}
+
+// ─── MOCK MARKETPLACE ────────────────────────────────────────────────────────
+
+export const PROVEEDORES_MKT: Proveedor[] = [
+  {
+    id: 'PM001', nombre: 'FridgeMax Argentina', razonSocial: 'FridgeMax S.A.', cuit: '30-71234567-0',
+    telefono: '011-4555-0001', email: 'ventas@fridgemax.com.ar', direccion: 'Av. Corrientes 1234, CABA',
+    rubros: ['frio_comercial'], zonaDespacho: ['CABA', 'GBA'],
+    tiempoEntregaHs: 24, esShuuriPro: true,
+    tiposSeller: ['fabricante'], shuuriPro: true, tiendaOficial: true,
+    esProveedorInsumos: false,
+  },
+  {
+    id: 'PM002', nombre: 'ThermoGas Pro', razonSocial: 'ThermoGas Pro S.R.L.', cuit: '30-71234568-1',
+    telefono: '011-4555-0002', email: 'ventas@thermogaspro.com', direccion: 'Av. San Martín 567, CABA',
+    rubros: ['gas_combustion', 'calor_comercial'], zonaDespacho: ['CABA', 'GBA', 'La Plata'],
+    tiempoEntregaHs: 48, esShuuriPro: false,
+    tiposSeller: ['representante', 'importador'], shuuriPro: false, tiendaOficial: true,
+    esProveedorInsumos: false,
+  },
+  {
+    id: 'PM003', nombre: 'CaféTech Soluciones', razonSocial: 'CaféTech S.A.S.', cuit: '30-71234569-2',
+    telefono: '011-4555-0003', email: 'info@cafetech.com.ar', direccion: 'Palermo, CABA',
+    rubros: ['cafe_bebidas'], zonaDespacho: ['CABA'],
+    tiempoEntregaHs: 12, esShuuriPro: true,
+    tiposSeller: ['distribuidor'], shuuriPro: true, tiendaOficial: false,
+    esProveedorInsumos: false,
+  },
+  {
+    id: 'PM004', nombre: 'InsumoRest', razonSocial: 'InsumoRest S.A.', cuit: '30-71234570-3',
+    telefono: '011-4555-0004', email: 'pedidos@insumorest.com.ar', direccion: 'Mataderos, CABA',
+    rubros: ['maquinaria_preparacion'], zonaDespacho: ['CABA', 'GBA'],
+    tiempoEntregaHs: 24, esShuuriPro: false,
+    tiposSeller: ['revendedor'], shuuriPro: false, tiendaOficial: false,
+    esProveedorInsumos: true, categoriaInsumo: 'comestibles',
+  },
+  {
+    id: 'PM005', nombre: 'CleanPro Gastro', razonSocial: 'CleanPro S.R.L.', cuit: '30-71234571-4',
+    telefono: '011-4555-0005', email: 'ventas@cleanpro.com.ar', direccion: 'Avellaneda, GBA Sur',
+    rubros: ['lavado_comercial'], zonaDespacho: ['CABA', 'GBA'],
+    tiempoEntregaHs: 24, esShuuriPro: false,
+    tiposSeller: ['distribuidor'], shuuriPro: false, tiendaOficial: false,
+    esProveedorInsumos: true, categoriaInsumo: 'limpieza',
+  },
+  {
+    id: 'PM006', nombre: 'POS & Tech Store', razonSocial: 'POS Tech S.A.', cuit: '30-71234572-5',
+    telefono: '011-4555-0006', email: 'ventas@postech.com.ar', direccion: 'Microcentro, CABA',
+    rubros: ['pos_it'], zonaDespacho: ['CABA', 'GBA', 'Rosario', 'Córdoba'],
+    tiempoEntregaHs: 72, esShuuriPro: false,
+    tiposSeller: ['importador', 'revendedor'], shuuriPro: false, tiendaOficial: false,
+    esProveedorInsumos: false,
+  },
+];
+
+export const PRODUCTOS_MKT: ProductoMarketplace[] = [
+  {
+    id: 'PROD001', nombre: 'Cámara Frigorífica Vertical 400L', marca: 'FridgeMax',
+    precio: 1850, descripcion: 'Cámara frigorífica vertical acero inox, temperatura 0-8°C, puerta vidrio. Ideal para restaurantes y bares.',
+    categoria: 'Refrigeración', subcategoria: 'Cámaras verticales',
+    rubro: 'frio_comercial', proveedorId: 'PM001',
+    tipoSeller: ['fabricante'], tiendaOficial: true,
+    condicion: 'nuevo', stock: 8,
+    atributos: { capacidad: '400L', temperatura: '0-8°C', tension: '220V', garantia: '24 meses' },
+    logistica: { codigoProductoInterno: 'FM-CAM-V400', ean13: '7890001000011', pesoNeto: 62, pesoBruto: 75, largo: 70, ancho: 72, alto: 198, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD002', nombre: 'Mesa Fría Bajo Mesada 2 puertas', marca: 'FridgeMax',
+    precio: 1250, descripcion: 'Mesa fría bajo mesada con 2 puertas, acero inox 304, compresor Embraco.',
+    categoria: 'Refrigeración', subcategoria: 'Mesas frías',
+    rubro: 'frio_comercial', proveedorId: 'PM001',
+    tipoSeller: ['fabricante'], tiendaOficial: true,
+    condicion: 'nuevo', stock: 5,
+    atributos: { puertas: '2', material: 'Acero inox 304', compresor: 'Embraco', garantia: '12 meses' },
+    logistica: { codigoProductoInterno: 'FM-MFB-2P', ean13: '7890001000028', pesoNeto: 48, pesoBruto: 58, largo: 140, ancho: 70, alto: 85, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD003', nombre: 'Quemador Industrial 6 hornallas', marca: 'ThermoGas',
+    precio: 920, descripcion: 'Quemador industrial 6 hornallas dobles, estructura acero, parrillas fundición. Apto gas natural y envasado.',
+    categoria: 'Cocción', subcategoria: 'Quemadores',
+    rubro: 'gas_combustion', proveedorId: 'PM002',
+    tipoSeller: ['representante'], tiendaOficial: true,
+    condicion: 'nuevo', stock: 12,
+    atributos: { hornallas: '6', gas: 'Natural/Envasado', parrillas: 'Fundición' },
+    logistica: { codigoProductoInterno: 'TG-QI-6H', ean13: '7890002000013', pesoNeto: 55, pesoBruto: 65, largo: 120, ancho: 70, alto: 28, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD004', nombre: 'Horno Convector 10 bandejas', marca: 'ThermoGas',
+    precio: 2400, descripcion: 'Horno convector a gas 10 bandejas GN 1/1, control digital, vapor integrado.',
+    categoria: 'Cocción', subcategoria: 'Hornos',
+    rubro: 'calor_comercial', proveedorId: 'PM002',
+    tipoSeller: ['importador'], tiendaOficial: true,
+    condicion: 'nuevo', stock: 3,
+    atributos: { bandejas: '10 GN 1/1', control: 'Digital', vapor: 'Integrado', garantia: '18 meses' },
+    logistica: { codigoProductoInterno: 'TG-HC-10B', ean13: '7890002000020', pesoNeto: 78, pesoBruto: 95, largo: 85, ancho: 77, alto: 62, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', posicionArancelaria: '8516.60.90', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD005', nombre: 'Cafetera Espresso Profesional 2 grupos', marca: 'La Marzocco',
+    precio: 4200, descripcion: 'Cafetera espresso profesional 2 grupos, caldera doble, control PID. Estado: showroom.',
+    categoria: 'Café y Bebidas', subcategoria: 'Cafeteras espresso',
+    rubro: 'cafe_bebidas', proveedorId: 'PM003',
+    tipoSeller: ['distribuidor'], tiendaOficial: false,
+    condicion: 'usado', stock: 2,
+    atributos: { grupos: '2', caldera: 'Doble', control: 'PID', estado: 'Showroom' },
+    logistica: { codigoProductoInterno: 'CT-LM-2G', ean13: '7890003000017', pesoNeto: 35, pesoBruto: 42, largo: 80, ancho: 55, alto: 55, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', posicionArancelaria: '8516.71.00', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD006', nombre: 'Molinillo de Café On Demand', marca: 'Mazzer',
+    precio: 680, descripcion: 'Molinillo on demand, muelas planas 64mm, display digital. Mínimas horas de uso.',
+    categoria: 'Café y Bebidas', subcategoria: 'Molinillos',
+    rubro: 'cafe_bebidas', proveedorId: 'PM003',
+    tipoSeller: ['distribuidor'], tiendaOficial: false,
+    condicion: 'saldo', stock: 3,
+    atributos: { muelas: '64mm planas', display: 'Digital', horas: 'Bajas' },
+    logistica: { codigoProductoInterno: 'CT-MZ-OD', ean13: '7890003000024', pesoNeto: 8, pesoBruto: 11, largo: 28, ancho: 20, alto: 38, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', posicionArancelaria: '8509.40.00', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD007', nombre: 'Cortadora de Fiambre 300mm Industrial', marca: 'Berkel',
+    precio: 750, descripcion: 'Cortadora de fiambre industrial hoja 300mm, motor 170W, base anodizada.',
+    categoria: 'Preparación', subcategoria: 'Cortadoras',
+    rubro: 'maquinaria_preparacion', proveedorId: 'PM004',
+    tipoSeller: ['revendedor'], tiendaOficial: false,
+    condicion: 'usado', stock: 1,
+    atributos: { hoja: '300mm', motor: '170W', base: 'Anodizada' },
+    logistica: { codigoProductoInterno: 'IR-BK-300', ean13: '7890004000011', pesoNeto: 14, pesoBruto: 18, largo: 55, ancho: 40, alto: 35, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Países Bajos', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD008', nombre: 'Lavavajillas Frontal 50x50', marca: 'Winterhalter',
+    precio: 3100, descripcion: 'Lavavajillas frontal ciclo 120s, consumo agua 2.8L/ciclo, conexión 380V trifásico.',
+    categoria: 'Lavado', subcategoria: 'Lavavajillas',
+    rubro: 'lavado_comercial', proveedorId: 'PM005',
+    tipoSeller: ['distribuidor'], tiendaOficial: false,
+    condicion: 'nuevo', stock: 4,
+    atributos: { ciclo: '120s', agua: '2.8L/ciclo', tension: '380V trifásico', garantia: '12 meses' },
+    logistica: { codigoProductoInterno: 'CP-WH-F5050', ean13: '7890005000015', pesoNeto: 52, pesoBruto: 64, largo: 60, ancho: 60, alto: 82, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Alemania', posicionArancelaria: '8422.11.00', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD009', nombre: 'Terminal POS Touch 15"', marca: 'Epson',
+    precio: 520, descripcion: 'Terminal POS táctil 15", procesador J1900, SSD 128GB, Windows 10 IoT.',
+    categoria: 'Tecnología', subcategoria: 'Terminales POS',
+    rubro: 'pos_it', proveedorId: 'PM006',
+    tipoSeller: ['importador'], tiendaOficial: false,
+    condicion: 'nuevo', stock: 15,
+    atributos: { pantalla: '15" touch', procesador: 'J1900', almacenamiento: 'SSD 128GB', os: 'Windows 10 IoT' },
+    logistica: { codigoProductoInterno: 'PT-EPS-T15', ean13: '7890006000012', pesoNeto: 4.2, pesoBruto: 5.5, largo: 42, ancho: 32, alto: 18, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'China', posicionArancelaria: '8471.60.90', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD010', nombre: 'Cámara Frigorífica Horizontal 200L (SALDO)', marca: 'Frider',
+    precio: 480, descripcion: 'Cámara horizontal 200L, leve uso, puerta superior. Precio liquidación por renovación de stock.',
+    categoria: 'Refrigeración', subcategoria: 'Cámaras horizontales',
+    rubro: 'frio_comercial', proveedorId: 'PM001',
+    tipoSeller: ['fabricante'], tiendaOficial: true,
+    condicion: 'saldo', stock: 2,
+    atributos: { capacidad: '200L', puerta: 'Superior', estado: 'Leve uso' },
+    logistica: { codigoProductoInterno: 'FM-CFH-200', ean13: '7890001000035', pesoNeto: 38, pesoBruto: 45, largo: 95, ancho: 60, alto: 85, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD011', nombre: 'Balanza Electrónica 15kg Homologada', marca: 'Toledo',
+    precio: 290, descripcion: 'Balanza de mostrador 15kg, homologada INTI, plataforma acero inox, pantalla LCD.',
+    categoria: 'Preparación', subcategoria: 'Balanzas',
+    rubro: 'maquinaria_preparacion', proveedorId: 'PM004',
+    tipoSeller: ['revendedor'], tiendaOficial: false,
+    condicion: 'nuevo', stock: 10,
+    atributos: { capacidad: '15kg', homologada: 'INTI', plataforma: 'Acero inox' },
+    logistica: { codigoProductoInterno: 'IR-TOL-15K', ean13: '7890004000028', pesoNeto: 3.2, pesoBruto: 4.0, largo: 35, ancho: 28, alto: 12, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Brasil', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'PROD012', nombre: 'Impresora Fiscal Epson TM-T900FA', marca: 'Epson',
+    precio: 340, descripcion: 'Impresora fiscal térmica, velocidad 300mm/s, conectividad USB + Ethernet. Homologada AFIP.',
+    categoria: 'Tecnología', subcategoria: 'Impresoras fiscales',
+    rubro: 'pos_it', proveedorId: 'PM006',
+    tipoSeller: ['importador'], tiendaOficial: false,
+    condicion: 'nuevo', stock: 20,
+    atributos: { velocidad: '300mm/s', conectividad: 'USB + Ethernet', homologada: 'AFIP' },
+    logistica: { codigoProductoInterno: 'PT-EPS-T900', ean13: '7890006000029', pesoNeto: 1.8, pesoBruto: 2.6, largo: 30, ancho: 22, alto: 18, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'China', posicionArancelaria: '8443.32.19', temperaturaAlmacenamiento: 'ambiente' },
+  },
+];
+
+export const REPUESTOS_MKT: Repuesto[] = [
+  {
+    id: 'REP001', nombre: 'Compresor Embraco 1/3 HP R404A', marca: 'Embraco',
+    precio: 320, descripcion: 'Compresor hermético 1/3 HP para refrigeración comercial, gas R404A.',
+    proveedorId: 'PM001', rubro: 'frio_comercial',
+    compatibleCon: ['PROD001', 'PROD002', 'PROD010'],
+    compatibleMarcas: ['FridgeMax', 'Frider', 'Iarp'],
+    compatibleModelos: ['CF-200', 'CF-300', 'CF-400'],
+    stock: 25,
+    compatibleActivosIds: ['act-002'],
+    reemplazaA: 'EMB-FH2480Z-OEM',
+    logistica: { codigoProductoInterno: 'REP-EMB-13HP', ean13: '7891000001011', pesoNeto: 4.8, pesoBruto: 6.0, largo: 28, ancho: 22, alto: 24, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Brasil', posicionArancelaria: '8414.30.19', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP002', nombre: 'Termostato Digital -25/+8°C', marca: 'Carel',
+    precio: 85, descripcion: 'Controlador electrónico temperatura -25 a +8°C, sonda NTC incluida.',
+    proveedorId: 'PM001', rubro: 'frio_comercial',
+    compatibleCon: ['PROD001', 'PROD002'],
+    compatibleMarcas: ['FridgeMax', 'Frider', 'Iarp', 'Zanussi'],
+    compatibleModelos: [],
+    stock: 40,
+    compatibleActivosIds: ['act-002'],
+    reemplazaA: 'CAREL-IR33-OEM',
+    logistica: { codigoProductoInterno: 'REP-CAREL-NTC', ean13: '7891000001028', pesoNeto: 0.18, pesoBruto: 0.28, largo: 15, ancho: 10, alto: 5, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP003', nombre: 'Válvula Solenoide Gas 1/2"', marca: 'Brahma',
+    precio: 65, descripcion: 'Válvula solenoide para gas natural/envasado 1/2", 220V, normalmente cerrada.',
+    proveedorId: 'PM002', rubro: 'gas_combustion',
+    compatibleCon: ['PROD003'],
+    compatibleMarcas: ['ThermoGas', 'Ascaso', 'Irinox'],
+    compatibleModelos: [],
+    stock: 30,
+    codigoFabricante: 'BRH-SOL-12',
+    compatibleActivosIds: ['act-001'],
+    reemplazaA: 'BRH-SOL-12-LEGACY',
+    logistica: { codigoProductoInterno: 'REP-BRH-VS12', ean13: '7891000001035', pesoNeto: 0.35, pesoBruto: 0.5, largo: 12, ancho: 8, alto: 6, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP004', nombre: 'Quemador de Piloto Universal', marca: 'Polidoro',
+    precio: 28, descripcion: 'Quemador piloto universal apto gas natural y envasado, con termopar incluido.',
+    proveedorId: 'PM002', rubro: 'gas_combustion',
+    compatibleCon: ['PROD003'],
+    compatibleMarcas: ['ThermoGas', 'Garland', 'Zanussi'],
+    compatibleModelos: [],
+    stock: 60,
+    compatibleActivosIds: ['act-001', 'act-005'],
+    reemplazaA: 'PLT-UNIV-OEM',
+    logistica: { codigoProductoInterno: 'REP-PLT-UNIV', ean13: '7891000001042', pesoNeto: 0.12, pesoBruto: 0.18, largo: 10, ancho: 8, alto: 4, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP005', nombre: 'Grupo Portafiltro 58mm E61', marca: 'La Marzocco',
+    precio: 145, descripcion: 'Portafiltro original 58mm compatible E61, doble ala, inox pulido.',
+    proveedorId: 'PM003', rubro: 'cafe_bebidas',
+    compatibleCon: ['PROD005'],
+    compatibleMarcas: ['La Marzocco', 'Rocket', 'ECM', 'Nuova Simonelli'],
+    compatibleModelos: ['Linea PB', 'GB5', 'GS3'],
+    stock: 15,
+    codigoFabricante: 'LM-PF-58',
+    compatibleActivosIds: ['act-004'],
+    reemplazaA: 'LM-PF-58-V1',
+    logistica: { codigoProductoInterno: 'REP-LM-PF58', ean13: '7891000001059', pesoNeto: 0.55, pesoBruto: 0.75, largo: 18, ancho: 12, alto: 8, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP006', nombre: 'Junta Grupo Espresso 73x57x8.5mm', marca: 'Genérico',
+    precio: 8, descripcion: 'Junta de grupo silicona food-grade 73x57x8.5mm, compatible máquinas E61.',
+    proveedorId: 'PM003', rubro: 'cafe_bebidas',
+    compatibleCon: ['PROD005'],
+    compatibleMarcas: ['La Marzocco', 'Rocket', 'ECM', 'Rancilio', 'Faema'],
+    compatibleModelos: [],
+    stock: 200,
+    compatibleActivosIds: ['act-004'],
+    reemplazaA: 'JNT-E61-STD',
+    logistica: { codigoProductoInterno: 'REP-JNT-E61', ean13: '7891000001066', pesoNeto: 0.02, pesoBruto: 0.05, largo: 8, ancho: 8, alto: 2, tipoPackaging: 'unitario', unidadVenta: 'unidad', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP007', nombre: 'Bomba Dosificadora Lavavajillas 12W', marca: 'Fluid-O-Tech',
+    precio: 95, descripcion: 'Bomba dosificadora detergente/abrillantador 12W, 220V, cabezal PP.',
+    proveedorId: 'PM005', rubro: 'lavado_comercial',
+    compatibleCon: ['PROD008'],
+    compatibleMarcas: ['Winterhalter', 'Electrolux', 'Hobart'],
+    compatibleModelos: ['UC-S', 'UC-M', 'GS302'],
+    stock: 18,
+    compatibleActivosIds: ['act-003'],
+    reemplazaA: 'FOT-DOS-12W-OEM',
+    logistica: { codigoProductoInterno: 'REP-FOT-DOS12', ean13: '7891000001073', pesoNeto: 0.45, pesoBruto: 0.65, largo: 14, ancho: 10, alto: 8, tipoPackaging: 'caja', unidadVenta: 'unidad', origen: 'importado', paisOrigen: 'Italia', temperaturaAlmacenamiento: 'ambiente' },
+  },
+  {
+    id: 'REP008', nombre: 'Rollo Papel Térmico 80x80mm (Pack x10)', marca: 'Genérico',
+    precio: 22, descripcion: 'Pack 10 rollos papel térmico BPA-free 80x80mm. Apto impresoras fiscales y POS.',
+    proveedorId: 'PM006', rubro: 'pos_it',
+    compatibleCon: ['PROD009', 'PROD012'],
+    compatibleMarcas: ['Epson', 'Star', 'Bixolon', 'Custom'],
+    compatibleModelos: [],
+    stock: 500,
+    codigoFabricante: 'TH-80x80-10',
+    compatibleActivosIds: [],
+    reemplazaA: 'TH-80x80-V1',
+    logistica: { codigoProductoInterno: 'REP-TH-8080', ean13: '7891000001080', pesoNeto: 0.9, pesoBruto: 1.1, largo: 20, ancho: 10, alto: 10, tipoPackaging: 'caja', unidadVenta: 'pack x10', origen: 'nacional', paisOrigen: 'Argentina', temperaturaAlmacenamiento: 'ambiente' },
+  },
+];
+
+export const INSUMOS_MKT: Insumo[] = [
+  {
+    id: 'INS001', nombre: 'Aceite de Girasol Premium 20L', marca: 'Natura',
+    precio: 48, unidad: 'Bidón 20L',
+    descripcion: 'Aceite girasol alto oleico prensado en frío, ideal fritura profunda. Punto de humo 230°C.',
+    categoria: 'comestibles', proveedorId: 'PM004',
+    esPerecible: false, stock: 40,
+  },
+  {
+    id: 'INS002', nombre: 'Harina 000 Premezcla Reforzada 25kg', marca: 'Pureza',
+    precio: 32, unidad: 'Bolsa 25kg',
+    descripcion: 'Harina 000 reforzada con gluten, ideal masas de pizza y pan artesanal.',
+    categoria: 'comestibles', proveedorId: 'PM004',
+    esPerecible: false, stock: 80,
+  },
+  {
+    id: 'INS003', nombre: 'Gaseosa Soda Cítrica Bag-in-Box 10L', marca: 'Schweppes',
+    precio: 55, unidad: 'Bag-in-box 10L',
+    descripcion: 'Soda cítrica en bag-in-box lista para conectar a dispensador. Rendimiento aprox. 80 porciones.',
+    categoria: 'bebidas', proveedorId: 'PM004',
+    esPerecible: true, stock: 60,
+  },
+  {
+    id: 'INS004', nombre: 'Café Blend Espresso 1kg', marca: 'Cabrales',
+    precio: 18, unidad: 'Bolsa 1kg',
+    descripcion: 'Blend 80/20 arábica/robusta tostado oscuro. Ideal para maquinas espresso comerciales.',
+    categoria: 'bebidas', proveedorId: 'PM003',
+    esPerecible: false, stock: 120,
+  },
+  {
+    id: 'INS005', nombre: 'Vasos Descartables PP 300cc (Pack x1000)', marca: 'Clarpack',
+    precio: 38, unidad: 'Pack x1000',
+    descripcion: 'Vasos PP transparente 300cc aptos microondas, sin BPA. Ideales para take-away.',
+    categoria: 'descartables', proveedorId: 'PM004',
+    esPerecible: false, stock: 200,
+  },
+  {
+    id: 'INS006', nombre: 'Envases Comida para Llevar 750cc (Pack x500)', marca: 'Biobox',
+    precio: 62, unidad: 'Pack x500',
+    descripcion: 'Contenedores biodegradables 750cc PLA, herméticos, aptos frío y caliente hasta 80°C.',
+    categoria: 'packaging', proveedorId: 'PM004',
+    esPerecible: false, stock: 150,
+  },
+  {
+    id: 'INS007', nombre: 'Detergente Alcalino Lozar 20L', marca: 'Diversey',
+    precio: 72, unidad: 'Bidón 20L',
+    descripcion: 'Detergente alcalino concentrado para lavavajillas industrial. Dosis 2-5ml/L. NSF certificado.',
+    categoria: 'limpieza', proveedorId: 'PM005',
+    esPerecible: false, stock: 35,
+  },
+  {
+    id: 'INS008', nombre: 'Abrillantador Lavavajillas 5L', marca: 'Diversey',
+    precio: 44, unidad: 'Bidón 5L',
+    descripcion: 'Abrillantador para lavavajillas industriales, previene manchas de agua, compatible con agua dura.',
+    categoria: 'limpieza', proveedorId: 'PM005',
+    esPerecible: false, stock: 50,
+  },
+];
+
+// Fecha helper
+const _futuro = (dias: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return d.toISOString();
+};
+
+export const REMATES_MKT: Remate[] = [
+  {
+    id: 'REM001',
+    titulo: 'Subasta — Equipos de Cocción de Cierre de Restaurante',
+    descripcion: 'Liquidación total de equipos de restaurante que cierra operaciones. Todos en buen estado, algunos con mantenimiento reciente.',
+    tipo: 'subasta',
+    items: [PRODUCTOS_MKT[2], PRODUCTOS_MKT[3]],
+    precioBase: 1200,
+    precioActual: 1450,
+    pujaMinima: 50,
+    fechaCierre: _futuro(3),
+    proveedorId: 'PM002',
+    estado: 'activo',
+    totalPujas: 8,
+  },
+  {
+    id: 'REM002',
+    titulo: 'Subasta — Cafetera La Marzocco + Molinillo Mazzer',
+    descripcion: 'Pack cafetera espresso 2 grupos + molinillo on demand. Ideal para abrir cafetería o renovar equipo. Leve uso, excelente estado.',
+    tipo: 'subasta',
+    items: [PRODUCTOS_MKT[4], PRODUCTOS_MKT[5]],
+    precioBase: 3500,
+    precioActual: 4100,
+    pujaMinima: 100,
+    fechaCierre: _futuro(7),
+    proveedorId: 'PM003',
+    estado: 'activo',
+    totalPujas: 14,
+  },
+  {
+    id: 'REM003',
+    titulo: 'Precio Fijo — Lote Cámaras Frigoríficas (Saldo Temporada)',
+    descripcion: 'Lote de 2 cámaras frigoríficas horizontales 200L. Precio fijo de temporada por renovación de stock. Entrega inmediata.',
+    tipo: 'precio_fijo',
+    items: [PRODUCTOS_MKT[9]],
+    precioBase: 960,
+    precioActual: 960,
+    fechaCierre: _futuro(14),
+    proveedorId: 'PM001',
+    estado: 'activo',
+    totalPujas: 0,
+  },
+];
+
+export function getProductosMkt(): ProductoMarketplace[] { return PRODUCTOS_MKT; }
+export function getRepuestosMkt(): Repuesto[] { return REPUESTOS_MKT; }
+export function getInsumosMkt(): Insumo[] { return INSUMOS_MKT; }
+export function getRematesMkt(): Remate[] { return REMATES_MKT; }
+export function getRepuestosCompatibles(equipoTipo: string, equipoMarca: string): Repuesto[] {
+  return REPUESTOS_MKT.filter(r =>
+    r.compatibleMarcas.some(m => m.toLowerCase().includes(equipoMarca.toLowerCase()))
+  );
+}
+
+// ─── ACTIVOS (Bloque A) ───────────────────────────────────────────────────────
+
+export const MOCK_ACTIVOS: Activo[] = [
+  {
+    id: 'act-001',
+    rubro: 'calor_comercial',
+    categoria: 'Hornos',
+    subcategoria: 'Horno Convector',
+    marca: 'Rational',
+    modelo: 'SCC WE 61',
+    numeroSerie: 'RAT-2021-003847',
+    restauranteId: 'rest-001',
+    zonaLocal: 'cocina_caliente',
+    estado: 'operativo',
+    proveedorCompra: 'IG Ingeniería Gastronómica',
+    garantiaVigente: '2026-08-15',
+    anoCompraInstalacion: 2021,
+    ultimoService: '2025-11-10',
+    contratMantenimientoVigente: false,
+    problemasConocidos: 'Ventilador con ruido leve al arrancar',
+    fotoEquipo: ['001-equipo-cocina_caliente.jpg'],
+    fotoChapa: ['001-chapa-cocina_caliente.jpg'],
+    creadoEn: '2026-02-01T10:00:00Z',
+    actualizadoEn: '2026-03-01T10:00:00Z',
+  },
+  {
+    id: 'act-002',
+    rubro: 'frio_comercial',
+    categoria: 'Heladeras',
+    subcategoria: 'Heladera Vertical',
+    marca: 'True',
+    modelo: 'T-23',
+    numeroSerie: 'TRUE-2020-118432',
+    restauranteId: 'rest-001',
+    zonaLocal: 'cocina_fria',
+    estado: 'falla',
+    proveedorCompra: 'Frider Refrigeración',
+    anoCompraInstalacion: 2020,
+    ultimoService: '2025-06-20',
+    contratMantenimientoVigente: false,
+    problemasConocidos: 'No enfría correctamente, posible fuga de gas',
+    fotoEquipo: ['002-equipo-cocina_fria.jpg'],
+    fotoChapa: ['002-chapa-cocina_fria.jpg'],
+    creadoEn: '2026-02-01T10:00:00Z',
+    actualizadoEn: '2026-03-10T10:00:00Z',
+  },
+  {
+    id: 'act-003',
+    rubro: 'lavado_comercial',
+    categoria: 'Lavavajillas',
+    subcategoria: 'Lavavajillas Capota',
+    marca: 'Winterhalter',
+    modelo: 'GS 630 E',
+    numeroSerie: 'WH-2022-005621',
+    restauranteId: 'rest-001',
+    zonaLocal: 'lavado',
+    estado: 'operativo',
+    proveedorCompra: 'Winterhalter Argentina',
+    garantiaVigente: '2024-06-01',
+    anoCompraInstalacion: 2022,
+    ultimoService: '2026-01-15',
+    contratMantenimientoVigente: true,
+    nombreProveedorMantenimiento: 'Winterhalter Argentina',
+    fotoEquipo: ['003-equipo-lavado.jpg'],
+    fotoChapa: ['003-chapa-lavado.jpg'],
+    creadoEn: '2026-02-01T10:00:00Z',
+    actualizadoEn: '2026-02-01T10:00:00Z',
+  },
+  {
+    id: 'act-004',
+    rubro: 'cafe_bebidas',
+    categoria: 'Cafeteras',
+    subcategoria: 'Cafetera Profesional',
+    marca: 'La Marzocco',
+    modelo: 'Linea PB 2G',
+    numeroSerie: 'LM-2023-009874',
+    restauranteId: 'rest-001',
+    zonaLocal: 'barra_salon',
+    estado: 'operativo',
+    proveedorCompra: 'La Marzocco Argentina',
+    garantiaVigente: '2025-03-01',
+    anoCompraInstalacion: 2023,
+    ultimoService: '2025-12-10',
+    fotoEquipo: ['004-equipo-barra.jpg'],
+    fotoChapa: ['004-chapa-barra.jpg'],
+    creadoEn: '2026-02-01T10:00:00Z',
+    actualizadoEn: '2026-02-01T10:00:00Z',
+  },
+  {
+    id: 'act-005',
+    rubro: 'calor_comercial',
+    categoria: 'Freidoras',
+    subcategoria: 'Freidora Gas',
+    marca: 'BRAFH',
+    modelo: 'FG-15',
+    restauranteId: 'rest-001',
+    zonaLocal: 'cocina_caliente',
+    estado: 'mantenimiento',
+    proveedorCompra: 'IG Ingeniería Gastronómica',
+    fotoEquipo: ['005-equipo-cocina_caliente.jpg'],
+    fotoChapa: ['005-chapa-cocina_caliente.jpg'],
+    creadoEn: '2026-02-01T10:00:00Z',
+    actualizadoEn: '2026-03-05T10:00:00Z',
+  },
+];
+
+// ─── ÓRDENES DE COMPRA DE REPUESTOS (Bloque A) ────────────────────────────────
+
+export const MOCK_ORDENES_COMPRA: OrdenCompraRepuesto[] = [
+  {
+    id: 'ocr-001',
+    otId: 'OT-2026-001',
+    activoId: 'act-002',
+    restauranteId: 'R001',
+    tecnicoId: 'T001',
+    proveedorId: 'PM001',
+    items: [
+      {
+        repuestoId: 'REP001',
+        cantidad: 1,
+        precioUnitarioARS: 8500,
+        comisionShuuriPct: 15,
+        comisionShuuriARS: 1275,
+        totalARS: 9775,
+      },
+      {
+        descripcionLibre: 'Gas refrigerante R404A — 500gr',
+        cantidad: 2,
+        precioUnitarioARS: 12000,
+        comisionShuuriPct: 15,
+        comisionShuuriARS: 1800,
+        totalARS: 13800,
+      },
+    ],
+    subtotalARS: 32500,
+    totalComisionARS: 4875,
+    totalARS: 37375,
+    aprobadoAutomaticamente: true,
+    aprobadaEn: '2026-03-12T10:05:00Z',
+    estado: 'confirmada_proveedor',
+    numeroSeguimiento: 'OCA-2026-889933',
+    transportista: 'OCA',
+    fechaEstimadaEntrega: '2026-03-14T12:00:00Z',
+    creadaPor: 'tecnico',
+    creadaEn: '2026-03-12T10:00:00Z',
+    actualizadoEn: '2026-03-12T15:00:00Z',
+  },
+];
+
+// OT asociada a la OCR (activo act-002 con falla)
+const OT_BLOQUE_A: OrdenTrabajo = {
+  id: 'OT-2026-001',
+  restauranteId: 'R001',
+  activoId: 'act-002',
+  ordenesCompraRepuesto: ['ocr-001'],
+  tecnicoId: 'T001',
+  equipoTipo: 'Heladera Vertical',
+  equipoMarca: 'True',
+  equipoModelo: 'T-23',
+  rubro: 'frio_comercial',
+  descripcionFalla: 'No enfría correctamente. Posible fuga de gas refrigerante R404A. Temperatura interior alcanza 18°C sin bajar.',
+  urgencia: 'ALTA',
+  fotosReporte: ['ot2026001-foto1.jpg'],
+  estado: 'REPUESTO_SOLICITADO',
+  cotizacion: {
+    estimacionMin: 28000,
+    estimacionMax: 45000,
+    aprobadaFase1: true,
+    fechaEstimacion: '2026-03-11T09:00:00Z',
+    diagnosticoTecnico: 'Fuga de gas en circuito primario. Requiere recarga R404A y reemplazo de compresor Embraco.',
+    itemsRepuestos: [
+      { id: 'IR-2026-001', descripcion: 'Compresor Embraco 1/3 HP R404A', cantidad: 1, precioUnitario: 8500, esRepuesto: true },
+      { id: 'IR-2026-002', descripcion: 'Gas refrigerante R404A 500gr x2', cantidad: 2, precioUnitario: 12000, esRepuesto: true },
+    ],
+    manoDeObra: 5000,
+    totalDefinitivo: 37375,
+    aprobadaFase2: true,
+    fechaEmisionCotizacion: '2026-03-11T14:00:00Z',
+  },
+  notas: 'Cliente solicita reparación urgente. Heladera con productos en riesgo.',
+  fechaCreacion: '2026-03-10T08:00:00Z',
+  fechaVisitaProgramada: '2026-03-11T09:00:00Z',
+  slaBreachAt: '2026-03-12T08:00:00Z',
+};
+
+// Inyectamos en el array OTS para que sea accesible por getOTById
+OTS.push(OT_BLOQUE_A);
+
+export function getActivosByRestaurante(restauranteId: string): Activo[] {
+  return MOCK_ACTIVOS.filter(a => a.restauranteId === restauranteId);
+}
+
+export function getActivoById(id: string): Activo | undefined {
+  return MOCK_ACTIVOS.find(a => a.id === id);
+}
+
+export function getOrdenCompraRepuestoById(id: string): OrdenCompraRepuesto | undefined {
+  return MOCK_ORDENES_COMPRA.find(o => o.id === id);
+}
+
+export function getOrdenesCompraRepuestoPorOT(otId: string): OrdenCompraRepuesto[] {
+  return MOCK_ORDENES_COMPRA.filter(o => o.otId === otId);
 }
