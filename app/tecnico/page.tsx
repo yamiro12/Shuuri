@@ -1,18 +1,30 @@
 "use client";
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge, formatARS, formatDate } from '@/components/shared/utils';
-import { OTS, TECNICOS } from '@/data/mock';
+import { OTS, TECNICOS, LIQUIDACIONES } from '@/data/mock';
 import { AlertTriangle, Calendar, Wrench, DollarSign, Star, ShieldCheck } from 'lucide-react';
 
-const TECNICO = TECNICOS[0];
-const MIS_OTS = OTS.filter(o => o.tecnicoId === TECNICO.id);
+const TASA_USD_ARS = 1050;
 
 export default function TecnicoDashboard() {
-  const activas = MIS_OTS.filter(o => !['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','CANCELADA','LIQUIDADA'].includes(o.estado));
-  const hoy = MIS_OTS.filter(o => o.fechaVisitaProgramada?.startsWith(new Date().toISOString().slice(0, 10)));
+  const searchParams = useSearchParams();
+  const tecnicoId = searchParams.get('id') ?? 'T001';
+  const TECNICO = TECNICOS.find(t => t.id === tecnicoId) ?? TECNICOS[0];
+
+  const misOTs = useMemo(() => OTS.filter(o => o.tecnicoId === TECNICO.id), [TECNICO.id]);
+  const liquidadoEsteMes = useMemo(() => {
+    const mes = new Date().toISOString().slice(0, 7);
+    return LIQUIDACIONES
+      .filter(l => l.tecnicoId === TECNICO.id && l.fechaDevengado?.startsWith(mes))
+      .reduce((s, l) => s + l.pagoTecnico * TASA_USD_ARS, 0);
+  }, [TECNICO.id]);
+
+  const activas = misOTs.filter(o => !['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','CANCELADA','LIQUIDADA'].includes(o.estado));
+  const hoy = misOTs.filter(o => o.fechaVisitaProgramada?.startsWith(new Date().toISOString().slice(0, 10)));
 
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
@@ -53,7 +65,7 @@ export default function TecnicoDashboard() {
             {[
               { label: 'OTs activas', value: activas.length, icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-50' },
               { label: 'Visitas hoy', value: hoy.length, icon: Calendar, color: 'text-green-600', bg: 'bg-green-50' },
-              { label: 'Liquidado este mes', value: formatARS(40600), icon: DollarSign, color: 'text-purple-600', bg: 'bg-purple-50' },
+              { label: 'Liquidado este mes', value: formatARS(liquidadoEsteMes), icon: DollarSign, color: 'text-purple-600', bg: 'bg-purple-50' },
               { label: 'Score actual', value: TECNICO.score, icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
             ].map(kpi => (
               <div key={kpi.label} className="rounded-xl border bg-white p-5 shadow-sm">

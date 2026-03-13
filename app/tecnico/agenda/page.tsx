@@ -1,20 +1,17 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge } from '@/components/shared/utils';
-import { OTS, getRestauranteById } from '@/data/mock';
+import { OTS, TECNICOS, getRestauranteById } from '@/data/mock';
 import { RUBRO_LABELS } from '@/types/shuuri';
 import type { Rubro } from '@/types/shuuri';
 import {
   ChevronLeft, ChevronRight, MapPin, Clock,
   Wrench, AlertTriangle, CheckCircle, Calendar,
 } from 'lucide-react';
-
-// ─── TÉCNICO SIMULADO (en producción viene del auth) ─────────────────────────
-const TECNICO_ID   = 'T002';
-const TECNICO_NOMBRE = 'Alejandro Brizuela'; // T002 — Café + Bebidas + Lavado
 
 // ─── HELPERS DE FECHA ─────────────────────────────────────────────────────────
 
@@ -58,7 +55,7 @@ const HORAS = Array.from({ length: 12 }, (_, i) => i + 8);
 // Las fechas del mock son históricas — las reemplazamos con fechas de la semana actual
 // para que el calendario tenga contenido visible
 
-function generarOTsConFechasActuales() {
+function generarOTsConFechasActuales(tecnicoId: string) {
   const hoy   = new Date();
   const lunes = startOfWeek(hoy);
 
@@ -68,7 +65,7 @@ function generarOTsConFechasActuales() {
     'AUTORIZADA', 'REPUESTO_SOLICITADO', 'EN_EJECUCION', 'PENDIENTE_CONFORMIDAD',
   ];
   const otsBase = OTS.filter(o =>
-    o.tecnicoId === TECNICO_ID && estadosActivos.includes(o.estado)
+    o.tecnicoId === tecnicoId && estadosActivos.includes(o.estado)
   );
 
   // Distribuir en días de la semana con horarios distintos
@@ -102,7 +99,7 @@ const urgenciaColor: Record<string, { bg: string; border: string; text: string }
 };
 
 // ─── MODAL DETALLE OT ────────────────────────────────────────────────────────
-function ModalOT({ ot, onClose }: { ot: OTAgenda; onClose: () => void }) {
+function ModalOT({ ot, onClose, tecnicoId }: { ot: OTAgenda; onClose: () => void; tecnicoId: string }) {
   const router      = useRouter();
   const restaurante = getRestauranteById(ot.restauranteId);
   const col         = urgenciaColor[ot.urgencia] ?? urgenciaColor.BAJA;
@@ -182,7 +179,7 @@ function ModalOT({ ot, onClose }: { ot: OTAgenda; onClose: () => void }) {
             Cerrar
           </button>
           <button
-            onClick={() => { onClose(); router.push(`/tecnico/ots/${ot.id}?id=${TECNICO_ID}`); }}
+            onClick={() => { onClose(); router.push(`/tecnico/ots/${ot.id}?id=${tecnicoId}`); }}
             className="flex-1 rounded-lg bg-[#2698D1] py-2.5 text-sm font-bold text-white hover:bg-[#2698D1]/90"
           >
             Ir a la OT
@@ -196,12 +193,17 @@ function ModalOT({ ot, onClose }: { ot: OTAgenda; onClose: () => void }) {
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 export default function TecnicoAgenda() {
+  const searchParams = useSearchParams();
+  const tecnicoId = searchParams.get('id') ?? 'T001';
+  const TECNICO = TECNICOS.find(t => t.id === tecnicoId) ?? TECNICOS[0];
+  const tecnicoNombre = TECNICO.nombre;
+
   const hoy         = new Date();
   const [semanaBase, setSemanaBase] = useState(() => startOfWeek(hoy));
   const [otModal,    setOtModal]    = useState<OTAgenda | null>(null);
   const [vista,      setVista]      = useState<'semana' | 'lista'>('semana');
 
-  const otsAgenda = useMemo(() => generarOTsConFechasActuales(), []);
+  const otsAgenda = useMemo(() => generarOTsConFechasActuales(tecnicoId), [tecnicoId]);
 
   const diasSemana = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => addDays(semanaBase, i)),
@@ -226,9 +228,9 @@ export default function TecnicoAgenda() {
 
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
-      <Sidebar userRole="TECNICO" userName={TECNICO_NOMBRE} />
+      <Sidebar userRole="TECNICO" userName={tecnicoNombre} />
       <div className="flex-1 ml-64">
-        <Header userRole="TECNICO" userName={TECNICO_NOMBRE} />
+        <Header userRole="TECNICO" userName={tecnicoNombre} />
         <main className="p-8">
 
           {/* TÍTULO + NAVEGACIÓN */}
@@ -511,7 +513,7 @@ export default function TecnicoAgenda() {
 
       {/* MODAL */}
       {otModal && (
-        <ModalOT ot={otModal} onClose={() => setOtModal(null)} />
+        <ModalOT ot={otModal} onClose={() => setOtModal(null)} tecnicoId={tecnicoId} />
       )}
     </div>
   );

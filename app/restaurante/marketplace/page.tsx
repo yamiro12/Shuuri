@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { formatARS } from '@/components/shared/utils';
 import {
   EQUIPOS,
+  RESTAURANTES,
   getProductosMkt,
   getRepuestosMkt,
   getInsumosMkt,
@@ -45,8 +47,6 @@ import {
 } from 'lucide-react';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
-
-const RESTAURANTE_ID = 'R001';
 
 const SELLER_LABELS: Record<TipoSeller, string> = {
   fabricante: 'Fabricante',
@@ -364,6 +364,10 @@ function RemateCard({
 // ─── MAIN PAGE ───────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
+  const searchParams = useSearchParams();
+  const restauranteId = searchParams.get('id') ?? 'R001';
+  const restaurante = RESTAURANTES.find(r => r.id === restauranteId) ?? RESTAURANTES[0];
+
   const [tab, setTab] = useState<Tab>('productos');
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
   const [carritoOpen, setCarritoOpen] = useState(false);
@@ -483,7 +487,7 @@ export default function MarketplacePage() {
   }, [busqIns, filtroCategoria]);
 
   const remates = getRematesMkt().filter(r => r.estado === 'activo');
-  const equiposRestaurante = EQUIPOS.filter(e => e.restauranteId === RESTAURANTE_ID);
+  const equiposRestaurante = EQUIPOS.filter(e => e.restauranteId === restauranteId);
 
   // ─── MODAL OFERTA ───────────────────────────────────────────────────────────
 
@@ -497,9 +501,9 @@ export default function MarketplacePage() {
   if (pantalla === 'exito') {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar userRole="RESTAURANTE" userName="Mi Restaurante" />
+        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
         <div className="flex-1 ml-64 flex flex-col">
-          <Header userRole="RESTAURANTE" userName="Mi Restaurante" />
+          <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex-1 flex items-center justify-center p-8">
             <div className="bg-white rounded-2xl shadow-lg p-12 max-w-lg w-full text-center">
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
@@ -530,9 +534,9 @@ export default function MarketplacePage() {
   if (pantalla === 'checkout') {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar userRole="RESTAURANTE" userName="Mi Restaurante" />
+        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
         <div className="flex-1 ml-64 flex flex-col">
-          <Header userRole="RESTAURANTE" userName="Mi Restaurante" />
+          <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex-1 overflow-y-auto p-8">
             <div className="max-w-2xl mx-auto">
               <button
@@ -621,9 +625,9 @@ export default function MarketplacePage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar userRole="RESTAURANTE" userName="Mi Restaurante" />
+      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
       <div className="flex-1 ml-64 flex flex-col">
-        <Header userRole="RESTAURANTE" userName="Mi Restaurante" />
+        <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
         <main className="flex-1 overflow-y-auto p-8">
 
           {/* ─── PAGE HEADER ─────────────────────────────────────────────── */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Thermometer, Flame, Wind, Coffee, Wrench, Zap,
@@ -14,8 +15,6 @@ import type { Equipo, Rubro } from '@/types/shuuri';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 
-const RESTAURANTE_ID = 'R001';
-const RESTAURANTE = RESTAURANTES.find(r => r.id === RESTAURANTE_ID) ?? RESTAURANTES[0];
 
 const RUBRO_ICON: Record<string, React.ReactNode> = {
   frio_comercial:          <Thermometer className="w-4 h-4" />,
@@ -79,9 +78,13 @@ function formatDate(iso?: string) {
 const EQUIPO_VACIO = { tipo: '', marca: '', modelo: '', rubro: 'frio_comercial' as Rubro };
 
 export default function EquiposPage() {
+  const searchParams = useSearchParams();
+  const restauranteId = searchParams.get('id') ?? 'R001';
+  const RESTAURANTE = RESTAURANTES.find(r => r.id === restauranteId) ?? RESTAURANTES[0];
+
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [equiposLocal, setEquiposLocal] = useState<Equipo[]>(
-    () => EQUIPOS.filter(e => e.restauranteId === RESTAURANTE_ID)
+    () => EQUIPOS.filter(e => e.restauranteId === restauranteId)
   );
   const [modalOpen,   setModalOpen]   = useState(false);
   const [nuevoEquipo, setNuevoEquipo] = useState(EQUIPO_VACIO);
@@ -92,7 +95,7 @@ export default function EquiposPage() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  const allOTs = getOTsByRestaurante(RESTAURANTE_ID);
+  const allOTs = getOTsByRestaurante(restauranteId);
 
   const filtrados = filtroEstado === 'todos'
     ? equiposLocal
@@ -115,7 +118,7 @@ export default function EquiposPage() {
     if (!nuevoEquipo.tipo || !nuevoEquipo.marca) return;
     const nuevo: Equipo = {
       id:              `EQ-NEW-${Date.now()}`,
-      restauranteId:   RESTAURANTE_ID,
+      restauranteId:   restauranteId,
       tipo:            nuevoEquipo.tipo,
       marca:           nuevoEquipo.marca,
       modelo:          nuevoEquipo.modelo,

@@ -1,14 +1,12 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { formatARS, formatDate } from '@/components/shared/utils';
 import { TECNICOS, LIQUIDACIONES, getOTById } from '@/data/mock';
 import { Liquidacion } from '@/types/shuuri';
 import { DollarSign, TrendingUp, Clock, CheckCircle, ChevronDown, ChevronUp, FileText } from 'lucide-react';
-
-const TECNICO = TECNICOS[0];
-const MIS_LIQUIDACIONES = LIQUIDACIONES.filter(l => l.tecnicoId === TECNICO.id);
 
 function EstadoBadgeLiq({ estado }: { estado: Liquidacion['estado'] }) {
   const map: Record<string, { label: string; cls: string }> = {
@@ -132,13 +130,21 @@ function DesgloseFila({ liq }: { liq: Liquidacion }) {
 }
 
 export default function TecnicoLiquidaciones() {
+  const searchParams = useSearchParams();
+  const tecnicoId = searchParams.get('id') ?? 'T001';
+  const TECNICO = TECNICOS.find(t => t.id === tecnicoId) ?? TECNICOS[0];
+  const misLiquidaciones = useMemo(
+    () => LIQUIDACIONES.filter(l => l.tecnicoId === TECNICO.id),
+    [TECNICO.id]
+  );
+
   const [expandida, setExpandida] = useState<string | null>(null);
 
-  const totalNeto = MIS_LIQUIDACIONES.reduce((a, l) => a + l.pagoTecnico, 0);
-  const pagadas = MIS_LIQUIDACIONES.filter(l => l.estado === 'PAGADA').length;
-  const pendientes = MIS_LIQUIDACIONES.filter(l => l.estado !== 'PAGADA').length;
-  const comisionPctProm = MIS_LIQUIDACIONES.length > 0
-    ? Math.round(MIS_LIQUIDACIONES.reduce((a, l) => a + l.comisionServicioPct, 0) / MIS_LIQUIDACIONES.length * 100)
+  const totalNeto = misLiquidaciones.reduce((a, l) => a + l.pagoTecnico, 0);
+  const pagadas = misLiquidaciones.filter(l => l.estado === 'PAGADA').length;
+  const pendientes = misLiquidaciones.filter(l => l.estado !== 'PAGADA').length;
+  const comisionPctProm = misLiquidaciones.length > 0
+    ? Math.round(misLiquidaciones.reduce((a, l) => a + l.comisionServicioPct, 0) / misLiquidaciones.length * 100)
     : 0;
 
   const toggle = (id: string) => setExpandida(prev => prev === id ? null : id);
@@ -180,7 +186,7 @@ export default function TecnicoLiquidaciones() {
               <p className="text-xs text-gray-400">Clic en una fila para ver el desglose completo</p>
             </div>
 
-            {MIS_LIQUIDACIONES.length === 0 ? (
+            {misLiquidaciones.length === 0 ? (
               <div className="px-6 py-12 text-center text-gray-400 text-sm italic">
                 Sin liquidaciones registradas aún.
               </div>
@@ -197,7 +203,7 @@ export default function TecnicoLiquidaciones() {
                   <span>Estado</span>
                 </div>
 
-                {MIS_LIQUIDACIONES.map(liq => (
+                {misLiquidaciones.map(liq => (
                   <div key={liq.id}>
                     <button
                       onClick={() => toggle(liq.id)}
