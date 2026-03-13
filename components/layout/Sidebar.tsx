@@ -6,7 +6,7 @@ import {
   LayoutDashboard, PlusCircle, ClipboardList, Wrench, Utensils,
   CreditCard, Calendar, Package, ShieldCheck, Users, LogOut,
   BarChart3, Settings, Truck, BookOpen, UserCircle, ShoppingBag,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Bell,
 } from 'lucide-react';
 import { UserRole } from '@/types/shuuri';
 import { useSidebarContext } from '@/context/SidebarContext';
@@ -21,11 +21,12 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
   RESTAURANTE: [
     {
       items: [
-        { label: 'Dashboard',       href: '/restaurante',              icon: LayoutDashboard },
-        { label: 'Reportar falla',  href: '/restaurante/reportar',     icon: PlusCircle },
-        { label: 'Mis OTs',         href: '/restaurante/ots',          icon: ClipboardList },
-        { label: 'Mis Equipos',     href: '/restaurante/equipos',      icon: Utensils },
-        { label: 'Marketplace',     href: '/restaurante/marketplace',  icon: ShoppingBag },
+        { label: 'Dashboard',        href: '/restaurante',                  icon: LayoutDashboard },
+        { label: 'Reportar falla',   href: '/restaurante/reportar',         icon: PlusCircle },
+        { label: 'Mis OTs',          href: '/restaurante/ots',              icon: ClipboardList },
+        { label: 'Mis Equipos',      href: '/restaurante/equipos',          icon: Utensils },
+        { label: 'Marketplace',      href: '/restaurante/marketplace',      icon: ShoppingBag },
+        { label: 'Notificaciones',   href: '/restaurante/notificaciones',   icon: Bell },
       ],
     },
     {
@@ -45,9 +46,10 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
   TECNICO: [
     {
       items: [
-        { label: 'Dashboard', href: '/tecnico',        icon: LayoutDashboard },
-        { label: 'Mi agenda', href: '/tecnico/agenda', icon: Calendar },
-        { label: 'Mis OTs',   href: '/tecnico/ots',    icon: ClipboardList },
+        { label: 'Dashboard',      href: '/tecnico',                    icon: LayoutDashboard },
+        { label: 'Mi agenda',      href: '/tecnico/agenda',             icon: Calendar },
+        { label: 'Mis OTs',        href: '/tecnico/ots',                icon: ClipboardList },
+        { label: 'Notificaciones', href: '/tecnico/notificaciones',     icon: Bell },
       ],
     },
     {
@@ -68,9 +70,10 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
   PROVEEDOR: [
     {
       items: [
-        { label: 'Dashboard',         href: '/proveedor',          icon: LayoutDashboard },
-        { label: 'Órdenes de compra', href: '/proveedor/ordenes',  icon: Package },
-        { label: 'Mi catálogo',       href: '/proveedor/catalogo', icon: BookOpen },
+        { label: 'Dashboard',         href: '/proveedor',                  icon: LayoutDashboard },
+        { label: 'Órdenes de compra', href: '/proveedor/ordenes',          icon: Package },
+        { label: 'Mi catálogo',       href: '/proveedor/catalogo',         icon: BookOpen },
+        { label: 'Notificaciones',    href: '/proveedor/notificaciones',   icon: Bell },
       ],
     },
     {

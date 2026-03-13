@@ -701,6 +701,20 @@ export const TAXONOMIA_ACTIVOS: CategoriaActivo[] = [
   { rubro: 'maquinaria_preparacion', categoria: 'Pesaje',              subcategoria: 'Balanza Electrónica',   marcasComunes: ['Systel', 'CAS'] },
 ];
 
+// ─── NOTIFICACIONES ───────────────────────────────────────────────────────────
+export type TipoNotificacion = 'ot' | 'falla' | 'repuesto' | 'sistema' | 'pago';
+
+export interface Notificacion {
+  id:          string;
+  actorId:     string;
+  actorTipo:   'RESTAURANTE' | 'TECNICO' | 'PROVEEDOR';
+  titulo:      string;
+  descripcion: string;
+  tipo:        TipoNotificacion;
+  fechaHora:   string;   // ISO 8601
+  leida:       boolean;
+}
+
 // ─── VALIDACIONES ─────────────────────────────────────────────────────────────
 export const VALIDACIONES = {
   cuit:     { regex: /^\d{2}-\d{8}-\d{1}$/, mensaje: 'Formato requerido: XX-XXXXXXXX-X' },

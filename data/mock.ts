@@ -20,6 +20,7 @@ import type {
   Remate,
   Activo,
   OrdenCompraRepuesto,
+  Notificacion,
 } from '../types/shuuri';
 
 // ─── RESTAURANTES ─────────────────────────────────────────────────────────────
@@ -2222,4 +2223,203 @@ export function getOrdenCompraRepuestoById(id: string): OrdenCompraRepuesto | un
 
 export function getOrdenesCompraRepuestoPorOT(otId: string): OrdenCompraRepuesto[] {
   return MOCK_ORDENES_COMPRA.filter(o => o.otId === otId);
+}
+
+// ─── NOTIFICACIONES ───────────────────────────────────────────────────────────
+
+export const NOTIFICACIONES: Notificacion[] = [
+  // ── RESTAURANTE R001 ────────────────────────────────────────────────────────
+  {
+    id: 'N-R001-001',
+    actorId: 'R001',
+    actorTipo: 'RESTAURANTE',
+    titulo: 'Nueva OT asignada',
+    descripcion: 'La OT #OT-2026-031 por falla en cámara frigorífica fue asignada al técnico Alejandro Brizuela.',
+    tipo: 'ot',
+    fechaHora: '2026-03-13T09:15:00',
+    leida: false,
+  },
+  {
+    id: 'N-R001-002',
+    actorId: 'R001',
+    actorTipo: 'RESTAURANTE',
+    titulo: 'Falla crítica reportada',
+    descripcion: 'Se reportó una falla CRÍTICA en el compresor principal. Un técnico fue notificado y llegará en menos de 2 horas.',
+    tipo: 'falla',
+    fechaHora: '2026-03-13T08:00:00',
+    leida: false,
+  },
+  {
+    id: 'N-R001-003',
+    actorId: 'R001',
+    actorTipo: 'RESTAURANTE',
+    titulo: 'Repuesto aprobado por SHUURI',
+    descripcion: 'El compresor Embraco 1/3 HP fue aprobado. Entrega estimada: 3 días hábiles.',
+    tipo: 'repuesto',
+    fechaHora: '2026-03-12T16:30:00',
+    leida: false,
+  },
+  {
+    id: 'N-R001-004',
+    actorId: 'R001',
+    actorTipo: 'RESTAURANTE',
+    titulo: 'Mantenimiento preventivo programado',
+    descripcion: 'Tu cámara frigorífica tiene un preventivo programado para el 20/03. Te avisaremos 48hs antes.',
+    tipo: 'sistema',
+    fechaHora: '2026-03-11T11:00:00',
+    leida: true,
+  },
+  {
+    id: 'N-R001-005',
+    actorId: 'R001',
+    actorTipo: 'RESTAURANTE',
+    titulo: 'Factura emitida',
+    descripcion: 'Se emitió la factura FC-A-0001-00004567 por $37.375. Podés descargarla desde el portal.',
+    tipo: 'pago',
+    fechaHora: '2026-03-10T18:00:00',
+    leida: true,
+  },
+  {
+    id: 'N-R001-006',
+    actorId: 'R001',
+    actorTipo: 'RESTAURANTE',
+    titulo: 'OT finalizada con conformidad',
+    descripcion: 'La OT #OT-2025-018 fue cerrada con conformidad. Equipo: Lavavajillas Hobart. Técnico: Carlos Ríos.',
+    tipo: 'ot',
+    fechaHora: '2026-03-09T14:20:00',
+    leida: true,
+  },
+
+  // ── TECNICO T001 ────────────────────────────────────────────────────────────
+  {
+    id: 'N-T001-001',
+    actorId: 'T001',
+    actorTipo: 'TECNICO',
+    titulo: 'Nueva OT asignada',
+    descripcion: 'Se te asignó la OT #OT-2026-031 en La Cabrera (Palermo). Urgencia: ALTA. Visita: hoy a las 10:00.',
+    tipo: 'ot',
+    fechaHora: '2026-03-13T08:50:00',
+    leida: false,
+  },
+  {
+    id: 'N-T001-002',
+    actorId: 'T001',
+    actorTipo: 'TECNICO',
+    titulo: 'Repuesto disponible para retiro',
+    descripcion: 'El compresor Embraco para OT #OT-2026-031 está disponible en depósito SHUURI (Barracas). Retiro hasta las 18:00.',
+    tipo: 'repuesto',
+    fechaHora: '2026-03-13T07:30:00',
+    leida: false,
+  },
+  {
+    id: 'N-T001-003',
+    actorId: 'T001',
+    actorTipo: 'TECNICO',
+    titulo: 'Liquidación procesada',
+    descripcion: 'Se procesó tu liquidación #LQ-010 por $47.250 ARS. Acreditación en cuenta en 48hs hábiles.',
+    tipo: 'pago',
+    fechaHora: '2026-03-12T17:00:00',
+    leida: false,
+  },
+  {
+    id: 'N-T001-004',
+    actorId: 'T001',
+    actorTipo: 'TECNICO',
+    titulo: 'Certificación próxima a vencer',
+    descripcion: 'Tu certificación de Gas Natural vence en 21 días (03/04/2026). Renovala para no ser bloqueado.',
+    tipo: 'sistema',
+    fechaHora: '2026-03-11T09:00:00',
+    leida: true,
+  },
+  {
+    id: 'N-T001-005',
+    actorId: 'T001',
+    actorTipo: 'TECNICO',
+    titulo: 'OT cerrada con conformidad',
+    descripcion: 'La OT #OT-2025-018 fue cerrada por el cliente. Tu score fue actualizado: 4.9 ★',
+    tipo: 'ot',
+    fechaHora: '2026-03-09T15:10:00',
+    leida: true,
+  },
+  {
+    id: 'N-T001-006',
+    actorId: 'T001',
+    actorTipo: 'TECNICO',
+    titulo: 'Nuevo mensaje del cliente',
+    descripcion: 'La Cabrera dejó una nota en OT #OT-2026-031: "El equipo volvió a fallar esta mañana."',
+    tipo: 'falla',
+    fechaHora: '2026-03-08T10:45:00',
+    leida: true,
+  },
+
+  // ── PROVEEDOR P001 ──────────────────────────────────────────────────────────
+  {
+    id: 'N-P001-001',
+    actorId: 'P001',
+    actorTipo: 'PROVEEDOR',
+    titulo: 'Nueva orden de compra recibida',
+    descripcion: 'Recibiste la OC #OC-2026-014 por 1x Compresor Embraco 1/3 HP. Confirmar disponibilidad antes de las 17:00.',
+    tipo: 'repuesto',
+    fechaHora: '2026-03-13T08:00:00',
+    leida: false,
+  },
+  {
+    id: 'N-P001-002',
+    actorId: 'P001',
+    actorTipo: 'PROVEEDOR',
+    titulo: 'Pago acreditado',
+    descripcion: 'Se acreditó el pago de la OC #OC-2026-009 por $24.500. Verificá tu cuenta bancaria.',
+    tipo: 'pago',
+    fechaHora: '2026-03-12T14:00:00',
+    leida: false,
+  },
+  {
+    id: 'N-P001-003',
+    actorId: 'P001',
+    actorTipo: 'PROVEEDOR',
+    titulo: 'Solicitud urgente de repuesto',
+    descripcion: 'SHUURI solicita cotización urgente de gas refrigerante R404A (500gr x2). Tiempo de respuesta: 2 horas.',
+    tipo: 'falla',
+    fechaHora: '2026-03-12T11:30:00',
+    leida: false,
+  },
+  {
+    id: 'N-P001-004',
+    actorId: 'P001',
+    actorTipo: 'PROVEEDOR',
+    titulo: 'Catálogo actualizado correctamente',
+    descripcion: 'Tu catálogo de repuestos fue actualizado. 3 nuevos productos fueron aprobados y ya están visibles en el marketplace.',
+    tipo: 'sistema',
+    fechaHora: '2026-03-11T16:00:00',
+    leida: true,
+  },
+  {
+    id: 'N-P001-005',
+    actorId: 'P001',
+    actorTipo: 'PROVEEDOR',
+    titulo: 'Entrega confirmada',
+    descripcion: 'OC #OC-2026-007 marcada como entregada por el técnico. Fondos liberados para liquidación.',
+    tipo: 'ot',
+    fechaHora: '2026-03-10T12:00:00',
+    leida: true,
+  },
+  {
+    id: 'N-P001-006',
+    actorId: 'P001',
+    actorTipo: 'PROVEEDOR',
+    titulo: 'Evaluación de proveedor recibida',
+    descripcion: 'SHUURI evaluó tu desempeño este trimestre. Puntaje: 4.7/5. Tiempo de respuesta promedio: 1.8hs.',
+    tipo: 'sistema',
+    fechaHora: '2026-03-09T10:00:00',
+    leida: true,
+  },
+];
+
+export function getNotificacionesByActor(
+  actorId: string,
+  actorTipo: 'RESTAURANTE' | 'TECNICO' | 'PROVEEDOR'
+): Notificacion[] {
+  return NOTIFICACIONES.filter(
+    n => n.actorId === actorId && n.actorTipo === actorTipo
+  );
 }

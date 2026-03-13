@@ -2,11 +2,13 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/shuuri';
-import { Bell, Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight } from 'lucide-react';
+import NotificacionesBell from '@/components/NotificacionesBell';
 
 interface HeaderProps {
   userRole: UserRole;
   userName: string;
+  actorId?: string; // for notification filtering; if omitted, bell is hidden
 }
 
 const PORTAL_LABELS: Record<UserRole, string> = {
@@ -18,44 +20,47 @@ const PORTAL_LABELS: Record<UserRole, string> = {
 
 const PAGE_LABELS: Record<string, string> = {
   // Restaurante
-  '/restaurante':              'Dashboard',
-  '/restaurante/reportar':     'Reportar falla',
-  '/restaurante/ots':          'Mis OTs',
-  '/restaurante/equipos':      'Mis Equipos',
-  '/restaurante/marketplace':  'Marketplace',
-  '/restaurante/estadisticas': 'Estadísticas',
-  '/restaurante/perfil':       'Mi perfil',
-  '/restaurante/onboarding':   'Onboarding',
-  '/restaurante/dashboard':    'Dashboard',
+  '/restaurante':                    'Dashboard',
+  '/restaurante/reportar':           'Reportar falla',
+  '/restaurante/ots':                'Mis OTs',
+  '/restaurante/equipos':            'Mis Equipos',
+  '/restaurante/marketplace':        'Marketplace',
+  '/restaurante/estadisticas':       'Estadísticas',
+  '/restaurante/perfil':             'Mi perfil',
+  '/restaurante/onboarding':         'Onboarding',
+  '/restaurante/dashboard':          'Dashboard',
+  '/restaurante/notificaciones':     'Notificaciones',
   // Técnico
-  '/tecnico':                  'Dashboard',
-  '/tecnico/agenda':           'Mi agenda',
-  '/tecnico/ots':              'Mis OTs',
-  '/tecnico/liquidaciones':    'Liquidaciones',
-  '/tecnico/estadisticas':     'Estadísticas',
-  '/tecnico/perfil':           'Mi perfil',
-  '/tecnico/onboarding':       'Onboarding',
-  '/tecnico/dashboard':        'Dashboard',
+  '/tecnico':                        'Dashboard',
+  '/tecnico/agenda':                 'Mi agenda',
+  '/tecnico/ots':                    'Mis OTs',
+  '/tecnico/liquidaciones':          'Liquidaciones',
+  '/tecnico/estadisticas':           'Estadísticas',
+  '/tecnico/perfil':                 'Mi perfil',
+  '/tecnico/onboarding':             'Onboarding',
+  '/tecnico/dashboard':              'Dashboard',
+  '/tecnico/notificaciones':         'Notificaciones',
   // Proveedor
-  '/proveedor':                'Dashboard',
-  '/proveedor/ordenes':        'Órdenes de compra',
-  '/proveedor/catalogo':       'Mi catálogo',
-  '/proveedor/liquidaciones':  'Liquidaciones',
-  '/proveedor/estadisticas':   'Estadísticas',
-  '/proveedor/perfil':         'Mi perfil',
-  '/proveedor/onboarding':     'Onboarding',
-  '/proveedor/dashboard':      'Dashboard',
+  '/proveedor':                      'Dashboard',
+  '/proveedor/ordenes':              'Órdenes de compra',
+  '/proveedor/catalogo':             'Mi catálogo',
+  '/proveedor/liquidaciones':        'Liquidaciones',
+  '/proveedor/estadisticas':         'Estadísticas',
+  '/proveedor/perfil':               'Mi perfil',
+  '/proveedor/onboarding':           'Onboarding',
+  '/proveedor/dashboard':            'Dashboard',
+  '/proveedor/notificaciones':       'Notificaciones',
   // Admin
-  '/admin':                    'Dashboard',
-  '/admin/ots':                'Todas las OTs',
-  '/admin/tecnicos':           'Técnicos',
-  '/admin/restaurantes':       'Restaurantes',
-  '/admin/proveedores':        'Proveedores',
-  '/admin/compliance':         'Compliance',
-  '/admin/liquidaciones':      'Liquidaciones',
-  '/admin/estadisticas':       'Estadísticas',
-  '/admin/integraciones':      'Integraciones',
-  '/admin/configuracion':      'Configuración',
+  '/admin':                          'Dashboard',
+  '/admin/ots':                      'Todas las OTs',
+  '/admin/tecnicos':                 'Técnicos',
+  '/admin/restaurantes':             'Restaurantes',
+  '/admin/proveedores':              'Proveedores',
+  '/admin/compliance':               'Compliance',
+  '/admin/liquidaciones':            'Liquidaciones',
+  '/admin/estadisticas':             'Estadísticas',
+  '/admin/integraciones':            'Integraciones',
+  '/admin/configuracion':            'Configuración',
 };
 
 const AVATAR_COLORS: Record<UserRole, string> = {
@@ -65,10 +70,14 @@ const AVATAR_COLORS: Record<UserRole, string> = {
   SHUURI_ADMIN: 'bg-[#2698D1]',
 };
 
+const BANDEJA_HREF: Partial<Record<UserRole, string>> = {
+  RESTAURANTE: '/restaurante/notificaciones',
+  TECNICO:     '/tecnico/notificaciones',
+  PROVEEDOR:   '/proveedor/notificaciones',
+};
+
 function getPageLabel(pathname: string): string {
-  // Exact match first
   if (PAGE_LABELS[pathname]) return PAGE_LABELS[pathname];
-  // Dynamic routes — strip last segment and check if it's a detail page
   const parts = pathname.split('/');
   if (parts.length >= 3) {
     const parent = parts.slice(0, -1).join('/');
@@ -77,11 +86,12 @@ function getPageLabel(pathname: string): string {
   return '';
 }
 
-export default function Header({ userRole, userName }: HeaderProps) {
+export default function Header({ userRole, userName, actorId }: HeaderProps) {
   const pathname  = usePathname();
   const portal    = PORTAL_LABELS[userRole];
   const pageLabel = getPageLabel(pathname);
   const initials  = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const bandejaHref = BANDEJA_HREF[userRole];
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-gray-100 bg-white/95 px-6 backdrop-blur-sm">
@@ -109,11 +119,14 @@ export default function Header({ userRole, userName }: HeaderProps) {
           </kbd>
         </button>
 
-        {/* Notification */}
-        <button className="relative ml-1 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
-          <Bell className="h-4.5 w-4.5 h-[18px] w-[18px]" />
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#2698D1] ring-2 ring-white" />
-        </button>
+        {/* Notification bell — only for portals with a bandeja */}
+        {actorId && bandejaHref && userRole !== 'SHUURI_ADMIN' && (
+          <NotificacionesBell
+            actorId={actorId}
+            actorTipo={userRole as 'RESTAURANTE' | 'TECNICO' | 'PROVEEDOR'}
+            bandejaHref={bandejaHref}
+          />
+        )}
 
         {/* Divider */}
         <div className="mx-2 h-5 w-px bg-gray-100" />
