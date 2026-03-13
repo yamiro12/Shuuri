@@ -149,7 +149,7 @@ export default function AdminConfiguracion() {
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* TÍTULO + ACCIONES */}
           <div className="mb-6 flex items-center justify-between">

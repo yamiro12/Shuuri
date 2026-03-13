@@ -133,6 +133,14 @@
 .sidebar-push {
   margin-left: var(--sidebar-w, 256px);
   transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+/* On mobile the sidebar is an overlay — no layout shift */
+@media (max-width: 767px) {
+  .sidebar-push {
+    margin-left: 0 !important;
+  }
 }
 
 @layer base {
@@ -245,4 +253,28 @@
 .page-content {
   padding: 2rem;
   max-width: 1280px;
+}
+
+/* Responsive main padding — use instead of hard p-8 */
+.page-main {
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .page-main { padding: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .page-main { padding: 2rem; }
+}
+
+/* Success / enviado screen centers properly */
+.page-main-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .page-main-center { padding: 2rem; }
 }

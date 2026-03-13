@@ -6,7 +6,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge, formatARS, formatDate } from '@/components/shared/utils';
 import { OTS, TECNICOS, LIQUIDACIONES } from '@/data/mock';
-import { AlertTriangle, Calendar, Wrench, DollarSign, Star, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Calendar, Wrench, DollarSign, Star, ShieldCheck, PercentCircle, ChevronRight, Banknote } from 'lucide-react';
 
 const TASA_USD_ARS = 1050;
 
@@ -31,7 +31,7 @@ export default function TecnicoDashboard() {
       <Sidebar userRole="TECNICO" userName={TECNICO.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={TECNICO.nombre} actorId={tecnicoId} />
-        <main className="p-8">
+        <main className="page-main">
 
           {TECNICO.certStatusGlobal === 'por_vencer' && (
             <div className="mb-6 flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
@@ -78,8 +78,8 @@ export default function TecnicoDashboard() {
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-2 rounded-xl border bg-white shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="col-span-1 lg:col-span-2 rounded-xl border bg-white shadow-sm">
               <div className="flex items-center justify-between border-b px-6 py-4">
                 <h2 className="font-bold text-[#0D0D0D]">Mis OTs activas</h2>
                 <Link href="/tecnico/ots" className="text-sm font-medium text-[#2698D1] hover:underline">Ver todas</Link>
@@ -107,6 +107,69 @@ export default function TecnicoDashboard() {
             </div>
 
             <div className="space-y-4">
+
+              {/* ── PRÓXIMA LIQUIDACIÓN ── */}
+              {(() => {
+                const devengado = LIQUIDACIONES
+                  .filter(l => l.tecnicoId === TECNICO.id && l.estado !== 'PAGADA')
+                  .reduce((s, l) => s + l.pagoTecnico * TASA_USD_ARS, 0);
+                const hoyDate = new Date();
+                const dia = hoyDate.getDate();
+                const mes = hoyDate.toLocaleString('es-AR', { month: 'long' });
+                const proxDia = dia <= 15 ? 15 : new Date(hoyDate.getFullYear(), hoyDate.getMonth() + 1, 0).getDate();
+                const diasRestantes = proxDia - dia;
+                return devengado > 0 ? (
+                  <div className="rounded-xl border-2 border-green-200 bg-green-50 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Banknote className="h-5 w-5 text-green-600" />
+                      <h3 className="font-bold text-green-900 text-sm">Próxima liquidación</h3>
+                    </div>
+                    <p className="text-2xl font-black text-green-700">{formatARS(devengado)}</p>
+                    <p className="text-xs text-green-600 mt-1">Devengado pendiente de acreditación</p>
+                    <div className="mt-3 flex items-center justify-between rounded-lg bg-white border border-green-200 px-3 py-2">
+                      <span className="text-xs text-gray-500">Acreditación estimada</span>
+                      <span className="text-xs font-bold text-green-700">
+                        Día {proxDia} de {mes}
+                        {diasRestantes > 0 ? ` · en ${diasRestantes}d` : ' · hoy'}
+                      </span>
+                    </div>
+                    <Link href="/tecnico/liquidaciones" className="mt-3 flex items-center justify-center gap-1 text-xs font-bold text-green-700 hover:text-green-800">
+                      Ver liquidaciones <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                ) : null;
+              })()}
+
+              {/* ── MI ESQUEMA DE COMISIONES ── */}
+              <div className="rounded-xl border bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <PercentCircle className="h-5 w-5 text-[#2698D1]" />
+                  <h3 className="font-bold text-[#0D0D0D] text-sm">Mi esquema de comisiones</h3>
+                </div>
+                <div className="space-y-2 mb-4">
+                  {[
+                    { tier: 'Freemium',      pct: '30%', cls: 'bg-gray-100 text-gray-600' },
+                    { tier: 'Cadena chica',  pct: '25%', cls: 'bg-blue-100 text-blue-700' },
+                    { tier: 'Cadena grande', pct: '20%', cls: 'bg-yellow-100 text-yellow-700' },
+                  ].map(r => (
+                    <div key={r.tier} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                      <span className="text-xs text-gray-600">{r.tier}</span>
+                      <span className={`text-xs font-black rounded-full px-2.5 py-0.5 ${r.cls}`}>
+                        retención SHUURI {r.pct}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg border border-[#2698D1]/20 bg-blue-50 px-3 py-2.5">
+                  <p className="text-xs text-[#2698D1] font-medium leading-snug">
+                    <strong>Periodicidad quincenal:</strong> pagos los días 15 y último de cada mes por OTs cerradas en cada quincena.
+                  </p>
+                </div>
+                <Link href="/tecnico/liquidaciones" className="mt-3 flex items-center justify-center gap-1 text-xs font-bold text-[#2698D1] hover:text-[#2698D1]/80">
+                  Ver mi historial completo <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
               <div className="rounded-xl border bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <ShieldCheck className="h-5 w-5 text-[#2698D1]" />

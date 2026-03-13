@@ -501,7 +501,7 @@ export default function MarketplacePage() {
   if (pantalla === 'exito') {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
         <div className="flex-1 sidebar-push flex flex-col">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex-1 flex items-center justify-center p-8">
@@ -534,7 +534,7 @@ export default function MarketplacePage() {
   if (pantalla === 'checkout') {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
         <div className="flex-1 sidebar-push flex flex-col">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
           <main className="flex-1 overflow-y-auto p-8">
@@ -625,7 +625,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
       <div className="flex-1 sidebar-push flex flex-col">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
         <main className="flex-1 overflow-y-auto p-8">

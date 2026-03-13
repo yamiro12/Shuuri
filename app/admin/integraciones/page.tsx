@@ -236,7 +236,7 @@ export default function AdminIntegraciones() {
       <Sidebar userRole="SHUURI_ADMIN" userName="Admin SHUURI" />
       <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin SHUURI" />
-        <main className="p-8">
+        <main className="page-main">
 
           <div className="mb-8">
             <h1 className="text-2xl font-black text-[#0D0D0D]">Integraciones</h1>

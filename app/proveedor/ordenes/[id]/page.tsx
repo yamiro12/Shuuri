@@ -15,6 +15,7 @@ import {
   ArrowLeft, Package, Truck, CheckCircle2,
   Clock, MapPin, Wrench, Building2,
   ChevronRight, X, AlertCircle, ShoppingCart,
+  ChevronDown, ChevronUp, DollarSign,
 } from 'lucide-react';
 
 type OC = typeof OCS[number];
@@ -217,7 +218,8 @@ function DetalleOCR({ ocr, proveedor, estadoLocal, setEstadoLocal, showToast }: 
   setEstadoLocal: (s: string) => void;
   showToast: (msg: string) => void;
 }) {
-  const [numSeg, setNumSeg] = useState(ocr.numeroSeguimiento ?? '');
+  const [numSeg,       setNumSeg]       = useState(ocr.numeroSeguimiento ?? '');
+  const [showDesglose, setShowDesglose] = useState(false);
   const estadoActual = (estadoLocal ?? ocr.estado) as OrdenCompraRepuesto['estado'];
 
   const ot          = getOTById(ocr.otId);
@@ -289,6 +291,48 @@ function DetalleOCR({ ocr, proveedor, estadoLocal, setEstadoLocal, showToast }: 
               <span>Total ARS</span><span className="text-xl">{formatARS(ocr.totalARS)}</span>
             </div>
           </div>
+        </div>
+
+        {/* ── DESGLOSE ECONÓMICO ── */}
+        <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+          <button
+            onClick={() => setShowDesglose(v => !v)}
+            className="flex w-full items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-gray-700">
+              <DollarSign className="h-4 w-4 text-[#2698D1]" />
+              ¿Cómo funciona el precio?
+            </span>
+            {showDesglose
+              ? <ChevronUp className="h-4 w-4 text-gray-400" />
+              : <ChevronDown className="h-4 w-4 text-gray-400" />
+            }
+          </button>
+          {showDesglose && (
+            <div className="border-t px-6 py-5 space-y-3">
+              <div className="flex justify-between py-2 border-b border-gray-50 text-sm">
+                <span className="text-gray-500">Precio de los repuestos</span>
+                <span className="font-bold text-gray-800">{formatARS(ocr.subtotalARS)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-50 text-sm">
+                <span className="text-gray-500">
+                  Comisión SHUURI marketplace
+                  <span className="ml-1.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-400">15%</span>
+                </span>
+                <span className="font-bold text-red-500">- {formatARS(ocr.totalComisionARS)}</span>
+              </div>
+              <div className="flex justify-between py-2 text-sm">
+                <span className="font-bold text-gray-800">Lo que recibís</span>
+                <span className="font-black text-green-600">{formatARS(ocr.subtotalARS - ocr.totalComisionARS)}</span>
+              </div>
+              <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+                <p className="text-xs text-blue-800 leading-snug">
+                  <strong>SHUURI actúa como mandatario comercial</strong> para esta transacción.
+                  Cobra al restaurante en tu nombre y liquida el neto según los plazos acordados.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Logística */}
@@ -460,7 +504,7 @@ export default function ProveedorOrdenDetalle() {
       <Sidebar userRole="PROVEEDOR" userName={proveedor.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="PROVEEDOR" userName={proveedor.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           <div className="mb-6 flex items-center gap-2">
             <Link href={`/proveedor/ordenes?id=${proveedorId}`}

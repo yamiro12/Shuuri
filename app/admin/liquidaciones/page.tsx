@@ -6,6 +6,7 @@ import { formatARS, formatDate } from '@/components/shared/utils';
 import { LIQUIDACIONES, OTS, getTecnicoById, getRestauranteById, getOCsByOT } from '@/data/mock';
 import { RUBRO_LABELS } from '@/types/shuuri';
 import type { Rubro } from '@/types/shuuri';
+import { calcularLiquidacionOT, getComisionServicioPct, COMISION_REPUESTOS, getTierLabel, getTierBadgeClass } from '@/lib/business';
 import {
   DollarSign, Clock, CheckCircle2, ChevronDown, ChevronRight,
   Plus, X, Wrench, Building2, User, AlertCircle, Zap,
@@ -45,19 +46,27 @@ function ModalCrearLiq({
   const restaurante = getRestauranteById(ot.restauranteId);
   const ocs         = getOCsByOT(ot.id);
 
-  // Calcular comisiones desde cotización
-  const mdo           = ot.cotizacion?.manoDeObra ?? 0;
+  // Calcular comisiones desde cotización + tier real del restaurante
+  const mdo            = ot.cotizacion?.manoDeObra ?? 0;
   const totalRepuestos = ot.cotizacion?.itemsRepuestos?.reduce(
     (s, i) => s + i.cantidad * i.precioUnitario, 0
   ) ?? 0;
   const totalFacturado = ot.cotizacion?.totalDefinitivo ?? (mdo + totalRepuestos);
 
-  // Tier cliente (simplificado: siempre FREEMIUM para el prototipo)
-  const [pctServicio,  setPctServicio]  = useState(30);
-  const [pctRepuestos, setPctRepuestos] = useState(15);
+  // Porcentajes editables por el admin — se inicializan con el tier real del restaurante
+  const [pctServicio,  setPctServicio]  = useState(() => Math.round(getComisionServicioPct(restaurante?.tier) * 100));
+  const [pctRepuestos, setPctRepuestos] = useState(() => Math.round(COMISION_REPUESTOS * 100));
 
-  const comisionServicio  = Math.round(mdo * pctServicio / 100 * 100) / 100;
-  const comisionRepuestos = Math.round(totalRepuestos * pctRepuestos / 100 * 100) / 100;
+  const liqCalc = calcularLiquidacionOT(
+    mdo,
+    totalRepuestos,
+    restaurante?.tier,
+  );
+  // Use slider overrides only if admin changed them from the default
+  const defaultServPct = Math.round(getComisionServicioPct(restaurante?.tier) * 100);
+  const useOverride    = pctServicio !== defaultServPct || pctRepuestos !== Math.round(COMISION_REPUESTOS * 100);
+  const comisionServicio  = useOverride ? Math.round(mdo            * pctServicio  / 100 * 100) / 100 : liqCalc.comisionServicio;
+  const comisionRepuestos = useOverride ? Math.round(totalRepuestos * pctRepuestos / 100 * 100) / 100 : liqCalc.comisionRepuestos;
   const comisionTotal     = comisionServicio + comisionRepuestos;
   const pagoTecnico       = mdo - comisionServicio;
   const pagoProveedor     = totalRepuestos > 0 ? totalRepuestos - comisionRepuestos : undefined;
@@ -268,9 +277,12 @@ function LiqRow({
   const estadoReal = liq._estadoOverride ?? liq.estado;
   const s          = ESTADO_LIQ[estadoReal] ?? ESTADO_LIQ['DEVENGADA'];
 
-  const pctComision = liq.montoTotalFacturado > 0
-    ? ((liq.comisionTotal / liq.montoTotalFacturado) * 100).toFixed(1)
-    : '0.0';
+  // Tier del restaurante vinculado a esta liquidación
+  const ot         = OTS.find(o => o.id === liq.otId);
+  const restaurante = ot ? getRestauranteById(ot.restauranteId) : null;
+  const tier        = restaurante?.tier;
+
+  const servPct    = Math.round(liq.comisionServicioPct * 100);
 
   return (
     <>
@@ -301,11 +313,18 @@ function LiqRow({
           </div>
         </td>
 
-        <td className="px-4 py-4 text-sm text-gray-500 font-mono">{liq.otId}</td>
+        <td className="px-4 py-4">
+          <p className="text-sm text-gray-500 font-mono">{liq.otId}</p>
+          {tier && (
+            <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${getTierBadgeClass(tier)}`}>
+              {getTierLabel(tier)}
+            </span>
+          )}
+        </td>
         <td className="px-4 py-4 text-sm font-medium text-gray-700">{formatARS(liq.montoTotalFacturado)}</td>
         <td className="px-4 py-4">
           <span className="text-sm font-bold text-[#2698D1]">{formatARS(liq.comisionTotal)}</span>
-          <span className="ml-1 text-xs text-gray-400">({pctComision}%)</span>
+          <span className="ml-1 text-xs text-gray-400">({servPct}% serv.)</span>
         </td>
         <td className="px-4 py-4 text-sm font-black text-[#0D0D0D]">{formatARS(liq.pagoTecnico)}</td>
         <td className="px-4 py-4 text-xs text-gray-400">
@@ -366,12 +385,12 @@ function LiqRow({
                   <p className="text-xs text-[#2698D1] mb-1">Comisión SHUURI</p>
                   <p className="text-xl font-black text-[#2698D1]">{formatARS(liq.comisionTotal)}</p>
                   <div className="mt-3 text-xs text-blue-500">
-                    <span className="font-bold">{pctComision}%</span> del total facturado
+                    <span className="font-bold">{servPct}%</span> serv. · {Math.round(liq.comisionRepuestosPct * 100)}% rep.
                   </div>
                   <div className="mt-2 h-1.5 w-full rounded-full bg-blue-200">
                     <div
                       className="h-1.5 rounded-full bg-[#2698D1]"
-                      style={{ width: `${Math.min(parseFloat(pctComision), 100)}%` }}
+                      style={{ width: `${Math.min(liq.montoTotalFacturado > 0 ? (liq.comisionTotal / liq.montoTotalFacturado) * 100 : 0, 100)}%` }}
                     />
                   </div>
                 </div>
@@ -476,7 +495,7 @@ export default function AdminLiquidaciones() {
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* TÍTULO */}
           <div className="mb-6 flex items-center justify-between">
@@ -604,7 +623,7 @@ export default function AdminLiquidaciones() {
             <table className="w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
-                  {['Liq.', 'Técnico', 'OT', 'Facturado', 'Comisión', 'Pago neto', 'Fecha', 'Estado', 'Acción'].map(h => (
+                  {['Liq.', 'Técnico', 'OT / Tier', 'Facturado', 'Comisión SHUURI', 'Pago neto', 'Fecha', 'Estado', 'Acción'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500">{h}</th>
                   ))}
                 </tr>

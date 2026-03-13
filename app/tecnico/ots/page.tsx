@@ -156,7 +156,7 @@ export default function TecnicoOTs() {
       <Sidebar userRole="TECNICO" userName={tecnico.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={tecnico.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* HEADER */}
           <div className="mb-6 flex items-start justify-between">

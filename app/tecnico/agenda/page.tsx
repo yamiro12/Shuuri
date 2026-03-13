@@ -231,7 +231,7 @@ export default function TecnicoAgenda() {
       <Sidebar userRole="TECNICO" userName={tecnicoNombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={tecnicoNombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* TÍTULO + NAVEGACIÓN */}
           <div className="mb-6 flex items-center justify-between">

@@ -8,8 +8,9 @@ import {
   Wrench, Package, Star,
   ThumbsUp, ThumbsDown,
   Info, Calendar, MapPin, Zap, Phone,
+  ChevronDown, ChevronUp, DollarSign,
 } from 'lucide-react';
-import { getOTById, getTecnicoById } from '@/data/mock';
+import { getOTById, getTecnicoById, RESTAURANTES } from '@/data/mock';
 import { EstadoBadge, UrgenciaBadge, formatARS, formatDate } from '@/components/shared/utils';
 import { RUBRO_LABELS } from '@/types/shuuri';
 
@@ -102,10 +103,11 @@ export default function RestauranteOTDetail() {
   const router = useRouter();
   const ot = getOTById(id);
 
-  const [cotAprobadaLocal,   setCotAprobadaLocal]   = useState(false);
-  const [cotRechazadaLocal,  setCotRechazadaLocal]  = useState(false);
-  const [conformidadFirmada, setConformidadFirmada] = useState(false);
+  const [cotAprobadaLocal,    setCotAprobadaLocal]    = useState(false);
+  const [cotRechazadaLocal,   setCotRechazadaLocal]   = useState(false);
+  const [conformidadFirmada,  setConformidadFirmada]  = useState(false);
   const [sinConformidadLocal, setSinConformidadLocal] = useState(false);
+  const [showDesglose,        setShowDesglose]        = useState(false);
 
   if (!ot) {
     return (
@@ -119,6 +121,17 @@ export default function RestauranteOTDetail() {
   const tecnico    = ot.tecnicoId ? getTecnicoById(ot.tecnicoId) : null;
   const cot        = ot.cotizacion;
   const faseActual = FASE_MAP[ot.estado] ?? 'reporte';
+
+  // Desglose económico
+  const COMISION_PCT_MAP: Record<string, number> = { FREEMIUM: 30, CADENA_CHICA: 25, CADENA_GRANDE: 20 };
+  const TIER_NOMBRE: Record<string, string>      = { FREEMIUM: 'Freemium', CADENA_CHICA: 'Cadena Chica', CADENA_GRANDE: 'Cadena Grande' };
+  const restauranteData = RESTAURANTES.find(r => r.id === ot.restauranteId);
+  const tierActual      = restauranteData?.tier ?? 'FREEMIUM';
+  const comisionPct     = COMISION_PCT_MAP[tierActual] ?? 30;
+  const precioTotal     = cot?.totalDefinitivo ?? 0;
+  const comisionARS     = Math.round(precioTotal * comisionPct / 100);
+  const precioBase      = precioTotal - comisionARS;
+  const comisionGrande  = COMISION_PCT_MAP['CADENA_GRANDE'] ?? 20;
   const faseIdx    = FASES_ORDEN.indexOf(faseActual);
 
   const tieneEstimacion          = (cot?.estimacionMin ?? 0) > 0;
@@ -447,6 +460,57 @@ export default function RestauranteOTDetail() {
           <section className="bg-white rounded-2xl border border-gray-100 p-5">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Notas internas</h2>
             <p className="text-sm text-gray-600 leading-relaxed">{ot.notas}</p>
+          </section>
+        )}
+
+        {/* ── DESGLOSE ECONÓMICO ── */}
+        {precioTotal > 0 && (
+          <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <button
+              onClick={() => setShowDesglose(v => !v)}
+              className="flex w-full items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                <DollarSign className="h-4 w-4 text-[#2698D1]" />
+                ¿Cómo funciona el precio?
+              </span>
+              {showDesglose
+                ? <ChevronUp className="h-4 w-4 text-gray-400" />
+                : <ChevronDown className="h-4 w-4 text-gray-400" />
+              }
+            </button>
+            {showDesglose && (
+              <div className="border-t px-5 py-5 space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                  <span className="text-sm text-gray-600">Precio del servicio</span>
+                  <span className="text-sm font-bold text-gray-800">{formatARS(precioBase)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                  <span className="text-sm text-gray-600">
+                    Comisión SHUURI
+                    <span className="ml-1.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-500">
+                      {comisionPct}% · plan {TIER_NOMBRE[tierActual]}
+                    </span>
+                  </span>
+                  <span className="text-sm font-bold text-red-500">+ {formatARS(comisionARS)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm font-bold text-gray-800">Total que pagás</span>
+                  <span className="text-lg font-black text-[#0D0D0D]">{formatARS(precioTotal)}</span>
+                </div>
+                {tierActual !== 'CADENA_GRANDE' && (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+                    <p className="text-xs text-blue-800 leading-snug">
+                      Con tu plan <strong>{TIER_NOMBRE[tierActual]}</strong>, tu comisión es <strong>{comisionPct}%</strong>.
+                      Con <strong>Cadena Grande</strong> sería <strong>{comisionGrande}%</strong> — ahorrarías {formatARS(comisionARS - Math.round(precioTotal * comisionGrande / 100))}.{' '}
+                      <a href={`/restaurante/licencia?id=${ot.restauranteId}`} className="font-bold underline hover:text-blue-700">
+                        Ver mi licencia →
+                      </a>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         )}
 

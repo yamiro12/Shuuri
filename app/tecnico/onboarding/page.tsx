@@ -27,6 +27,7 @@ import {
   LABELS_ZONA_COBERTURA,
 } from "@/types/shuuri";
 import type { CondicionIVA, ZonaCobertura } from "@/types/shuuri";
+import { TAXONOMIA_SHUURI } from "@/data/mock";
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 
@@ -38,15 +39,8 @@ const PROVINCIAS = [
   "Tierra del Fuego", "Tucumán",
 ];
 
-const ESPECIALIDADES = [
-  "Refrigeración",
-  "Calor Comercial",
-  "Lavado Industrial",
-  "Café y Bebidas",
-  "Panificación",
-  "Gas",
-  "Eléctrico General",
-];
+// Especialidades derivadas de TAXONOMIA_SHUURI (usamos el label de cada rubro)
+const ESPECIALIDADES = TAXONOMIA_SHUURI.map(r => r.label);
 
 const CATEGORIAS_MONOTRIBUTO = ["A","B","C","D","E","F","G","H","I","J","K"];
 
@@ -350,9 +344,12 @@ function Paso3({ data, onChange, onToggleEsp, certs, onAddCert, onUpdateCert, on
         </p>
       </div>
 
-      {/* Especialidades */}
+      {/* Especialidades — rubros de TAXONOMIA_SHUURI */}
       <div>
-        <Label required>Especialidades (mínimo 1)</Label>
+        <Label required>Rubros de especialización (mínimo 1)</Label>
+        <p className="text-xs text-gray-400 mb-2">
+          Seleccioná los rubros en los que trabajás. Podrás configurar categorías, subcategorías y marcas certificadas en tu perfil.
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
           {ESPECIALIDADES.map((esp) => {
             const active = data.especialidades.includes(esp);

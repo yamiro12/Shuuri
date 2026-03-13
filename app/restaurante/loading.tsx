@@ -6,7 +6,7 @@ export default function Loading() {
       <div className="flex-1 sidebar-push">
         {/* Header skeleton */}
         <div className="sticky top-0 z-30 h-16 border-b bg-white" />
-        <main className="p-8">
+        <main className="page-main">
           <div className="mb-8 h-8 w-48 rounded-lg bg-gray-200 animate-pulse" />
           <div className="mb-6 grid grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (

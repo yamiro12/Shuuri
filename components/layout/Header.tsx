@@ -1,14 +1,15 @@
 "use client";
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/shuuri';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, Menu, LogOut, User, Settings } from 'lucide-react';
 import NotificacionesBell from '@/components/NotificacionesBell';
 
 interface HeaderProps {
-  userRole: UserRole;
-  userName: string;
-  actorId?: string; // for notification filtering; if omitted, bell is hidden
+  userRole:  UserRole;
+  userName:  string;
+  actorId?:  string;
 }
 
 const PORTAL_LABELS: Record<UserRole, string> = {
@@ -28,8 +29,12 @@ const PAGE_LABELS: Record<string, string> = {
   '/restaurante/estadisticas':       'Estadísticas',
   '/restaurante/perfil':             'Mi perfil',
   '/restaurante/onboarding':         'Onboarding',
-  '/restaurante/dashboard':          'Dashboard',
   '/restaurante/notificaciones':     'Notificaciones',
+  '/restaurante/sucursales':         'Mis Sucursales',
+  '/restaurante/tecnicos-fijos':     'Mis Técnicos Fijos',
+  '/restaurante/licencia':           'Mi Licencia',
+  '/restaurante/usuarios':           'Usuarios & Accesos',
+  '/restaurante/integraciones':      'Integraciones',
   // Técnico
   '/tecnico':                        'Dashboard',
   '/tecnico/agenda':                 'Mi agenda',
@@ -38,18 +43,24 @@ const PAGE_LABELS: Record<string, string> = {
   '/tecnico/estadisticas':           'Estadísticas',
   '/tecnico/perfil':                 'Mi perfil',
   '/tecnico/onboarding':             'Onboarding',
-  '/tecnico/dashboard':              'Dashboard',
   '/tecnico/notificaciones':         'Notificaciones',
+  '/tecnico/disponibilidad':         'Disponibilidad',
+  '/tecnico/rubros':                 'Mis Rubros',
   // Proveedor
   '/proveedor':                      'Dashboard',
   '/proveedor/ordenes':              'Órdenes de compra',
   '/proveedor/catalogo':             'Mi catálogo',
   '/proveedor/liquidaciones':        'Liquidaciones',
+  '/proveedor/comisiones':           'Comisiones OCR',
   '/proveedor/estadisticas':         'Estadísticas',
   '/proveedor/perfil':               'Mi perfil',
   '/proveedor/onboarding':           'Onboarding',
-  '/proveedor/dashboard':            'Dashboard',
   '/proveedor/notificaciones':       'Notificaciones',
+  '/proveedor/mis-marcas':           'Mis Marcas',
+  '/proveedor/mi-pagina':            'Mi Página',
+  '/proveedor/licencia':             'Mi Licencia',
+  '/proveedor/usuarios':             'Usuarios & Accesos',
+  '/proveedor/integraciones':        'Integraciones',
   // Admin
   '/admin':                          'Dashboard',
   '/admin/ots':                      'Todas las OTs',
@@ -86,40 +97,75 @@ function getPageLabel(pathname: string): string {
   return '';
 }
 
+function toggleMobileSidebar() {
+  window.dispatchEvent(new Event('shuuri:toggle-mobile-sidebar'));
+}
+
 export default function Header({ userRole, userName, actorId }: HeaderProps) {
-  const pathname  = usePathname();
-  const portal    = PORTAL_LABELS[userRole];
-  const pageLabel = getPageLabel(pathname);
-  const initials  = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const pathname    = usePathname();
+  const portal      = PORTAL_LABELS[userRole];
+  const pageLabel   = getPageLabel(pathname);
+  const initials    = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const bandejaHref = BANDEJA_HREF[userRole];
 
-  return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-gray-100 bg-white/95 px-6 backdrop-blur-sm">
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-      {/* ── LEFT: breadcrumb ───────────────────────────────── */}
-      <div className="flex items-center gap-1.5 text-sm">
-        <span className="font-medium text-gray-400">{portal}</span>
-        {pageLabel && (
-          <>
-            <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
-            <span className="font-semibold text-gray-800">{pageLabel}</span>
-          </>
-        )}
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [userMenuOpen]);
+
+  const profileHref =
+    userRole === 'RESTAURANTE' ? `/restaurante/perfil${actorId ? `?id=${actorId}` : ''}` :
+    userRole === 'TECNICO'     ? '/tecnico/perfil' :
+    userRole === 'PROVEEDOR'   ? '/proveedor/perfil' : '/admin';
+
+  return (
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-gray-100/80 bg-white/96 px-4 sm:px-6 backdrop-blur-md">
+
+      {/* ── LEFT ─────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={toggleMobileSidebar}
+          aria-label="Abrir menú"
+          className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors shrink-0"
+        >
+          <Menu className="h-[18px] w-[18px]" />
+        </button>
+
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm min-w-0">
+          <span className="font-medium text-gray-400 shrink-0">{portal}</span>
+          {pageLabel && (
+            <>
+              <ChevronRight className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">{pageLabel}</span>
+            </>
+          )}
+        </nav>
       </div>
 
-      {/* ── RIGHT: actions ─────────────────────────────────── */}
-      <div className="flex items-center gap-1">
+      {/* ── RIGHT ────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
-        {/* Search trigger */}
-        <button className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100">
+        {/* Search — hidden on mobile */}
+        <button className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100">
           <Search className="h-3.5 w-3.5" />
-          <span className="hidden sm:block">Buscar...</span>
-          <kbd className="hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-gray-300 shadow-sm ring-1 ring-gray-200 sm:block">
+          <span>Buscar...</span>
+          <kbd className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-gray-300 shadow-sm ring-1 ring-gray-200">
             ⌘K
           </kbd>
         </button>
 
-        {/* Notification bell — only for portals with a bandeja */}
+        {/* Notification bell */}
         {actorId && bandejaHref && userRole !== 'SHUURI_ADMIN' && (
           <NotificacionesBell
             actorId={actorId}
@@ -129,14 +175,63 @@ export default function Header({ userRole, userName, actorId }: HeaderProps) {
         )}
 
         {/* Divider */}
-        <div className="mx-2 h-5 w-px bg-gray-100" />
+        <div className="mx-1 h-5 w-px bg-gray-100" />
 
-        {/* User */}
-        <div className="flex items-center gap-2">
-          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black text-white ${AVATAR_COLORS[userRole]}`}>
-            {initials}
-          </div>
-          <span className="hidden text-sm font-medium text-gray-700 sm:block">{userName.split(' ')[0]}</span>
+        {/* User avatar + dropdown */}
+        <div className="relative" ref={userMenuRef}>
+          <button
+            onClick={() => setUserMenuOpen(o => !o)}
+            className="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-gray-50 transition-colors"
+          >
+            <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black text-white shrink-0 ${AVATAR_COLORS[userRole]}`}>
+              {initials}
+            </div>
+            <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
+              {userName.split(' ')[0]}
+            </span>
+          </button>
+
+          {/* User dropdown */}
+          {userMenuOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-gray-200 bg-white shadow-lg py-1.5 z-50 animate-fade-in">
+              {/* User info */}
+              <div className="px-3 py-2 mb-1 border-b border-gray-100">
+                <p className="text-[12px] font-semibold text-gray-800 truncate">{userName}</p>
+                <p className="text-[11px] text-gray-400">{PORTAL_LABELS[userRole]}</p>
+              </div>
+
+              <Link
+                href={profileHref}
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2.5 mx-1 px-2.5 py-2 rounded-lg text-[13px] text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              >
+                <User className="h-3.5 w-3.5 text-gray-400" />
+                Mi perfil
+              </Link>
+
+              {userRole === 'RESTAURANTE' && actorId && (
+                <Link
+                  href={`/restaurante/licencia?id=${actorId}`}
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2.5 mx-1 px-2.5 py-2 rounded-lg text-[13px] text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                  <Settings className="h-3.5 w-3.5 text-gray-400" />
+                  Mi Licencia
+                </Link>
+              )}
+
+              <div className="my-1 mx-2 h-px bg-gray-100" />
+
+              <Link
+                href="/"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2.5 mx-1 px-2.5 py-2 rounded-lg text-[13px] text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Cerrar sesión
+              </Link>
+            </div>
+          )}
         </div>
 
       </div>

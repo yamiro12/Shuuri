@@ -184,10 +184,10 @@ export default function RestauranteOTs() {
 
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
-      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
       <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* HEADER */}
           <div className="mb-6 flex items-start justify-between">

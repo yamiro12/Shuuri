@@ -158,10 +158,10 @@ export default function RestauranteEstadisticas() {
 
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
-      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={id} />
       <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* Header + period filter */}
           <div className="mb-6 flex items-center justify-between">

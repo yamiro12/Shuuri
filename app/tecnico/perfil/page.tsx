@@ -1,10 +1,29 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useRef, KeyboardEvent } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { TECNICOS } from '@/data/mock';
+import { TECNICOS, TAXONOMIA_SHUURI } from '@/data/mock';
 import { LegajoTecnico, RUBRO_LABELS, TODOS_LOS_RUBROS } from '@/types/shuuri';
-import { User, MapPin, Users, Star, Phone, CreditCard, FileText, Edit3, Save, CheckCircle, ShieldCheck, Calendar } from 'lucide-react';
+import { User, MapPin, Users, Star, Phone, CreditCard, FileText, Edit3, Save, CheckCircle, ShieldCheck, Calendar, Wrench, Plus, Trash2, X, ChevronDown, Tag } from 'lucide-react';
+
+// ─── TIPOS ABM RUBROS ─────────────────────────────────────────────────────────
+
+type NivelCert = 'certificacion_oficial' | 'experiencia_comprobable' | 'en_proceso';
+
+interface RubroCert {
+  id:        string;
+  rubro:     string; // e.g. 'Coccion'
+  categoria: string; // e.g. 'Hornos'
+  subcats:   string[];
+  marcas:    string[];
+  nivel:     NivelCert;
+}
+
+const NIVEL_LABELS: Record<NivelCert, { label: string; cls: string }> = {
+  certificacion_oficial:  { label: 'Certificación oficial',    cls: 'bg-green-50 text-green-700 border-green-200' },
+  experiencia_comprobable:{ label: 'Experiencia comprobable',  cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  en_proceso:             { label: 'En proceso',               cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+};
 
 const TECNICO = TECNICOS[0];
 
@@ -49,6 +68,7 @@ const SECCIONES = [
   { id: 'tipo',           label: 'Tipo de alta',      icon: User },
   { id: 'fiscal',         label: 'Datos fiscales',    icon: FileText },
   { id: 'cobertura',      label: 'Cobertura',         icon: MapPin },
+  { id: 'rubros',         label: 'Mis Rubros',        icon: Wrench },
   { id: 'equipo',         label: 'Equipo de trabajo', icon: Users },
   { id: 'experiencia',    label: 'Experiencia',       icon: Star },
   { id: 'contacto',       label: 'Contacto',          icon: Phone },
@@ -129,11 +149,83 @@ function ChipsMulti({ label, values, editando, opciones, onChange }: {
   );
 }
 
+// ─── TAG INPUT COMPONENT ─────────────────────────────────────────────────────
+
+function TagInput({ tags, onChange, placeholder }: {
+  tags: string[]; onChange: (t: string[]) => void; placeholder?: string;
+}) {
+  const [input, setInput] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function add() {
+    const v = input.trim();
+    if (v && !tags.includes(v)) onChange([...tags, v]);
+    setInput('');
+  }
+
+  function handleKey(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(); }
+    if (e.key === 'Backspace' && !input && tags.length > 0)
+      onChange(tags.slice(0, -1));
+  }
+
+  return (
+    <div
+      onClick={() => inputRef.current?.focus()}
+      className="flex min-h-[40px] flex-wrap gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 cursor-text focus-within:border-[#2698D1] transition-colors"
+    >
+      {tags.map(t => (
+        <span key={t} className="flex items-center gap-1 rounded-md bg-[#2698D1]/10 px-2 py-0.5 text-xs font-medium text-[#2698D1]">
+          <Tag className="h-2.5 w-2.5" />{t}
+          <button type="button" onClick={e => { e.stopPropagation(); onChange(tags.filter(x => x !== t)); }}
+            className="hover:text-red-500 transition-colors">
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </span>
+      ))}
+      <input
+        ref={inputRef}
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={handleKey}
+        onBlur={add}
+        placeholder={tags.length === 0 ? (placeholder ?? 'Escribí y presioná Enter…') : ''}
+        className="flex-1 min-w-[120px] text-xs outline-none bg-transparent"
+      />
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+
 export default function TecnicoPerfil() {
   const [seccion, setSeccion] = useState('tipo');
   const [editando, setEditando] = useState(false);
   const [data, setData] = useState<LegajoTecnico>(LEGAJO_VACIO);
   const [guardado, setGuardado] = useState(false);
+
+  // ── ABM Rubros state ──
+  const [rubrosCerts, setRubrosCerts] = useState<RubroCert[]>([
+    {
+      id: '1', rubro: 'Refrigeracion', categoria: 'Heladeras',
+      subcats: ['Heladera Vertical', 'Heladera Exhibidora'],
+      marcas: ['True', 'Frider'], nivel: 'certificacion_oficial',
+    },
+    {
+      id: '2', rubro: 'Coccion', categoria: 'Hornos',
+      subcats: ['Horno Convector'],
+      marcas: ['Rational', 'Unox'], nivel: 'experiencia_comprobable',
+    },
+  ]);
+
+  // ── Formulario "agregar rubro" ──
+  const [showForm, setShowForm] = useState(false);
+  const [formRubro,    setFormRubro]    = useState('');
+  const [formCat,      setFormCat]      = useState('');
+  const [formSubcats,  setFormSubcats]  = useState<string[]>([]);
+  const [formMarcas,   setFormMarcas]   = useState<string[]>([]);
+  const [formNivel,    setFormNivel]    = useState<NivelCert>('experiencia_comprobable');
+  const [formError,    setFormError]    = useState('');
 
   const set = (campo: keyof LegajoTecnico) => (valor: string) =>
     setData(prev => ({ ...prev, [campo]: valor }));
@@ -144,12 +236,43 @@ export default function TecnicoPerfil() {
     setTimeout(() => setGuardado(false), 2500);
   };
 
+  // Derived from TAXONOMIA_SHUURI
+  const rubroOptions   = TAXONOMIA_SHUURI;
+  const categorias     = rubroOptions.find(r => r.rubro === formRubro)?.categorias ?? [];
+  const subcategorias  = categorias.find(c => c.nombre === formCat)?.subcategorias ?? [];
+
+  function resetForm() {
+    setFormRubro(''); setFormCat(''); setFormSubcats([]);
+    setFormMarcas([]); setFormNivel('experiencia_comprobable');
+    setFormError(''); setShowForm(false);
+  }
+
+  function agregarRubro() {
+    if (!formRubro || !formCat) { setFormError('Elegí rubro y categoría.'); return; }
+    if (formSubcats.length === 0) { setFormError('Seleccioná al menos una subcategoría.'); return; }
+    const duplicado = rubrosCerts.some(r => r.rubro === formRubro && r.categoria === formCat);
+    if (duplicado) { setFormError('Ya tenés configurado ese Rubro + Categoría.'); return; }
+    setRubrosCerts(prev => [...prev, {
+      id: String(Date.now()), rubro: formRubro, categoria: formCat,
+      subcats: formSubcats, marcas: formMarcas, nivel: formNivel,
+    }]);
+    resetForm();
+  }
+
+  function eliminarRubro(id: string) {
+    setRubrosCerts(prev => prev.filter(r => r.id !== id));
+  }
+
+  function toggleSubcat(sub: string) {
+    setFormSubcats(prev => prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]);
+  }
+
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={TECNICO.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={TECNICO.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -261,6 +384,221 @@ export default function TecnicoPerfil() {
                     opciones={['Lunes a Viernes horario comercial', 'Sábados', 'Domingos y feriados', 'Nocturno', '24/7']}
                     onChange={v => setData(prev => ({ ...prev, disponibilidadHoraria: v }))} />
                   <Campo label="Servicios por día (aprox)" value={data.serviciosPorDia} editando={editando} onChange={set('serviciosPorDia')} />
+                </div>
+              )}
+
+              {/* MIS RUBROS */}
+              {seccion === 'rubros' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="font-black text-[#0D0D0D]">Mis Rubros</h2>
+                      <p className="text-xs text-gray-400 mt-0.5">Configurá tus especialidades con categoría, subcategorías y marcas certificadas.</p>
+                    </div>
+                    {!showForm && (
+                      <button
+                        onClick={() => setShowForm(true)}
+                        className="flex items-center gap-1.5 rounded-lg bg-[#2698D1] px-3 py-2 text-xs font-bold text-white hover:bg-[#2698D1]/90 transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Agregar rubro
+                      </button>
+                    )}
+                  </div>
+
+                  {/* FORMULARIO AGREGAR */}
+                  {showForm && (
+                    <div className="rounded-xl border-2 border-[#2698D1]/30 bg-blue-50/40 p-5 space-y-4">
+                      <p className="text-sm font-bold text-[#0D0D0D]">Nuevo rubro</p>
+
+                      {/* Cascada: Rubro → Categoría */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Rubro</label>
+                          <div className="relative">
+                            <select
+                              value={formRubro}
+                              onChange={e => { setFormRubro(e.target.value); setFormCat(''); setFormSubcats([]); }}
+                              className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#2698D1]"
+                            >
+                              <option value="">Elegí un rubro…</option>
+                              {rubroOptions.map(r => (
+                                <option key={r.rubro} value={r.rubro}>{r.label}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Categoría</label>
+                          <div className="relative">
+                            <select
+                              value={formCat}
+                              onChange={e => { setFormCat(e.target.value); setFormSubcats([]); }}
+                              disabled={!formRubro}
+                              className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#2698D1] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <option value="">Elegí categoría…</option>
+                              {categorias.map(c => (
+                                <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Subcategorías */}
+                      {formCat && subcategorias.length > 0 && (
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                            Subcategorías <span className="text-red-400">*</span>
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {subcategorias.map(sub => (
+                              <button
+                                key={sub}
+                                type="button"
+                                onClick={() => toggleSubcat(sub)}
+                                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                                  formSubcats.includes(sub)
+                                    ? 'border-[#2698D1] bg-[#2698D1] text-white'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:border-[#2698D1]/50'
+                                }`}
+                              >
+                                {formSubcats.includes(sub) && <span className="mr-1">✓</span>}
+                                {sub}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Marcas certificadas (tag input) */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+                          Marcas certificadas <span className="text-gray-400 font-normal normal-case">(opcional)</span>
+                        </label>
+                        <TagInput
+                          tags={formMarcas}
+                          onChange={setFormMarcas}
+                          placeholder="Ej: Rational, Unox… presioná Enter"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Escribí la marca y presioná Enter para agregarla.</p>
+                      </div>
+
+                      {/* Nivel de certificación */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+                          Nivel de certificación <span className="text-red-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={formNivel}
+                            onChange={e => setFormNivel(e.target.value as NivelCert)}
+                            className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#2698D1]"
+                          >
+                            <option value="certificacion_oficial">Certificación oficial de marca</option>
+                            <option value="experiencia_comprobable">Experiencia comprobable</option>
+                            <option value="en_proceso">En proceso de certificación</option>
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        </div>
+                      </div>
+
+                      {/* Error */}
+                      {formError && (
+                        <p className="text-xs text-red-500 font-medium">{formError}</p>
+                      )}
+
+                      {/* Botones */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={resetForm}
+                          className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={agregarRubro}
+                          className="flex items-center gap-1.5 rounded-lg bg-[#2698D1] px-4 py-2 text-xs font-bold text-white hover:bg-[#2698D1]/90 transition-colors"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Agregar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* LISTA DE RUBROS CONFIGURADOS */}
+                  {rubrosCerts.length === 0 && !showForm && (
+                    <div className="rounded-xl border border-dashed border-gray-200 py-10 text-center">
+                      <Wrench className="h-8 w-8 text-gray-200 mx-auto mb-3" />
+                      <p className="text-sm text-gray-400 font-medium">Sin rubros configurados</p>
+                      <p className="text-xs text-gray-300 mt-1">Agregá tus especialidades para recibir OTs.</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {rubrosCerts.map(rc => {
+                      const rubroLabel = TAXONOMIA_SHUURI.find(r => r.rubro === rc.rubro)?.label ?? rc.rubro;
+                      const nivel = NIVEL_LABELS[rc.nivel];
+                      return (
+                        <div key={rc.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              {/* Header */}
+                              <div className="flex items-center gap-2 flex-wrap mb-2">
+                                <span className="font-bold text-sm text-[#0D0D0D]">{rubroLabel}</span>
+                                <span className="text-gray-300">›</span>
+                                <span className="font-semibold text-sm text-[#2698D1]">{rc.categoria}</span>
+                                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${nivel.cls}`}>
+                                  {nivel.label}
+                                </span>
+                              </div>
+
+                              {/* Subcategorías */}
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {rc.subcats.map(s => (
+                                  <span key={s} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600 font-medium">
+                                    {s}
+                                  </span>
+                                ))}
+                              </div>
+
+                              {/* Marcas */}
+                              {rc.marcas.length > 0 && (
+                                <div className="flex flex-wrap gap-1 items-center">
+                                  <span className="text-[10px] text-gray-400 uppercase tracking-wide font-bold mr-1">Marcas:</span>
+                                  {rc.marcas.map(m => (
+                                    <span key={m} className="rounded-md bg-[#2698D1]/10 px-2 py-0.5 text-[11px] text-[#2698D1] font-medium">
+                                      {m}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Eliminar */}
+                            <button
+                              type="button"
+                              onClick={() => eliminarRubro(rc.id)}
+                              className="shrink-0 flex items-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1.5 text-[11px] font-bold text-red-500 hover:bg-red-100 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3" /> Eliminar
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {rubrosCerts.length > 0 && (
+                    <p className="text-xs text-gray-400 text-center">
+                      {rubrosCerts.length} rubro{rubrosCerts.length > 1 ? 's' : ''} configurado{rubrosCerts.length > 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
               )}
 

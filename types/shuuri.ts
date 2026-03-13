@@ -116,6 +116,9 @@ export type EstadoOT =
 // ─── TIER DE CLIENTE ─────────────────────────────────────────────────────────
 export type TierCliente = 'FREEMIUM' | 'CADENA_CHICA' | 'CADENA_GRANDE';
 
+// ─── PLAN PROVEEDOR ──────────────────────────────────────────────────────────
+export type PlanProveedor = 'freemium' | 'pro' | 'premium';
+
 export const COMISION_POR_TIER: Record<TierCliente, number> = {
   FREEMIUM:      0.30,
   CADENA_CHICA:  0.25,
@@ -153,6 +156,8 @@ export interface Restaurante {
   telefono: string;
   tier: TierCliente;
   cantidadLocales: number;
+  suscripcionActivaDesde?: string;   // ISO date — presente solo en tiers de pago
+  cantidadLocalesSuscriptos?: number;
   locales?: LocalRestaurante[];
   legajo?: LegajoRestaurante;
 }
@@ -195,6 +200,7 @@ export interface Proveedor {
   email: string;
   direccion?: string;
   rubros: Rubro[];
+  plan?: PlanProveedor;
   // Campos originales del type
   zonaDespacho?: string[];
   tiempoEntregaHs?: number;
@@ -431,6 +437,15 @@ export interface LegajoRestaurante {
   frustracionMantenimiento?: string;
   // Campo plan (referencia al tier del restaurante)
   plan?: string;
+  // Fiscal
+  numeroIIBB?: string;
+  convenioMultilateral?: boolean;
+  jurisdiccionesIIBB?: string;
+  alicuotaIIBB?: string;
+  esSujetoRetencion?: boolean;
+  retencionGanancias?: string;
+  retencionIVA?: string;
+  retencionIIBBPct?: string;
 }
 
 export interface LegajoTecnico {

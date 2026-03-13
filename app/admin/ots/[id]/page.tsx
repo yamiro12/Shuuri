@@ -50,7 +50,7 @@ export default function AdminOTDetalle() {
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* BREADCRUMB / BACK */}
           <button

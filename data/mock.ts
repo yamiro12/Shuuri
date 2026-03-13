@@ -22,6 +22,7 @@ import type {
   OrdenCompraRepuesto,
   Notificacion,
 } from '../types/shuuri';
+import { calcularLiquidacionOT } from '../lib/business';
 
 // ─── RESTAURANTES ─────────────────────────────────────────────────────────────
 
@@ -84,6 +85,8 @@ export const RESTAURANTES: Restaurante[] = [
     telefono: '11-4823-1100',
     tier: 'CADENA_GRANDE',
     cantidadLocales: 4,
+    suscripcionActivaDesde: '2024-03-01',
+    cantidadLocalesSuscriptos: 4,
     locales: [
       { id: 'L001', nombre: 'Café Martínez Palermo', direccion: 'Av. Santa Fe 3253, CABA', zona: 'Palermo', contactoNombre: 'Valeria Soto', contactoTel: '11-5522-8831' },
       { id: 'L002', nombre: 'Café Martínez Recoleta', direccion: 'Av. Callao 1782, CABA', zona: 'Recoleta', contactoNombre: 'Diego Ortiz', contactoTel: '11-4804-2255' },
@@ -127,6 +130,8 @@ export const RESTAURANTES: Restaurante[] = [
     telefono: '11-4804-5533',
     tier: 'CADENA_GRANDE',
     cantidadLocales: 3,
+    suscripcionActivaDesde: '2024-06-01',
+    cantidadLocalesSuscriptos: 3,
     locales: [
       { id: 'L005', nombre: 'Havanna Recoleta', direccion: 'Av. Quintana 188, CABA', zona: 'Recoleta', contactoNombre: 'Patricia Ruiz', contactoTel: '11-4804-5533' },
       { id: 'L006', nombre: 'Havanna Palermo Soho', direccion: 'Thames 1745, CABA', zona: 'Palermo', contactoNombre: 'Fabián Torres', contactoTel: '11-4831-8844' },
@@ -235,6 +240,8 @@ export const RESTAURANTES: Restaurante[] = [
     telefono: '11-4300-1122',
     tier: 'CADENA_CHICA',
     cantidadLocales: 2,
+    suscripcionActivaDesde: '2025-01-01',
+    cantidadLocalesSuscriptos: 2,
     locales: [
       { id: 'L008', nombre: 'Burgerteca San Telmo', direccion: 'Estados Unidos 500, CABA', zona: 'San Telmo', contactoNombre: 'Lautaro Díaz', contactoTel: '11-4300-1122' },
       { id: 'L009', nombre: 'Burgerteca Almagro', direccion: 'Av. Rivadavia 3600, CABA', zona: 'Almagro', contactoNombre: 'Nicolás Vega', contactoTel: '11-4931-4455' },
@@ -371,6 +378,8 @@ export const RESTAURANTES: Restaurante[] = [
     telefono: '11-5032-2244',
     tier: 'CADENA_GRANDE',
     cantidadLocales: 8,
+    suscripcionActivaDesde: '2023-09-01',
+    cantidadLocalesSuscriptos: 8,
     locales: [
       { id: 'L010', nombre: 'McDonald\'s Callao', direccion: 'Av. Callao 100, CABA', zona: 'Centro', contactoNombre: 'Hernán Castro', contactoTel: '11-5032-2244' },
       { id: 'L011', nombre: 'McDonald\'s Corrientes', direccion: 'Av. Corrientes 800, CABA', zona: 'Centro', contactoNombre: 'Andrea López', contactoTel: '11-5033-5566' },
@@ -475,6 +484,8 @@ export const RESTAURANTES: Restaurante[] = [
     telefono: '11-4799-2233',
     tier: 'CADENA_CHICA',
     cantidadLocales: 2,
+    suscripcionActivaDesde: '2025-04-01',
+    cantidadLocalesSuscriptos: 2,
     locales: [
       { id: 'L013', nombre: 'Kentucky Olivos', direccion: 'Maipú 2800, Olivos', zona: 'GBA Norte', contactoNombre: 'Alberto Rivas', contactoTel: '11-4799-2233' },
       { id: 'L014', nombre: 'Kentucky Acassuso', direccion: 'Libertad 300, Acassuso', zona: 'GBA Norte', contactoNombre: 'Graciela Ferrer', contactoTel: '11-4747-8899' },
@@ -804,6 +815,7 @@ export const PROVEEDORES: Proveedor[] = [
     telefono: '11-4867-0700',
     email: 'ventas@lynchcocinas.com.ar',
     rubros: ['calor_comercial', 'gas_combustion', 'maquinaria_preparacion'],
+    plan: 'premium',
     catalogoItems: [
       { id: 'CAT001', nombre: 'Cocina industrial 6 hornallas Fagor CG-610', precio: 380, rubro: 'calor_comercial', marca: 'Fagor', modelo: 'CG-610' },
       { id: 'CAT002', nombre: 'Termo Piloto cocina Fagor', precio: 22, rubro: 'calor_comercial', marca: 'Fagor', modelo: 'Universal' },
@@ -846,6 +858,7 @@ export const PROVEEDORES: Proveedor[] = [
     telefono: '11-4753-3300',
     email: 'repuestos@frider.com.ar',
     rubros: ['frio_comercial'],
+    plan: 'pro',
     catalogoItems: [
       { id: 'CAT010', nombre: 'Compresor Tecumseh FH 2480Z', precio: 180, rubro: 'frio_comercial', marca: 'Tecumseh', modelo: 'FH 2480Z' },
       { id: 'CAT011', nombre: 'Gas refrigerante R404A 10kg', precio: 45, rubro: 'frio_comercial', marca: 'Dupont', modelo: 'R404A' },
@@ -890,6 +903,7 @@ export const PROVEEDORES: Proveedor[] = [
     telefono: '11-4777-0100',
     email: 'comercial@igastronomica.com.ar',
     rubros: ['cafe_bebidas', 'lavado_comercial', 'maquinaria_preparacion'],
+    plan: 'pro',
     catalogoItems: [
       { id: 'CAT020', nombre: 'Bomba vibradora ULKA EP5 230V', precio: 65, rubro: 'cafe_bebidas', marca: 'ULKA', modelo: 'EP5 230V' },
       { id: 'CAT021', nombre: 'Kit juntas y sellos La Marzocco Linea PB', precio: 38, rubro: 'cafe_bebidas', marca: 'La Marzocco', modelo: 'Linea PB' },
@@ -938,6 +952,7 @@ export const PROVEEDORES: Proveedor[] = [
     telefono: '11-4954-5500',
     email: 'ventas@masnet.com.ar',
     rubros: ['pos_it', 'seguridad_cctv', 'automatizacion_iot'],
+    plan: 'freemium',
     catalogoItems: [
       { id: 'CAT030', nombre: 'Terminal POS Ingenico Move 5000', precio: 220, rubro: 'pos_it', marca: 'Ingenico', modelo: 'Move 5000' },
       { id: 'CAT031', nombre: 'Cámara IP Hikvision DS-2CD2143G2-I', precio: 85, rubro: 'seguridad_cctv', marca: 'Hikvision', modelo: 'DS-2CD2143G2-I' },
@@ -980,6 +995,7 @@ export const PROVEEDORES: Proveedor[] = [
     telefono: '11-4641-8800',
     email: 'ventas@gasconfort.com.ar',
     rubros: ['gas_combustion', 'calor_comercial'],
+    plan: 'freemium',
     catalogoItems: [
       { id: 'CAT040', nombre: 'Válvula de gas DN25 Dungs', precio: 95, rubro: 'gas_combustion', marca: 'Dungs', modelo: 'DMV-D 225/11' },
       { id: 'CAT041', nombre: 'Manorreductor para gas industrial', precio: 65, rubro: 'gas_combustion', marca: 'Tartarini', modelo: 'FE 10 EF' },
@@ -1020,6 +1036,7 @@ export const PROVEEDORES: Proveedor[] = [
     telefono: '11-4642-9900',
     email: 'ventas@hydroservice.com.ar',
     rubros: ['plomeria_agua', 'lavado_comercial', 'campanas_extraccion'],
+    plan: 'freemium',
     catalogoItems: [
       { id: 'CAT050', nombre: 'Bomba centrífuga Pedrollo 1HP', precio: 145, rubro: 'plomeria_agua', marca: 'Pedrollo', modelo: 'PKm60' },
       { id: 'CAT051', nombre: 'Grasa de filtro campana 400gr', precio: 12, rubro: 'campanas_extraccion', marca: 'HydroService', modelo: 'GF-400' },
@@ -1461,32 +1478,58 @@ export const OCS: OrdenCompra[] = [
 
 // ─── LIQUIDACIONES ────────────────────────────────────────────────────────────
 
+// ─── HELPER: construye Liquidacion con comisiones calculadas dinámicamente ────
+
+type LiqBase = Pick<Liquidacion, 'id' | 'otId' | 'tecnicoId' | 'estado' | 'fechaDevengado'> &
+  Partial<Pick<Liquidacion, 'proveedorId' | 'fechaPago'>>;
+
+function buildLiq(base: LiqBase): Liquidacion {
+  const ot   = OTS.find(o => o.id === base.otId);
+  const rest = ot ? RESTAURANTES.find(r => r.id === ot.restauranteId) : undefined;
+  const mdo  = ot?.cotizacion?.manoDeObra ?? 0;
+  const reps = ot?.cotizacion?.itemsRepuestos?.reduce(
+    (s, i) => s + i.cantidad * i.precioUnitario, 0,
+  ) ?? 0;
+  const calc = calcularLiquidacionOT(mdo, reps, rest?.tier);
+  return {
+    ...base,
+    montoTotalFacturado: ot?.cotizacion?.totalDefinitivo ?? (mdo + reps),
+    comisionServicioPct:  calc.comisionServicioPct,
+    comisionServicio:     calc.comisionServicio,
+    comisionRepuestosPct: calc.comisionRepuestosPct,
+    comisionRepuestos:    calc.comisionRepuestos,
+    comisionTotal:        calc.comisionTotal,
+    pagoTecnico:          calc.pagoTecnico,
+    pagoProveedor:        reps > 0 ? calc.pagoProveedor : undefined,
+  };
+}
+
 export const LIQUIDACIONES: Liquidacion[] = [
-  { id: 'LQ-001', otId: 'OT-001', tecnicoId: 'T001', proveedorId: 'P002', montoTotalFacturado: 315, comisionServicioPct: 0.30, comisionServicio: 27, comisionRepuestosPct: 0.15, comisionRepuestos: 33.75, comisionTotal: 60.75, pagoTecnico: 63, pagoProveedor: 191.25, estado: 'PAGADA', fechaDevengado: '2025-04-12T18:00:00', fechaPago: '2025-04-16T10:00:00' },
-  { id: 'LQ-002', otId: 'OT-002', tecnicoId: 'T002', proveedorId: 'P003', montoTotalFacturado: 223, comisionServicioPct: 0.20, comisionServicio: 24, comisionRepuestosPct: 0.15, comisionRepuestos: 15.45, comisionTotal: 39.45, pagoTecnico: 96, pagoProveedor: 87.55, estado: 'PAGADA', fechaDevengado: '2025-05-22T18:00:00', fechaPago: '2025-05-27T10:00:00' },
-  { id: 'LQ-003', otId: 'OT-003', tecnicoId: 'T004', proveedorId: 'P002', montoTotalFacturado: 125, comisionServicioPct: 0.20, comisionServicio: 14, comisionRepuestosPct: 0.15, comisionRepuestos: 8.25, comisionTotal: 22.25, pagoTecnico: 56, pagoProveedor: 46.75, estado: 'PAGADA', fechaDevengado: '2025-06-27T18:00:00', fechaPago: '2025-07-02T10:00:00' },
-  { id: 'LQ-004', otId: 'OT-004', tecnicoId: 'T001', proveedorId: 'P001', montoTotalFacturado: 147, comisionServicioPct: 0.30, comisionServicio: 25.5, comisionRepuestosPct: 0.15, comisionRepuestos: 9.3, comisionTotal: 34.8, pagoTecnico: 59.5, pagoProveedor: 52.7, estado: 'PAGADA', fechaDevengado: '2025-07-06T18:00:00', fechaPago: '2025-07-10T10:00:00' },
-  { id: 'LQ-005', otId: 'OT-005', tecnicoId: 'T006', proveedorId: 'P001', montoTotalFacturado: 205, comisionServicioPct: 0.30, comisionServicio: 33, comisionRepuestosPct: 0.15, comisionRepuestos: 14.25, comisionTotal: 47.25, pagoTecnico: 77, pagoProveedor: 80.75, estado: 'PAGADA', fechaDevengado: '2025-07-16T18:00:00', fechaPago: '2025-07-21T10:00:00' },
-  { id: 'LQ-006', otId: 'OT-006', tecnicoId: 'T001', montoTotalFacturado: 60, comisionServicioPct: 0.30, comisionServicio: 18, comisionRepuestosPct: 0.15, comisionRepuestos: 0, comisionTotal: 18, pagoTecnico: 42, estado: 'PAGADA', fechaDevengado: '2025-08-02T18:00:00', fechaPago: '2025-08-06T10:00:00' },
-  { id: 'LQ-007', otId: 'OT-007', tecnicoId: 'T001', montoTotalFacturado: 90, comisionServicioPct: 0.30, comisionServicio: 27, comisionRepuestosPct: 0.15, comisionRepuestos: 0, comisionTotal: 27, pagoTecnico: 63, estado: 'PAGADA', fechaDevengado: '2025-09-12T18:00:00', fechaPago: '2025-09-16T10:00:00' },
-  { id: 'LQ-008', otId: 'OT-011', tecnicoId: 'T006', proveedorId: 'P001', montoTotalFacturado: 135, comisionServicioPct: 0.25, comisionServicio: 17.5, comisionRepuestosPct: 0.15, comisionRepuestos: 9.75, comisionTotal: 27.25, pagoTecnico: 52.5, pagoProveedor: 55.25, estado: 'PAGADA', fechaDevengado: '2025-08-21T18:00:00', fechaPago: '2025-08-26T10:00:00' },
-  { id: 'LQ-009', otId: 'OT-012', tecnicoId: 'T006', proveedorId: 'P001', montoTotalFacturado: 180, comisionServicioPct: 0.20, comisionServicio: 19, comisionRepuestosPct: 0.15, comisionRepuestos: 12.75, comisionTotal: 31.75, pagoTecnico: 76, pagoProveedor: 72.25, estado: 'PAGADA', fechaDevengado: '2025-09-06T18:00:00', fechaPago: '2025-09-11T10:00:00' },
-  { id: 'LQ-010', otId: 'OT-013', tecnicoId: 'T001', proveedorId: 'P002', montoTotalFacturado: 128, comisionServicioPct: 0.30, comisionServicio: 27, comisionRepuestosPct: 0.15, comisionRepuestos: 5.7, comisionTotal: 32.7, pagoTecnico: 63, pagoProveedor: 32.3, estado: 'PAGADA', fechaDevengado: '2025-10-13T18:00:00', fechaPago: '2025-10-17T10:00:00' },
-  { id: 'LQ-011', otId: 'OT-014', tecnicoId: 'T007', proveedorId: 'P006', montoTotalFacturado: 95, comisionServicioPct: 0.30, comisionServicio: 19.5, comisionRepuestosPct: 0.15, comisionRepuestos: 4.5, comisionTotal: 24, pagoTecnico: 45.5, pagoProveedor: 25.5, estado: 'PAGADA', fechaDevengado: '2025-10-21T18:00:00', fechaPago: '2025-10-25T10:00:00' },
-  { id: 'LQ-012', otId: 'OT-015', tecnicoId: 'T006', proveedorId: 'P001', montoTotalFacturado: 220, comisionServicioPct: 0.20, comisionServicio: 16, comisionRepuestosPct: 0.15, comisionRepuestos: 21, comisionTotal: 37, pagoTecnico: 64, pagoProveedor: 119, estado: 'PAGADA', fechaDevengado: '2025-11-11T18:00:00', fechaPago: '2025-11-16T10:00:00' },
-  { id: 'LQ-013', otId: 'OT-016', tecnicoId: 'T010', montoTotalFacturado: 80, comisionServicioPct: 0.30, comisionServicio: 24, comisionRepuestosPct: 0.15, comisionRepuestos: 0, comisionTotal: 24, pagoTecnico: 56, estado: 'PAGADA', fechaDevengado: '2025-11-26T18:00:00', fechaPago: '2025-12-01T10:00:00' },
-  { id: 'LQ-014', otId: 'OT-017', tecnicoId: 'T010', proveedorId: 'P002', montoTotalFacturado: 93, comisionServicioPct: 0.30, comisionServicio: 19.5, comisionRepuestosPct: 0.15, comisionRepuestos: 4.2, comisionTotal: 23.7, pagoTecnico: 45.5, pagoProveedor: 23.8, estado: 'PAGADA', fechaDevengado: '2025-12-03T18:00:00', fechaPago: '2025-12-08T10:00:00' },
-  { id: 'LQ-015', otId: 'OT-018', tecnicoId: 'T007', proveedorId: 'P001', montoTotalFacturado: 155, comisionServicioPct: 0.30, comisionServicio: 21, comisionRepuestosPct: 0.15, comisionRepuestos: 12.75, comisionTotal: 33.75, pagoTecnico: 49, pagoProveedor: 72.25, estado: 'PAGADA', fechaDevengado: '2025-12-11T18:00:00', fechaPago: '2025-12-16T10:00:00' },
-  { id: 'LQ-016', otId: 'OT-019', tecnicoId: 'T006', proveedorId: 'P001', montoTotalFacturado: 140, comisionServicioPct: 0.25, comisionServicio: 16.25, comisionRepuestosPct: 0.15, comisionRepuestos: 11.25, comisionTotal: 27.5, pagoTecnico: 48.75, pagoProveedor: 63.75, estado: 'PAGADA', fechaDevengado: '2026-01-09T18:00:00', fechaPago: '2026-01-14T10:00:00' },
-  { id: 'LQ-017', otId: 'OT-020', tecnicoId: 'T006', montoTotalFacturado: 80, comisionServicioPct: 0.25, comisionServicio: 20, comisionRepuestosPct: 0.15, comisionRepuestos: 0, comisionTotal: 20, pagoTecnico: 60, estado: 'PAGADA', fechaDevengado: '2026-01-20T18:00:00', fechaPago: '2026-01-24T10:00:00' },
-  { id: 'LQ-018', otId: 'OT-021', tecnicoId: 'T012', proveedorId: 'P001', montoTotalFacturado: 255, comisionServicioPct: 0.30, comisionServicio: 27, comisionRepuestosPct: 0.15, comisionRepuestos: 24.75, comisionTotal: 51.75, pagoTecnico: 63, pagoProveedor: 140.25, estado: 'PAGADA', fechaDevengado: '2026-02-04T18:00:00', fechaPago: '2026-02-09T10:00:00' },
-  { id: 'LQ-019', otId: 'OT-022', tecnicoId: 'T002', proveedorId: 'P003', montoTotalFacturado: 133, comisionServicioPct: 0.30, comisionServicio: 25.5, comisionRepuestosPct: 0.15, comisionRepuestos: 7.2, comisionTotal: 32.7, pagoTecnico: 59.5, pagoProveedor: 40.8, estado: 'PAGADA', fechaDevengado: '2026-02-19T18:00:00', fechaPago: '2026-02-24T10:00:00' },
-  { id: 'LQ-020', otId: 'OT-023', tecnicoId: 'T001', proveedorId: 'P002', montoTotalFacturado: 115, comisionServicioPct: 0.25, comisionServicio: 15, comisionRepuestosPct: 0.15, comisionRepuestos: 8.25, comisionTotal: 23.25, pagoTecnico: 45, pagoProveedor: 46.75, estado: 'PAGADA', fechaDevengado: '2026-02-23T18:00:00', fechaPago: '2026-02-27T10:00:00' },
-  { id: 'LQ-021', otId: 'OT-029', tecnicoId: 'T012', proveedorId: 'P001', montoTotalFacturado: 205, comisionServicioPct: 0.30, comisionServicio: 25.5, comisionRepuestosPct: 0.15, comisionRepuestos: 18, comisionTotal: 43.5, pagoTecnico: 59.5, pagoProveedor: 102, estado: 'PAGADA', fechaDevengado: '2026-03-01T18:00:00', fechaPago: '2026-03-05T10:00:00' },
-  { id: 'LQ-022', otId: 'OT-030', tecnicoId: 'T006', montoTotalFacturado: 70, comisionServicioPct: 0.20, comisionServicio: 14, comisionRepuestosPct: 0.15, comisionRepuestos: 0, comisionTotal: 14, pagoTecnico: 56, estado: 'PAGADA', fechaDevengado: '2026-02-05T18:00:00', fechaPago: '2026-02-10T10:00:00' },
-  { id: 'LQ-023', otId: 'OT-031', tecnicoId: 'T006', proveedorId: 'P005', montoTotalFacturado: 95, comisionServicioPct: 0.25, comisionServicio: 15, comisionRepuestosPct: 0.15, comisionRepuestos: 5.25, comisionTotal: 20.25, pagoTecnico: 45, pagoProveedor: 29.75, estado: 'PAGADA', fechaDevengado: '2026-01-26T18:00:00', fechaPago: '2026-01-30T10:00:00' },
-  { id: 'LQ-024', otId: 'OT-008', tecnicoId: 'T002', proveedorId: 'P003', montoTotalFacturado: 190, comisionServicioPct: 0.20, comisionServicio: 16, comisionRepuestosPct: 0.15, comisionRepuestos: 16.5, comisionTotal: 32.5, pagoTecnico: 64, pagoProveedor: 93.5, estado: 'PENDIENTE_PAGO', fechaDevengado: '2026-02-12T18:00:00' },
-  { id: 'LQ-025', otId: 'OT-007', tecnicoId: 'T001', montoTotalFacturado: 90, comisionServicioPct: 0.30, comisionServicio: 27, comisionRepuestosPct: 0.15, comisionRepuestos: 0, comisionTotal: 27, pagoTecnico: 63, estado: 'PENDIENTE_PAGO', fechaDevengado: '2025-09-12T18:00:00' },
+  buildLiq({ id: 'LQ-001', otId: 'OT-001', tecnicoId: 'T001', proveedorId: 'P002', estado: 'PAGADA',         fechaDevengado: '2025-04-12T18:00:00', fechaPago: '2025-04-16T10:00:00' }),
+  buildLiq({ id: 'LQ-002', otId: 'OT-002', tecnicoId: 'T002', proveedorId: 'P003', estado: 'PAGADA',         fechaDevengado: '2025-05-22T18:00:00', fechaPago: '2025-05-27T10:00:00' }),
+  buildLiq({ id: 'LQ-003', otId: 'OT-003', tecnicoId: 'T004', proveedorId: 'P002', estado: 'PAGADA',         fechaDevengado: '2025-06-27T18:00:00', fechaPago: '2025-07-02T10:00:00' }),
+  buildLiq({ id: 'LQ-004', otId: 'OT-004', tecnicoId: 'T001', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2025-07-06T18:00:00', fechaPago: '2025-07-10T10:00:00' }),
+  buildLiq({ id: 'LQ-005', otId: 'OT-005', tecnicoId: 'T006', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2025-07-16T18:00:00', fechaPago: '2025-07-21T10:00:00' }),
+  buildLiq({ id: 'LQ-006', otId: 'OT-006', tecnicoId: 'T001',                      estado: 'PAGADA',         fechaDevengado: '2025-08-02T18:00:00', fechaPago: '2025-08-06T10:00:00' }),
+  buildLiq({ id: 'LQ-007', otId: 'OT-007', tecnicoId: 'T001',                      estado: 'PAGADA',         fechaDevengado: '2025-09-12T18:00:00', fechaPago: '2025-09-16T10:00:00' }),
+  buildLiq({ id: 'LQ-008', otId: 'OT-011', tecnicoId: 'T006', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2025-08-21T18:00:00', fechaPago: '2025-08-26T10:00:00' }),
+  buildLiq({ id: 'LQ-009', otId: 'OT-012', tecnicoId: 'T006', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2025-09-06T18:00:00', fechaPago: '2025-09-11T10:00:00' }),
+  buildLiq({ id: 'LQ-010', otId: 'OT-013', tecnicoId: 'T001', proveedorId: 'P002', estado: 'PAGADA',         fechaDevengado: '2025-10-13T18:00:00', fechaPago: '2025-10-17T10:00:00' }),
+  buildLiq({ id: 'LQ-011', otId: 'OT-014', tecnicoId: 'T007', proveedorId: 'P006', estado: 'PAGADA',         fechaDevengado: '2025-10-21T18:00:00', fechaPago: '2025-10-25T10:00:00' }),
+  buildLiq({ id: 'LQ-012', otId: 'OT-015', tecnicoId: 'T006', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2025-11-11T18:00:00', fechaPago: '2025-11-16T10:00:00' }),
+  buildLiq({ id: 'LQ-013', otId: 'OT-016', tecnicoId: 'T010',                      estado: 'PAGADA',         fechaDevengado: '2025-11-26T18:00:00', fechaPago: '2025-12-01T10:00:00' }),
+  buildLiq({ id: 'LQ-014', otId: 'OT-017', tecnicoId: 'T010', proveedorId: 'P002', estado: 'PAGADA',         fechaDevengado: '2025-12-03T18:00:00', fechaPago: '2025-12-08T10:00:00' }),
+  buildLiq({ id: 'LQ-015', otId: 'OT-018', tecnicoId: 'T007', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2025-12-11T18:00:00', fechaPago: '2025-12-16T10:00:00' }),
+  buildLiq({ id: 'LQ-016', otId: 'OT-019', tecnicoId: 'T006', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2026-01-09T18:00:00', fechaPago: '2026-01-14T10:00:00' }),
+  buildLiq({ id: 'LQ-017', otId: 'OT-020', tecnicoId: 'T006',                      estado: 'PAGADA',         fechaDevengado: '2026-01-20T18:00:00', fechaPago: '2026-01-24T10:00:00' }),
+  buildLiq({ id: 'LQ-018', otId: 'OT-021', tecnicoId: 'T012', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2026-02-04T18:00:00', fechaPago: '2026-02-09T10:00:00' }),
+  buildLiq({ id: 'LQ-019', otId: 'OT-022', tecnicoId: 'T002', proveedorId: 'P003', estado: 'PAGADA',         fechaDevengado: '2026-02-19T18:00:00', fechaPago: '2026-02-24T10:00:00' }),
+  buildLiq({ id: 'LQ-020', otId: 'OT-023', tecnicoId: 'T001', proveedorId: 'P002', estado: 'PAGADA',         fechaDevengado: '2026-02-23T18:00:00', fechaPago: '2026-02-27T10:00:00' }),
+  buildLiq({ id: 'LQ-021', otId: 'OT-029', tecnicoId: 'T012', proveedorId: 'P001', estado: 'PAGADA',         fechaDevengado: '2026-03-01T18:00:00', fechaPago: '2026-03-05T10:00:00' }),
+  buildLiq({ id: 'LQ-022', otId: 'OT-030', tecnicoId: 'T006',                      estado: 'PAGADA',         fechaDevengado: '2026-02-05T18:00:00', fechaPago: '2026-02-10T10:00:00' }),
+  buildLiq({ id: 'LQ-023', otId: 'OT-031', tecnicoId: 'T006', proveedorId: 'P005', estado: 'PAGADA',         fechaDevengado: '2026-01-26T18:00:00', fechaPago: '2026-01-30T10:00:00' }),
+  buildLiq({ id: 'LQ-024', otId: 'OT-008', tecnicoId: 'T002', proveedorId: 'P003', estado: 'PENDIENTE_PAGO', fechaDevengado: '2026-02-12T18:00:00' }),
+  buildLiq({ id: 'LQ-025', otId: 'OT-007', tecnicoId: 'T001',                      estado: 'PENDIENTE_PAGO', fechaDevengado: '2025-09-12T18:00:00' }),
 ];
 
 // ─── SERIES TEMPORALES — para charts de estadísticas ─────────────────────────
@@ -2423,3 +2466,76 @@ export function getNotificacionesByActor(
     n => n.actorId === actorId && n.actorTipo === actorTipo
   );
 }
+
+// ─── TAXONOMÍA SHUURI ────────────────────────────────────────────────────────
+// Estructura: Rubro > Categoría > Subcategorías
+
+export type TaxonomiaCategoria = { nombre: string; subcategorias: string[] };
+export type TaxonomiaRubro = { rubro: string; label: string; categorias: TaxonomiaCategoria[] };
+
+export const TAXONOMIA_SHUURI: TaxonomiaRubro[] = [
+  {
+    rubro: 'Coccion', label: 'Cocción',
+    categorias: [
+      { nombre: 'Hornos',         subcategorias: ['Horno Convector', 'Horno Pizzero', 'Horno Pastelero', 'Microondas Industrial'] },
+      { nombre: 'Cocinas',        subcategorias: ['Cocina Industrial Gas', 'Cocina Industrial Eléctrica', 'Anafe Industrial'] },
+      { nombre: 'Freidoras',      subcategorias: ['Freidora Gas', 'Freidora Eléctrica'] },
+      { nombre: 'Planchas',       subcategorias: ['Plancha / Griddle'] },
+      { nombre: 'Otros Cocción',  subcategorias: ['Salamandra', 'Sartén Volcable', 'Marmita'] },
+    ],
+  },
+  {
+    rubro: 'Refrigeracion', label: 'Refrigeración',
+    categorias: [
+      { nombre: 'Heladeras',  subcategorias: ['Heladera Vertical', 'Heladera Bajo Mesada', 'Heladera Exhibidora'] },
+      { nombre: 'Freezers',   subcategorias: ['Freezer Vertical', 'Freezer Horizontal'] },
+      { nombre: 'Cámaras',    subcategorias: ['Cámara Frigorífica', 'Walk-in Cooler'] },
+      { nombre: 'Vitrinas',   subcategorias: ['Vitrina Refrigerada', 'Conservadora'] },
+    ],
+  },
+  {
+    rubro: 'Lavado', label: 'Lavado',
+    categorias: [
+      { nombre: 'Lavavajillas', subcategorias: ['Lavavajillas Bajomesada', 'Lavavajillas Capota', 'Lavavajillas Utensilios'] },
+    ],
+  },
+  {
+    rubro: 'Cafeteria_y_Bebidas', label: 'Cafetería y Bebidas',
+    categorias: [
+      { nombre: 'Cafeteras',  subcategorias: ['Cafetera Profesional', 'Cafetera Automática'] },
+      { nombre: 'Molinillos', subcategorias: ['Molinillo Profesional'] },
+      { nombre: 'Bebidas',    subcategorias: ['Chopera', 'Dispenser Bebidas', 'Licuadora Industrial'] },
+    ],
+  },
+  {
+    rubro: 'Maquinas_de_Hielo', label: 'Máquinas de Hielo',
+    categorias: [
+      { nombre: 'Fabricadoras', subcategorias: ['Fabricadora Cubitos', 'Fabricadora Escamas', 'Fabricadora Granular'] },
+    ],
+  },
+  {
+    rubro: 'Climatizacion', label: 'Climatización',
+    categorias: [
+      { nombre: 'Aire Acondicionado', subcategorias: ['Split Frío/Calor', 'Central / Ducto'] },
+      { nombre: 'Extracción',         subcategorias: ['Campana Extractora', 'Extractor Centrífugo', 'Cortina de Aire'] },
+    ],
+  },
+  {
+    rubro: 'Tecnologia', label: 'Tecnología',
+    categorias: [
+      { nombre: 'POS',  subcategorias: ['Terminal POS', 'Comandera / KDS', 'Impresora Tickets'] },
+      { nombre: 'CCTV', subcategorias: ['Cámara Seguridad', 'DVR / NVR'] },
+      { nombre: 'Red',  subcategorias: ['Router / Switch', 'Access Point WiFi'] },
+    ],
+  },
+  {
+    rubro: 'Equipos_Especializados', label: 'Equipos Especializados',
+    categorias: [
+      { nombre: 'Panadería',  subcategorias: ['Amasadora', 'Sobadora', 'Fermentadora'] },
+      { nombre: 'Carnicería', subcategorias: ['Cortadora Fiambre', 'Picadora'] },
+      { nombre: 'Pesaje',     subcategorias: ['Balanza Electrónica'] },
+      { nombre: 'Envasado',   subcategorias: ['Envasadora al Vacío'] },
+      { nombre: 'Otros',      subcategorias: ['Peladora', 'Exprimidor Industrial'] },
+    ],
+  },
+];

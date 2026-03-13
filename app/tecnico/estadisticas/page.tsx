@@ -205,7 +205,7 @@ export default function TecnicoEstadisticas() {
       <Sidebar userRole="TECNICO" userName={tecnico.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={tecnico.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* Header + period filter */}
           <div className="mb-6 flex items-center justify-between">

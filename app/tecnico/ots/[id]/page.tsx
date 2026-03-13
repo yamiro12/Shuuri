@@ -18,6 +18,7 @@ import {
   Phone, Building2, Play, Flag,
   DollarSign, Plus, Trash2, X,
   ShoppingCart, Search, Truck, ChevronLeft, Loader2,
+  Pencil, Save, PercentCircle, Timer, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -557,6 +558,14 @@ export default function TecnicoOTDetalle() {
   const [cotLocal,         setCotLocal]         = useState<{ total: number; diagnostico: string } | null>(null);
   const [ocrCreada,        setOcrCreada]        = useState<OrdenCompraRepuesto | null>(null);
 
+  // EN_VISITA — edición en sitio
+  const [diagVisita,       setDiagVisita]       = useState('');
+  const [diagGuardado,     setDiagGuardado]     = useState(false);
+  const [mdoVisita,        setMdoVisita]        = useState('');
+  const [tiempoVisita,     setTiempoVisita]     = useState('');
+  const [showComisiones,   setShowComisiones]   = useState(false);
+  const [showDesglose,     setShowDesglose]     = useState(false);
+
   if (!ot || !tecnico) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -598,12 +607,20 @@ export default function TecnicoOTDetalle() {
   const accionLabel = ACCION_LABELS[estadoActual as string];
   const esCerrada   = (['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','FACTURADA','LIQUIDADA','CANCELADA'] as string[]).includes(estadoActual);
 
+  // Desglose económico
+  const COMISION_MAP: Record<string, number> = { FREEMIUM: 30, CADENA_CHICA: 25, CADENA_GRANDE: 20 };
+  const tierRest     = restaurante && 'tier' in restaurante ? (restaurante as { tier?: string }).tier ?? 'FREEMIUM' : 'FREEMIUM';
+  const comisionPct  = COMISION_MAP[tierRest] ?? 30;
+  const precioTotal  = ot.cotizacion?.totalDefinitivo ?? 0;
+  const comisionARS  = Math.round(precioTotal * comisionPct / 100);
+  const netoTecnico  = precioTotal - comisionARS;
+
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={tecnico.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="TECNICO" userName={tecnico.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* BREADCRUMB */}
           <div className="mb-6 flex items-center gap-2">
@@ -616,10 +633,10 @@ export default function TecnicoOTDetalle() {
             <span className="text-sm font-mono text-gray-500">{ot.id}</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* ── COLUMNA PRINCIPAL ── */}
-            <div className="col-span-2 space-y-5">
+            <div className="col-span-1 lg:col-span-2 space-y-5">
 
               {/* Card principal */}
               <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
@@ -663,6 +680,162 @@ export default function TecnicoOTDetalle() {
                   )}
                 </div>
               </div>
+
+              {/* ── PANEL EN VISITA ─────────────────────────────────── */}
+              {(estadoActual as string) === 'EN_VISITA' && (
+                <div className="rounded-xl border-2 border-amber-200 bg-amber-50 overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 px-5 py-4 border-b border-amber-100 bg-amber-100/60">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 shrink-0">
+                      <Wrench className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-amber-900">Estás en visita</p>
+                      <p className="text-xs text-amber-700">Registrá el diagnóstico y ajustá la orden en tiempo real</p>
+                    </div>
+                  </div>
+
+                  <div className="px-5 py-5 space-y-5">
+
+                    {/* Diagnóstico en sitio */}
+                    <div>
+                      <label className="block text-xs font-bold text-amber-800 uppercase tracking-wide mb-2">
+                        Diagnóstico en sitio
+                      </label>
+                      <textarea
+                        value={diagVisita}
+                        onChange={e => { setDiagVisita(e.target.value); setDiagGuardado(false); }}
+                        rows={3}
+                        placeholder="Describí el problema real encontrado al llegar…"
+                        className="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-400 resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-2">
+                        {diagGuardado ? (
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-green-600">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Diagnóstico guardado
+                          </span>
+                        ) : (
+                          <span className="text-xs text-amber-600">{diagVisita.length}/500</span>
+                        )}
+                        <button
+                          onClick={() => { if (diagVisita.trim()) { setDiagGuardado(true); showToast('Diagnóstico guardado'); } }}
+                          disabled={!diagVisita.trim()}
+                          className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <Save className="h-3.5 w-3.5" /> Guardar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Ajustar precio y tiempo */}
+                    <div>
+                      <label className="block text-xs font-bold text-amber-800 uppercase tracking-wide mb-3">
+                        <Pencil className="h-3.5 w-3.5 inline mr-1" />
+                        Ajustar estimación en sitio
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-amber-700 mb-1 block">Mano de obra (USD)</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={mdoVisita}
+                            onChange={e => setMdoVisita(e.target.value)}
+                            placeholder={ot.cotizacion?.manoDeObra ? String(ot.cotizacion.manoDeObra) : 'ej. 80'}
+                            className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-amber-700 mb-1 block flex items-center gap-1">
+                            <Timer className="h-3 w-3" /> Tiempo estimado (hs)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.5}
+                            value={tiempoVisita}
+                            onChange={e => setTiempoVisita(e.target.value)}
+                            placeholder="ej. 2"
+                            className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+                      {(mdoVisita || tiempoVisita) && (
+                        <div className="mt-2 rounded-lg bg-white border border-amber-100 px-3 py-2 flex items-center justify-between">
+                          <span className="text-xs text-amber-700">Ajuste registrado</span>
+                          <div className="flex gap-3 text-xs font-bold text-amber-900">
+                            {mdoVisita && <span>MdO: USD {mdoVisita}</span>}
+                            {tiempoVisita && <span>Tiempo: {tiempoVisita}hs</span>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Acciones rápidas */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => setShowRepModal(true)}
+                        className="flex items-center justify-center gap-2 rounded-xl border-2 border-amber-300 bg-white px-4 py-3 text-sm font-bold text-amber-800 hover:bg-amber-50 transition-colors"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        Solicitar repuesto
+                      </button>
+                      <button
+                        onClick={() => setShowCotModal(true)}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-[#2698D1] px-4 py-3 text-sm font-bold text-white hover:bg-[#2698D1]/90 transition-colors"
+                      >
+                        <DollarSign className="h-4 w-4" />
+                        Emitir cotización
+                      </button>
+                    </div>
+
+                    {/* Comisiones accordion */}
+                    <div className="rounded-xl border border-amber-200 bg-white overflow-hidden">
+                      <button
+                        onClick={() => setShowComisiones(v => !v)}
+                        className="flex w-full items-center justify-between px-4 py-3 text-sm font-bold text-amber-800 hover:bg-amber-50 transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <PercentCircle className="h-4 w-4 text-amber-500" />
+                          Mis comisiones en esta OT
+                        </span>
+                        {showComisiones ? <ChevronUp className="h-4 w-4 text-amber-500" /> : <ChevronDown className="h-4 w-4 text-amber-500" />}
+                      </button>
+                      {showComisiones && (() => {
+                        const mdo    = Number(mdoVisita) || ot.cotizacion?.manoDeObra || 0;
+                        const comTec = Math.round(mdo * 0.70);
+                        const retShu = Math.round(mdo * 0.30);
+                        return (
+                          <div className="border-t border-amber-100 px-4 py-4 space-y-2">
+                            <div className="flex justify-between text-xs text-gray-500">
+                              <span>Mano de obra</span>
+                              <span className="font-bold text-gray-700">{mdo > 0 ? `USD ${mdo}` : '—'}</span>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-500">
+                              <span>Tu comisión (70%)</span>
+                              <span className="font-bold text-green-600">{mdo > 0 ? `USD ${comTec}` : '—'}</span>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-500">
+                              <span>Retención SHUURI (30%)</span>
+                              <span className="font-bold text-gray-400">{mdo > 0 ? `USD ${retShu}` : '—'}</span>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-400 border-t border-amber-100 pt-2">
+                              <span>Comisión OCR repuestos</span>
+                              <span>15% → al proveedor</span>
+                            </div>
+                            {mdo === 0 && (
+                              <p className="text-xs text-amber-600 text-center pt-1">
+                                Completá la mano de obra arriba para ver el cálculo
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                  </div>
+                </div>
+              )}
 
               {/* Diagnóstico / Cotización */}
               {(ot.cotizacion?.diagnosticoTecnico || cotLocal) && (
@@ -818,13 +991,11 @@ export default function TecnicoOTDetalle() {
                   <p className="text-xs font-bold text-[#2698D1] uppercase tracking-wide mb-3">Próxima acción</p>
 
                   {(estadoActual as string) === 'EN_VISITA' ? (
-                    <button
-                      onClick={() => setShowCotModal(true)}
-                      className="w-full rounded-xl bg-[#2698D1] px-4 py-3 text-sm font-bold text-white hover:bg-[#2698D1]/90 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <DollarSign className="h-4 w-4" />
-                      Emitir cotización
-                    </button>
+                    <div className="rounded-lg bg-amber-100 border border-amber-200 px-4 py-3 text-center">
+                      <Wrench className="mx-auto h-5 w-5 text-amber-600 mb-1" />
+                      <p className="text-xs font-bold text-amber-800">En visita activa</p>
+                      <p className="text-xs text-amber-600 mt-0.5">Usá el panel de la izquierda para gestionar la OT</p>
+                    </div>
                   ) : accionLabel ? (
                     <button
                       onClick={avanzarEstado}
@@ -906,6 +1077,48 @@ export default function TecnicoOTDetalle() {
                 <InfoRow label="Visita prog." value={ot.fechaVisitaProgramada ? formatDate(ot.fechaVisitaProgramada) : undefined} />
                 <InfoRow label="Finalizada"  value={ot.fechaFinalizacion ? formatDate(ot.fechaFinalizacion) : undefined} />
               </div>
+
+              {/* ── DESGLOSE ECONÓMICO ── */}
+              {precioTotal > 0 && (
+                <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+                  <button
+                    onClick={() => setShowDesglose(v => !v)}
+                    className="flex w-full items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                      <DollarSign className="h-4 w-4 text-[#2698D1]" />
+                      ¿Cómo funciona el precio?
+                    </span>
+                    {showDesglose
+                      ? <ChevronUp className="h-4 w-4 text-gray-400" />
+                      : <ChevronDown className="h-4 w-4 text-gray-400" />
+                    }
+                  </button>
+                  {showDesglose && (
+                    <div className="border-t px-4 py-4 space-y-2.5">
+                      <div className="flex justify-between py-1.5 border-b border-gray-50 text-sm">
+                        <span className="text-gray-500">Precio al cliente</span>
+                        <span className="font-bold text-gray-700">{formatARS(precioTotal)}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-b border-gray-50 text-sm">
+                        <span className="text-gray-500">Comisión SHUURI ({comisionPct}%)</span>
+                        <span className="font-bold text-red-500">- {formatARS(comisionARS)}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 text-sm">
+                        <span className="font-bold text-gray-700">Lo que recibís</span>
+                        <span className="font-black text-green-600">{formatARS(netoTecnico)}</span>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 border px-3 py-2.5 text-xs text-gray-500">
+                        <span className="font-bold text-gray-700">Periodicidad:</span> quincenal — días 15 y último del mes.
+                      </div>
+                      <a href={`/tecnico/liquidaciones?id=${tecnicoId}`}
+                        className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#2698D1] hover:text-[#2698D1]/80 pt-1">
+                        Ver mis liquidaciones →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

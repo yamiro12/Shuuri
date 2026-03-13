@@ -67,7 +67,7 @@ export default function RestauranteNotificaciones() {
 
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
-      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
       <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
         <main className="p-8 max-w-4xl">

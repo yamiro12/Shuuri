@@ -6,12 +6,8 @@ import Header from '@/components/layout/Header';
 import { formatARS } from '@/components/shared/utils';
 import { RESTAURANTES, getOTsByRestaurante, getEquiposByRestaurante } from '@/data/mock';
 import { Building2, Search, PlusCircle, ChevronRight, MapPin, Phone, Layers } from 'lucide-react';
-
-const TIER_COLOR: Record<string, string> = {
-  FREEMIUM: 'bg-gray-100 text-gray-700',
-  CADENA_CHICA: 'bg-blue-100 text-blue-700',
-  CADENA_GRANDE: 'bg-purple-100 text-purple-700',
-};
+import { getTierLabel, getTierBadgeClass, getComisionServicioPct } from '@/lib/business';
+import type { TierCliente } from '@/types/shuuri';
 
 export default function AdminRestaurantes() {
   const [busqueda, setBusqueda] = useState('');
@@ -31,7 +27,7 @@ export default function AdminRestaurantes() {
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* TÍTULO */}
           <div className="mb-6 flex items-center justify-between">
@@ -54,10 +50,10 @@ export default function AdminRestaurantes() {
             </div>
             <div className="flex items-center gap-1 rounded-lg border bg-white p-1">
               {([
-                { key: 'todos', label: 'Todos' },
-                { key: 'FREEMIUM', label: 'Freemium' },
-                { key: 'CADENA_CHICA', label: 'Cadena chica' },
-                { key: 'CADENA_GRANDE', label: 'Cadena grande' },
+                { key: 'todos',        label: 'Todos' },
+                { key: 'FREEMIUM',     label: getTierLabel('FREEMIUM') },
+                { key: 'CADENA_CHICA', label: getTierLabel('CADENA_CHICA') },
+                { key: 'CADENA_GRANDE',label: getTierLabel('CADENA_GRANDE') },
               ] as const).map(tab => (
                 <button key={tab.key} onClick={() => setFiltroTier(tab.key)}
                   className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
@@ -71,17 +67,29 @@ export default function AdminRestaurantes() {
 
           {/* KPIs RÁPIDOS */}
           <div className="mb-6 grid grid-cols-4 gap-4">
-            {[
-              { label: 'Total', value: RESTAURANTES.length, color: 'text-gray-700' },
-              { label: 'Freemium', value: RESTAURANTES.filter(r => r.tier === 'FREEMIUM').length, color: 'text-gray-600' },
-              { label: 'Cadena chica', value: RESTAURANTES.filter(r => r.tier === 'CADENA_CHICA').length, color: 'text-blue-600' },
-              { label: 'Cadena grande', value: RESTAURANTES.filter(r => r.tier === 'CADENA_GRANDE').length, color: 'text-purple-600' },
-            ].map(kpi => (
-              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm p-4">
-                <p className="text-xs text-gray-400 mb-1">{kpi.label}</p>
-                <p className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</p>
-              </div>
-            ))}
+            <div className="rounded-xl border bg-white shadow-sm p-4">
+              <p className="text-xs text-gray-400 mb-1">Total</p>
+              <p className="text-2xl font-black text-gray-700">{RESTAURANTES.length}</p>
+              <p className="text-xs text-gray-400 mt-1">establecimientos</p>
+            </div>
+            {(['FREEMIUM', 'CADENA_CHICA', 'CADENA_GRANDE'] as TierCliente[]).map(tier => {
+              const count  = RESTAURANTES.filter(r => r.tier === tier).length;
+              const comPct = Math.round(getComisionServicioPct(tier) * 100);
+              return (
+                <div key={tier} className="rounded-xl border bg-white shadow-sm p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${getTierBadgeClass(tier)}`}>
+                      {getTierLabel(tier)}
+                    </span>
+                    <span className="text-xs text-gray-400">com. {comPct}%</span>
+                  </div>
+                  <p className="text-2xl font-black text-[#0D0D0D]">{count}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {count === 1 ? 'establecimiento' : 'establecimientos'}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           {/* TABLA */}
@@ -96,6 +104,7 @@ export default function AdminRestaurantes() {
                   <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Locales</th>
                   <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">OTs activas</th>
                   <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Equipos</th>
+                  <th className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide">Suscripto desde</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -135,8 +144,8 @@ export default function AdminRestaurantes() {
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${TIER_COLOR[r.tier ?? ''] ?? 'bg-gray-100 text-gray-600'}`}>
-                          {r.tier}
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${getTierBadgeClass(r.tier)}`}>
+                          {getTierLabel(r.tier)}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-sm font-medium text-gray-700 text-center">{r.cantidadLocales}</td>
@@ -153,6 +162,11 @@ export default function AdminRestaurantes() {
                         <span className="flex items-center gap-1 text-sm text-gray-600">
                           <Layers className="h-3.5 w-3.5 text-gray-400" />{equipos.length}
                         </span>
+                      </td>
+                      <td className="px-4 py-4 text-xs text-gray-500">
+                        {r.suscripcionActivaDesde
+                          ? new Date(r.suscripcionActivaDesde).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })
+                          : <span className="text-gray-300">—</span>}
                       </td>
                       <td className="px-4 py-4">
                         <Link href={`/admin/restaurantes/${r.id}`}

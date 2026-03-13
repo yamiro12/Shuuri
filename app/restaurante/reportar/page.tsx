@@ -18,7 +18,7 @@ import {
 
 type Modo    = 'seleccion' | 'ia' | 'form';
 type Urgencia = 'CRITICA' | 'ALTA' | 'MEDIA' | 'BAJA';
-type Paso     = 1 | 2 | 3 | 4;
+type Paso     = 1 | 2 | 3 | 4 | 5;
 
 interface FormData {
   localId:        string;
@@ -29,6 +29,9 @@ interface FormData {
   rubro:          Rubro | '';
   descripcion:    string;
   urgencia:       Urgencia | '';
+  repuestosNecesarios:          boolean;
+  repuestosDescripcion:         string;
+  repuestosSolicitudMarketplace: boolean;
   horarioAcceso:  string;
   contactoNombre: string;
   contactoTel:    string;
@@ -38,6 +41,7 @@ interface FormData {
 const FORM_INICIAL: FormData = {
   localId: '', equipoId: '', equipoTipo: '', equipoMarca: '',
   equipoModelo: '', rubro: '', descripcion: '', urgencia: '',
+  repuestosNecesarios: false, repuestosDescripcion: '', repuestosSolicitudMarketplace: false,
   horarioAcceso: '', contactoNombre: '', contactoTel: '', notas: '',
 };
 
@@ -86,7 +90,7 @@ const URGENCIAS: { key: Urgencia; label: string; sub: string; icon: React.ReactN
 // ─── STEP INDICATOR ──────────────────────────────────────────────────────────
 
 function StepIndicator({ paso }: { paso: Paso }) {
-  const PASOS = ['Equipo', 'Falla', 'Acceso', 'Confirmar'];
+  const PASOS = ['Equipo', 'Falla', 'Repuestos', 'Acceso', 'Confirmar'];
   return (
     <div className="flex items-center gap-0 mb-8">
       {PASOS.map((label, i) => {
@@ -206,6 +210,7 @@ export default function ReportarFalla() {
   function puedeAvanzar(): boolean {
     if (paso === 1) return !!form.equipoTipo && !!form.rubro;
     if (paso === 2) return !!form.descripcion.trim() && !!form.urgencia;
+    // paso 3 (Repuestos) siempre puede avanzar
     return true;
   }
 
@@ -272,10 +277,10 @@ export default function ReportarFalla() {
     const urgCfg = URGENCIAS.find(u => u.key === form.urgencia);
     return (
       <div className="flex min-h-screen bg-[#F7F8FA]">
-        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+        <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
         <div className="flex-1 sidebar-push">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
-          <main className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-8">
+          <main className="page-main-center">
             <div className="w-full max-w-md text-center">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
                 <CheckCircle2 className="h-10 w-10 text-green-500" />
@@ -332,10 +337,10 @@ export default function ReportarFalla() {
 
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
-      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
+      <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} actorId={restauranteId} />
       <div className="flex-1 sidebar-push">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* HEADER */}
           <div className="mb-6 flex items-center gap-3">
@@ -758,8 +763,110 @@ export default function ReportarFalla() {
                   </div>
                 )}
 
-                {/* ── PASO 3: ACCESO ── */}
+                {/* ── PASO 3: REPUESTOS ── */}
                 {paso === 3 && (
+                  <div className="p-8">
+                    <h2 className="text-lg font-black text-[#0D0D0D] mb-1">¿Necesitás repuestos?</h2>
+                    <p className="text-sm text-gray-400 mb-6">
+                      Si la falla requiere piezas, podemos solicitarlas al Marketplace SHUURI antes de la visita.
+                    </p>
+
+                    {/* Toggle principal */}
+                    <button
+                      onClick={() => set('repuestosNecesarios', !form.repuestosNecesarios)}
+                      className={`w-full rounded-xl border-2 p-5 text-left transition-all mb-5 ${
+                        form.repuestosNecesarios
+                          ? 'border-[#2698D1] bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${form.repuestosNecesarios ? 'bg-[#2698D1]/10' : 'bg-gray-100'}`}>
+                            <Package className={`h-5 w-5 ${form.repuestosNecesarios ? 'text-[#2698D1]' : 'text-gray-400'}`} />
+                          </div>
+                          <div>
+                            <p className={`font-bold text-sm ${form.repuestosNecesarios ? 'text-[#0D0D0D]' : 'text-gray-600'}`}>
+                              Sí, probablemente se necesiten repuestos
+                            </p>
+                            <p className="text-xs text-gray-400">El técnico llegará con los materiales necesarios</p>
+                          </div>
+                        </div>
+                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          form.repuestosNecesarios ? 'border-[#2698D1] bg-[#2698D1]' : 'border-gray-300'
+                        }`}>
+                          {form.repuestosNecesarios && <CheckCircle2 className="h-4 w-4 text-white" />}
+                        </div>
+                      </div>
+                    </button>
+
+                    {form.repuestosNecesarios && (
+                      <div className="space-y-4 animate-in fade-in duration-200">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+                            ¿Qué repuesto/s creés que se necesitan?
+                          </label>
+                          <textarea
+                            value={form.repuestosDescripcion}
+                            onChange={e => set('repuestosDescripcion', e.target.value)}
+                            rows={3}
+                            placeholder="Ej: Compresor, filtro de aceite, correa de transmisión… (opcional)"
+                            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors resize-none"
+                          />
+                        </div>
+
+                        {/* Marketplace CTA */}
+                        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1">
+                              <Package className="h-5 w-5 text-[#2698D1] shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-sm font-bold text-[#0D0D0D] mb-0.5">Solicitar al Marketplace SHUURI</p>
+                                <p className="text-xs text-gray-500">
+                                  SHUURI buscará el repuesto, lo cotizará y lo tendrá listo para cuando llegue el técnico.
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => set('repuestosSolicitudMarketplace', !form.repuestosSolicitudMarketplace)}
+                              className={`relative shrink-0 h-6 w-11 rounded-full transition-colors ${
+                                form.repuestosSolicitudMarketplace ? 'bg-[#2698D1]' : 'bg-gray-200'
+                              }`}
+                            >
+                              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                form.repuestosSolicitudMarketplace ? 'translate-x-5' : 'translate-x-0'
+                              }`} />
+                            </button>
+                          </div>
+                          {form.repuestosSolicitudMarketplace && (
+                            <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
+                              <p className="text-xs text-blue-700 font-medium">
+                                Se agregará solicitud de cotización al crear la OT.
+                              </p>
+                              <Link
+                                href={`/restaurante/marketplace?id=${restauranteId}`}
+                                className="text-xs font-bold text-[#2698D1] hover:underline flex items-center gap-1"
+                              >
+                                Ver catálogo
+                                <ArrowRight className="h-3 w-3" />
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {!form.repuestosNecesarios && (
+                      <p className="text-center text-sm text-gray-400 py-4">
+                        Si no sabés si se necesitan repuestos, está bien. El técnico lo evaluará en la visita.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* ── PASO 4: ACCESO ── */}
+                {paso === 4 && (
                   <div className="p-8">
                     <h2 className="text-lg font-black text-[#0D0D0D] mb-1">Acceso y contacto</h2>
                     <p className="text-sm text-gray-400 mb-6">Para coordinar la visita del técnico</p>
@@ -823,8 +930,8 @@ export default function ReportarFalla() {
                   </div>
                 )}
 
-                {/* ── PASO 4: CONFIRMAR ── */}
-                {paso === 4 && (
+                {/* ── PASO 5: CONFIRMAR ── */}
+                {paso === 5 && (
                   <div className="p-8">
                     <h2 className="text-lg font-black text-[#0D0D0D] mb-1">Confirmá el reporte</h2>
                     <p className="text-sm text-gray-400 mb-6">Revisá los datos antes de enviar</p>
@@ -850,6 +957,26 @@ export default function ReportarFalla() {
                         </div>
                         <p className="text-sm text-gray-600">{form.descripcion}</p>
                       </div>
+                      {form.repuestosNecesarios && (
+                        <div className="rounded-xl border bg-gray-50 p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Package className="h-3.5 w-3.5 text-[#2698D1]" />
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Repuestos</p>
+                            {form.repuestosSolicitudMarketplace && (
+                              <span className="text-xs font-bold text-[#2698D1] bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                                Marketplace
+                              </span>
+                            )}
+                          </div>
+                          {form.repuestosDescripcion
+                            ? <p className="text-xs text-gray-600">{form.repuestosDescripcion}</p>
+                            : <p className="text-xs text-gray-400 italic">El técnico evaluará los repuestos necesarios</p>
+                          }
+                          {form.repuestosSolicitudMarketplace && (
+                            <p className="text-xs text-[#2698D1] mt-1">Se solicitará cotización al Marketplace al crear la OT.</p>
+                          )}
+                        </div>
+                      )}
                       {(form.horarioAcceso || form.contactoNombre || form.notas) && (
                         <div className="rounded-xl border bg-gray-50 p-4">
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Acceso</p>
@@ -872,7 +999,7 @@ export default function ReportarFalla() {
                     {paso === 1 ? 'Cancelar' : 'Atrás'}
                   </button>
 
-                  {paso < 4 ? (
+                  {paso < 5 ? (
                     <button
                       onClick={() => puedeAvanzar() && setPaso((paso + 1) as Paso)}
                       disabled={!puedeAvanzar()}

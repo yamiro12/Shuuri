@@ -5,6 +5,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { formatDate } from '@/components/shared/utils';
 import { PROVEEDORES, LIQUIDACIONES, getOTById } from '@/data/mock';
+import { COMISION_REPUESTOS } from '@/lib/business';
 import {
   DollarSign, Clock, CheckCircle2, ChevronDown, ChevronUp,
   TrendingUp, FileText, AlertCircle, CreditCard,
@@ -131,7 +132,7 @@ export default function ProveedorLiquidaciones() {
       <Sidebar userRole="PROVEEDOR" userName={proveedor.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="PROVEEDOR" userName={proveedor.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           <div className="mb-6">
             <h1 className="text-2xl font-black text-[#0D0D0D]">Liquidaciones</h1>
@@ -164,7 +165,7 @@ export default function ProveedorLiquidaciones() {
               </div>
               <p className="text-2xl font-black text-[#0D0D0D]">USD {totalComision}</p>
               <p className="text-sm text-gray-500 mt-0.5">Comisiones SHUURI</p>
-              <p className="text-xs text-gray-400 mt-1">{(15).toFixed(0)}% sobre repuestos despachados</p>
+              <p className="text-xs text-gray-400 mt-1">{Math.round(COMISION_REPUESTOS * 100)}% sobre repuestos despachados</p>
             </div>
           </div>
 

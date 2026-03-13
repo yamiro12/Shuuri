@@ -15,7 +15,8 @@ import {
   MOCK_ORDENES_COMPRA, OTS_POR_MES, COMISION_POR_MES,
 } from '@/data/mock';
 import { SAAS_POR_TIER } from '@/types/shuuri';
-import type { Rubro } from '@/types/shuuri';
+import type { Rubro, TierCliente } from '@/types/shuuri';
+import { getComisionServicioPct, getTierLabel, getTierBadgeClass } from '@/lib/business';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const TASA_USD_ARS = 1050;
@@ -108,6 +109,31 @@ export default function AdminDashboard() {
     [],
   );
 
+  // Comisión total dinámica: calculada por tier real de cada restaurante
+  const comisionTotalDinamica = useMemo(
+    () => OTS
+      .filter(ot => ot.cotizacion?.totalDefinitivo)
+      .reduce((sum, ot) => {
+        const rest = RESTAURANTES.find(r => r.id === ot.restauranteId);
+        const pct  = getComisionServicioPct(rest?.tier);
+        return sum + (ot.cotizacion.totalDefinitivo ?? 0) * pct;
+      }, 0),
+    [],
+  );
+
+  // Distribución de OTs por tier
+  const otsPorTier = useMemo(
+    () => OTS.reduce<Record<TierCliente, number>>(
+      (acc, ot) => {
+        const tier = RESTAURANTES.find(r => r.id === ot.restauranteId)?.tier ?? 'FREEMIUM';
+        acc[tier] = (acc[tier] ?? 0) + 1;
+        return acc;
+      },
+      { FREEMIUM: 0, CADENA_CHICA: 0, CADENA_GRANDE: 0 },
+    ),
+    [],
+  );
+
   // ── Pie: OTs por estado ──
   const pieData = useMemo(() => {
     const byEstado = OTS.reduce<Record<string, number>>((acc, o) => {
@@ -180,7 +206,7 @@ export default function AdminDashboard() {
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 sidebar-push">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* PAGE HEADER */}
           <div className="mb-6 flex items-center justify-between">
@@ -228,11 +254,11 @@ export default function AdminDashboard() {
           </div>
 
           {/* KPIs ROW 2 */}
-          <div className="mb-6 grid grid-cols-3 gap-4">
+          <div className="mb-4 grid grid-cols-3 gap-4">
             {[
-              { label: 'OTs en curso',      value: otsEnCurso.length,             icon: ClipboardList, color: 'text-amber-600',  bg: 'bg-amber-50',  format: false },
-              { label: 'ARR estimado',       value: formatARS(arrEstimadoARS),     icon: TrendingUp,    color: 'text-emerald-600', bg: 'bg-emerald-50', format: true },
-              { label: 'GMV del mes (ARS)',  value: formatARS(gmvMesARS),          icon: DollarSign,    color: 'text-rose-600',    bg: 'bg-rose-50',    format: true },
+              { label: 'OTs en curso',      value: otsEnCurso.length,             icon: ClipboardList, color: 'text-amber-600',  bg: 'bg-amber-50' },
+              { label: 'ARR estimado',       value: formatARS(arrEstimadoARS),     icon: TrendingUp,    color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'GMV del mes (ARS)',  value: formatARS(gmvMesARS),          icon: DollarSign,    color: 'text-rose-600',    bg: 'bg-rose-50' },
             ].map(kpi => (
               <div key={kpi.label} className="rounded-xl border bg-white shadow-sm p-5 flex items-center gap-4">
                 <div className={`h-12 w-12 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
@@ -244,6 +270,28 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* KPI: Comisión dinámica + Desglose por tier */}
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="rounded-xl border bg-white shadow-sm p-5">
+              <p className="text-xs text-gray-400 mb-1">Comisión total acumulada (dinámica por tier)</p>
+              <p className="text-2xl font-black text-[#2698D1]">{formatARS(comisionTotalDinamica)}</p>
+              <p className="text-[11px] text-gray-400 mt-1">Calculada OT por OT según tier real del restaurante</p>
+            </div>
+            <div className="rounded-xl border bg-white shadow-sm p-5">
+              <p className="text-xs text-gray-400 mb-2">Desglose de OTs por tier</p>
+              <div className="flex flex-wrap gap-2">
+                {(['FREEMIUM', 'CADENA_CHICA', 'CADENA_GRANDE'] as TierCliente[]).map(tier => (
+                  <span
+                    key={tier}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${getTierBadgeClass(tier)}`}
+                  >
+                    {getTierLabel(tier)}: {otsPorTier[tier]}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* CHARTS ROW */}

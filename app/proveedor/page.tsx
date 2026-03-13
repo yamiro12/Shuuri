@@ -76,7 +76,7 @@ export default function ProveedorDashboard() {
       <Sidebar userRole="PROVEEDOR" userName={proveedor.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="PROVEEDOR" userName={proveedor.nombre} actorId={proveedorId} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* HEADER */}
           <div className="mb-8 flex items-start justify-between">

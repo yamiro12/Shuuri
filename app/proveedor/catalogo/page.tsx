@@ -796,7 +796,7 @@ export default function ProveedorCatalogo() {
       <Sidebar userRole="PROVEEDOR" userName={proveedor.nombre} />
       <div className="flex-1 sidebar-push">
         <Header userRole="PROVEEDOR" userName={proveedor.nombre} />
-        <main className="p-8">
+        <main className="page-main">
 
           {/* Toast */}
           {toast && (
