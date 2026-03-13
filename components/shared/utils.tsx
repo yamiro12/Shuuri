@@ -66,8 +66,19 @@ export function formatARS(n: number) {
   }).format(n);
 }
 
-export function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-AR', {
+export function formatUSD(n: number) {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('es-AR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

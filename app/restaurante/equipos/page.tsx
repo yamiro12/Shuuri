@@ -8,11 +8,14 @@ import {
   AlertTriangle, CheckCircle, Clock, XCircle,
   Calendar, Package, BarChart2, X,
 } from 'lucide-react';
-import { EQUIPOS, getOTsByRestaurante } from '@/data/mock';
+import { EQUIPOS, getOTsByRestaurante, RESTAURANTES } from '@/data/mock';
 import { RUBRO_LABELS, TODOS_LOS_RUBROS } from '@/types/shuuri';
 import type { Equipo, Rubro } from '@/types/shuuri';
+import Sidebar from '@/components/layout/Sidebar';
+import Header from '@/components/layout/Header';
 
 const RESTAURANTE_ID = 'R001';
+const RESTAURANTE = RESTAURANTES.find(r => r.id === RESTAURANTE_ID) ?? RESTAURANTES[0];
 
 const RUBRO_ICON: Record<string, React.ReactNode> = {
   frio_comercial:          <Thermometer className="w-4 h-4" />,
@@ -82,6 +85,12 @@ export default function EquiposPage() {
   );
   const [modalOpen,   setModalOpen]   = useState(false);
   const [nuevoEquipo, setNuevoEquipo] = useState(EQUIPO_VACIO);
+  const [toast,       setToast]       = useState<string | null>(null);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
 
   const allOTs = getOTsByRestaurante(RESTAURANTE_ID);
 
@@ -120,10 +129,16 @@ export default function EquiposPage() {
     setEquiposLocal(prev => [...prev, nuevo]);
     setNuevoEquipo(EQUIPO_VACIO);
     setModalOpen(false);
+    showToast(`Equipo "${nuevo.tipo} ${nuevo.marca}" agregado`);
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar userRole="RESTAURANTE" userName={RESTAURANTE.nombre} />
+      <div className="flex-1 ml-64">
+        <Header userRole="RESTAURANTE" userName={RESTAURANTE.nombre} />
+        <main className="p-8">
+    <div className="max-w-5xl mx-auto space-y-6">
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -364,6 +379,16 @@ export default function EquiposPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+        </main>
+      </div>
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-[#0D0D0D] px-5 py-3 text-sm font-bold text-white shadow-xl flex items-center gap-2">
+          <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
+          {toast}
         </div>
       )}
     </div>
