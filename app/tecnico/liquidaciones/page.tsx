@@ -144,7 +144,7 @@ export default function TecnicoLiquidaciones() {
   const toggle = (id: string) => setExpandida(prev => prev === id ? null : id);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={TECNICO.nombre} />
       <div className="flex-1 ml-64">
         <Header userRole="TECNICO" userName={TECNICO.nombre} />

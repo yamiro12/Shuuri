@@ -15,7 +15,7 @@ export default function TecnicoDashboard() {
   const hoy = MIS_OTS.filter(o => o.fechaVisitaProgramada?.startsWith(new Date().toISOString().slice(0, 10)));
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={TECNICO.nombre} />
       <div className="flex-1 ml-64">
         <Header userRole="TECNICO" userName={TECNICO.nombre} />

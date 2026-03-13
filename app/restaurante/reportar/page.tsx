@@ -271,7 +271,7 @@ export default function ReportarFalla() {
   if (enviado) {
     const urgCfg = URGENCIAS.find(u => u.key === form.urgencia);
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[#F7F8FA]">
         <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
         <div className="flex-1 ml-64">
           <Header userRole="RESTAURANTE" userName={restaurante.nombre} />
@@ -331,7 +331,7 @@ export default function ReportarFalla() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="RESTAURANTE" userName={restaurante.nombre} />
       <div className="flex-1 ml-64">
         <Header userRole="RESTAURANTE" userName={restaurante.nombre} />

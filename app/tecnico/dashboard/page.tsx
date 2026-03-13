@@ -236,7 +236,7 @@ export default function TecnicoDashboardPage() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={tecnico.nombre} />
 
       <div className="ml-64 flex-1 flex flex-col">

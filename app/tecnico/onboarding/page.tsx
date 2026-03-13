@@ -1029,7 +1029,7 @@ export default function OnboardingTecnico() {
   const StepIcon = STEP_ICONS[step - 1];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 py-8">
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col items-center px-4 py-8">
       {/* HEADER */}
       <div className="w-full max-w-2xl mb-6">
         <div className="flex items-center gap-2 mb-6">

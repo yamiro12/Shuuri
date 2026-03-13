@@ -128,7 +128,7 @@ export default function RestauranteOTDetail() {
   const slaBreach                = ot.slaBreachAt && new Date(ot.slaBreachAt) < new Date();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F7F8FA]">
 
       {/* HEADER */}
       <div className="bg-white border-b border-gray-100 px-6 py-4">

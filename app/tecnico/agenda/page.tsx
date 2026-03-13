@@ -225,7 +225,7 @@ export default function TecnicoAgenda() {
   const minutosTotal  = otsSemana.reduce((s, o) => s + o.duracionMin, 0);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="TECNICO" userName={TECNICO_NOMBRE} />
       <div className="flex-1 ml-64">
         <Header userRole="TECNICO" userName={TECNICO_NOMBRE} />

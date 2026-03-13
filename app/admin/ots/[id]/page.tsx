@@ -28,7 +28,7 @@ export default function AdminOTDetalle() {
 
   if (!ot) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[#F7F8FA]">
         <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
         <div className="flex-1 ml-64">
           <Header userRole="SHUURI_ADMIN" userName="Admin" />
@@ -46,7 +46,7 @@ export default function AdminOTDetalle() {
   const cot         = ot.cotizacion;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 ml-64">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />

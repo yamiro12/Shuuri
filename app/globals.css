@@ -116,14 +116,125 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ── SHUURI Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  --shuuri-blue:       #2698D1;
+  --shuuri-blue-dark:  #1e82b8;
+  --shuuri-blue-light: #e8f4fb;
+  --shuuri-ink:        #0D0D0D;
+  --shuuri-surface:    #F7F8FA;
+  --shuuri-border:     #E5E7EB;
+  --shuuri-muted:      #6B7280;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
+  body {
+    @apply bg-[#F7F8FA] text-foreground;
+  }
+
+  /* ── Scrollbar (Webkit) ─────────────────────────────────── */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+  }
+
+  /* ── Focus rings ─────────────────────────────────────────── */
+  :focus-visible {
+    outline: 2px solid var(--shuuri-blue);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* ── Selection ───────────────────────────────────────────── */
+  ::selection {
+    background: #2698D120;
+    color: var(--shuuri-ink);
+  }
+
+  /* ── Inputs ──────────────────────────────────────────────── */
+  input, textarea, select {
+    @apply transition-colors duration-150;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--shuuri-blue) !important;
+    box-shadow: 0 0 0 3px rgba(38, 152, 209, 0.12);
+  }
+
+  /* ── Links ───────────────────────────────────────────────── */
+  a {
+    @apply transition-colors duration-100;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+  button {
+    @apply transition-all duration-150;
+  }
+}
+
+/* ── Utility: hide scrollbar ───────────────────────────────────────────────── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Utility: card hover lift ──────────────────────────────────────────────── */
+.card-hover {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.card-hover:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+/* ── Animation: fade-in-up ─────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.2s ease forwards;
+}
+
+/* ── Animation: fade-in ────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.15s ease forwards;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+.shuuri-table tr:hover td {
+  background-color: #F9FAFB;
+}
+
+/* ── Page main content ─────────────────────────────────────────────────────── */
+.page-content {
+  padding: 2rem;
+  max-width: 1280px;
 }

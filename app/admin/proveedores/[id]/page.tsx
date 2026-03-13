@@ -25,7 +25,7 @@ export default function AdminProveedorDetalle({ params }: { params: { id: string
   const [tab, setTab] = useState<'resumen'|'ordenes'|'legajo'>('resumen');
 
   if (!proveedor) return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 ml-64 p-8">
         <p className="text-gray-500 mb-4">Proveedor no encontrado.</p>
@@ -42,7 +42,7 @@ export default function AdminProveedorDetalle({ params }: { params: { id: string
   const leg = proveedor.legajo;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="SHUURI_ADMIN" userName="SHUURI Admin" />
       <div className="flex-1 ml-64">
         <Header userRole="SHUURI_ADMIN" userName="Admin" />

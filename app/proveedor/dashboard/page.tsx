@@ -193,7 +193,7 @@ export default function ProveedorDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <Sidebar userRole="PROVEEDOR" userName={proveedor.nombre} />
       <div className="flex-1 ml-64">
         <Header userRole="PROVEEDOR" userName={proveedor.nombre} />

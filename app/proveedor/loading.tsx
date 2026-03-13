@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F7F8FA]">
       <div className="w-64 shrink-0 bg-[#0D0D0D]" />
       <div className="flex-1 ml-64">
         <div className="sticky top-0 z-30 h-16 border-b bg-white" />

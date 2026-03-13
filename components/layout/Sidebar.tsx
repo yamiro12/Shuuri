@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, PlusCircle, ClipboardList, Wrench, Utensils,
   CreditCard, Calendar, Package, ShieldCheck, Users, LogOut,
-  BarChart3, Settings, Truck, BookOpen, UserCircle, ShoppingBag
+  BarChart3, Settings, Truck, BookOpen, UserCircle, ShoppingBag,
 } from 'lucide-react';
 import { UserRole } from '@/types/shuuri';
 
@@ -17,11 +17,11 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
   RESTAURANTE: [
     {
       items: [
-        { label: 'Dashboard',       href: '/restaurante',          icon: LayoutDashboard },
-        { label: 'Reportar falla',  href: '/restaurante/reportar', icon: PlusCircle },
-        { label: 'Mis OTs',         href: '/restaurante/ots',      icon: ClipboardList },
-        { label: 'Mis Equipos',     href: '/restaurante/equipos',  icon: Utensils },
-        { label: 'Marketplace',     href: '/restaurante/marketplace', icon: ShoppingBag },
+        { label: 'Dashboard',       href: '/restaurante',              icon: LayoutDashboard },
+        { label: 'Reportar falla',  href: '/restaurante/reportar',     icon: PlusCircle },
+        { label: 'Mis OTs',         href: '/restaurante/ots',          icon: ClipboardList },
+        { label: 'Mis Equipos',     href: '/restaurante/equipos',      icon: Utensils },
+        { label: 'Marketplace',     href: '/restaurante/marketplace',  icon: ShoppingBag },
       ],
     },
     {
@@ -33,17 +33,17 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
     {
       group: 'Mi cuenta',
       items: [
-        { label: 'Mi perfil',    href: '/restaurante/perfil',     icon: UserCircle },
-        { label: 'Onboarding',   href: '/restaurante/onboarding', icon: Settings },
+        { label: 'Mi perfil',  href: '/restaurante/perfil',     icon: UserCircle },
+        { label: 'Onboarding', href: '/restaurante/onboarding', icon: Settings },
       ],
     },
   ],
   TECNICO: [
     {
       items: [
-        { label: 'Dashboard',  href: '/tecnico',       icon: LayoutDashboard },
-        { label: 'Mi agenda',  href: '/tecnico/agenda', icon: Calendar },
-        { label: 'Mis OTs',    href: '/tecnico/ots',    icon: ClipboardList },
+        { label: 'Dashboard', href: '/tecnico',        icon: LayoutDashboard },
+        { label: 'Mi agenda', href: '/tecnico/agenda', icon: Calendar },
+        { label: 'Mis OTs',   href: '/tecnico/ots',    icon: ClipboardList },
       ],
     },
     {
@@ -56,17 +56,17 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
     {
       group: 'Mi cuenta',
       items: [
-        { label: 'Mi perfil',       href: '/tecnico/perfil', icon: UserCircle },
-        { label: 'Onboarding',      href: '/tecnico/onboarding', icon: Settings },
+        { label: 'Mi perfil',  href: '/tecnico/perfil',     icon: UserCircle },
+        { label: 'Onboarding', href: '/tecnico/onboarding', icon: Settings },
       ],
     },
   ],
   PROVEEDOR: [
     {
       items: [
-        { label: 'Dashboard',       href: '/proveedor',          icon: LayoutDashboard },
-        { label: 'Órdenes de compra', href: '/proveedor/ordenes', icon: Package },
-        { label: 'Mi catálogo',     href: '/proveedor/catalogo', icon: BookOpen },
+        { label: 'Dashboard',         href: '/proveedor',          icon: LayoutDashboard },
+        { label: 'Órdenes de compra', href: '/proveedor/ordenes',  icon: Package },
+        { label: 'Mi catálogo',       href: '/proveedor/catalogo', icon: BookOpen },
       ],
     },
     {
@@ -94,9 +94,9 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
     {
       group: 'Actores',
       items: [
-        { label: 'Técnicos',      href: '/admin/tecnicos',     icon: Wrench },
-        { label: 'Restaurantes',  href: '/admin/restaurantes', icon: Utensils },
-        { label: 'Proveedores',   href: '/admin/proveedores',  icon: Truck },
+        { label: 'Técnicos',     href: '/admin/tecnicos',     icon: Wrench },
+        { label: 'Restaurantes', href: '/admin/restaurantes', icon: Utensils },
+        { label: 'Proveedores',  href: '/admin/proveedores',  icon: Truck },
       ],
     },
     {
@@ -118,79 +118,128 @@ const NAV_CONFIG: Record<UserRole, NavGroup[]> = {
     {
       group: 'Sistema',
       items: [
+        { label: 'Integraciones', href: '/admin/integraciones', icon: Users },
         { label: 'Configuración', href: '/admin/configuracion', icon: Settings },
       ],
     },
   ],
 };
 
+const ROLE_COLOR: Record<UserRole, string> = {
+  RESTAURANTE:  'bg-orange-500',
+  TECNICO:      'bg-blue-500',
+  PROVEEDOR:    'bg-purple-500',
+  SHUURI_ADMIN: 'bg-[#2698D1]',
+};
+
+const ROLE_ABBR: Record<UserRole, string> = {
+  RESTAURANTE:  'RE',
+  TECNICO:      'TC',
+  PROVEEDOR:    'PR',
+  SHUURI_ADMIN: 'AD',
+};
+
 export default function Sidebar({ userRole, userName }: SidebarProps) {
-  const pathname = usePathname();
+  const pathname  = usePathname();
   const navGroups = NAV_CONFIG[userRole];
 
+  function isActive(href: string) {
+    const roots = ['/restaurante', '/tecnico', '/proveedor', '/admin'];
+    if (roots.includes(href)) return pathname === href;
+    return pathname === href || pathname.startsWith(href + '/') || pathname.startsWith(href + '?');
+  }
+
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-[#0D0D0D] text-white">
-      <div className="flex h-full flex-col px-3 py-4">
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-white/5 bg-[#0D0D0D]">
 
-        <div className="mb-8 flex items-center px-4 py-2">
-          <span className="text-2xl font-black tracking-tighter text-[#2698D1]">SHUURI</span>
-          <span className="ml-2 rounded border border-[#2698D1] px-1.5 py-0.5 text-[10px] font-bold text-[#2698D1]">MVP</span>
+      {/* ── LOGO ─────────────────────────────────────────────── */}
+      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-white/5 px-5">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2698D1]">
+          <span className="text-[10px] font-black text-white tracking-tight">SH</span>
         </div>
-
-        <nav className="flex-1 space-y-6 overflow-y-auto">
-          {navGroups.map((group, gi) => (
-            <div key={gi}>
-              {group.group && (
-                <p className="mb-1 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-600">
-                  {group.group}
-                </p>
-              )}
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    (item.href !== '/restaurante' &&
-                      item.href !== '/tecnico' &&
-                      item.href !== '/proveedor' &&
-                      item.href !== '/admin' &&
-                      pathname.startsWith(item.href));
-                  return (
-                    <Link key={item.href} href={item.href}
-                      className={`flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-medium transition-colors hover:bg-white/10 ${
-                        isActive ? 'bg-[#2698D1] text-white' : 'text-gray-400'
-                      }`}>
-                      <div className="flex items-center">
-                        <item.icon className="mr-3 h-4 w-4" />
-                        {item.label}
-                      </div>
-                      {item.badge && (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        <div className="mt-auto border-t border-white/10 pt-4">
-          <div className="px-4 py-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-600">
-              {userRole.replace('_', ' ')}
-            </span>
-            <p className="truncate text-sm font-bold text-white">{userName}</p>
-          </div>
-          <Link href="/"
-            className="mt-1 flex w-full items-center rounded-lg px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-400/10">
-            <LogOut className="mr-3 h-4 w-4" />
-            Cerrar Sesión
-          </Link>
-        </div>
-
+        <span className="text-base font-black tracking-tighter text-white">SHUURI</span>
+        <span className="ml-auto rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-gray-500">
+          MVP
+        </span>
       </div>
+
+      {/* ── NAV ──────────────────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
+        {navGroups.map((group, gi) => (
+          <div key={gi}>
+
+            {group.group && (
+              <div className="mb-1.5 flex items-center gap-2 px-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-600 whitespace-nowrap">
+                  {group.group}
+                </span>
+                <div className="h-px flex-1 bg-white/[0.04]" />
+              </div>
+            )}
+
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`group relative flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-150 ${
+                      active
+                        ? 'bg-white/[0.08] text-white'
+                        : 'text-gray-500 hover:bg-white/[0.04] hover:text-gray-200'
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r bg-[#2698D1]" />
+                    )}
+
+                    <div className="flex items-center gap-2.5">
+                      <item.icon
+                        className={`h-[15px] w-[15px] shrink-0 transition-colors ${
+                          active ? 'text-[#2698D1]' : 'text-gray-600 group-hover:text-gray-400'
+                        }`}
+                      />
+                      <span className={`text-[13px] ${active ? 'font-semibold' : 'font-medium'}`}>
+                        {item.label}
+                      </span>
+                    </div>
+
+                    {item.badge && (
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* ── USER + LOGOUT ────────────────────────────────────── */}
+      <div className="shrink-0 border-t border-white/5 p-3">
+        <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2 py-2">
+          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white ${ROLE_COLOR[userRole]}`}>
+            {ROLE_ABBR[userRole]}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-white leading-tight">{userName}</p>
+            <p className="text-[10px] text-gray-500 capitalize leading-tight">
+              {userRole.replace('SHUURI_', '').replace('_', ' ').toLowerCase()}
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/"
+          className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-[13px] font-medium text-gray-600 transition-colors hover:bg-white/[0.04] hover:text-red-400"
+        >
+          <LogOut className="h-[15px] w-[15px]" />
+          Cerrar sesión
+        </Link>
+      </div>
+
     </aside>
   );
 }
