@@ -3,10 +3,12 @@ import React from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { OTS, TECNICOS, RESTAURANTES } from '@/data/mock';
+import { formatDate, formatARS } from '@/components/shared/utils';
+import { OTS, TECNICOS, RESTAURANTES, MOCK_ORDENES_COMPRA } from '@/data/mock';
 import {
   ClipboardList, Wrench, Utensils, AlertTriangle,
   TrendingUp, CheckCircle2, Clock, XCircle, ChevronRight,
+  ShoppingCart,
 } from 'lucide-react';
 
 // Estados cerrados/finales
@@ -29,6 +31,13 @@ export default function AdminDashboard() {
   }, {});
 
   const urgenciaCritica = OTS.filter(o => o.urgencia === 'CRITICA' && !ESTADOS_CERRADOS.includes(o.estado as typeof ESTADOS_CERRADOS[number]));
+
+  // OCRs
+  const ocrsActivas  = MOCK_ORDENES_COMPRA.filter(o => o.estado !== 'entregada_local' && o.estado !== 'cancelada');
+  const montoEnTransito = ocrsActivas.reduce((s, o) => s + o.totalARS, 0);
+  const now = new Date();
+  const ocrsVencidas = ocrsActivas.filter(o => o.fechaEstimadaEntrega && new Date(o.fechaEstimadaEntrega) < now);
+  const ocrsRecientes = [...MOCK_ORDENES_COMPRA].sort((a, b) => new Date(b.creadaEn).getTime() - new Date(a.creadaEn).getTime()).slice(0, 5);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -196,6 +205,68 @@ export default function AdminDashboard() {
                   className="mt-4 flex items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-xs font-bold text-gray-600 hover:border-[#2698D1] hover:text-[#2698D1] transition-colors">
                   Ver técnicos <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
+              </div>
+
+              {/* ÓRDENES DE COMPRA REPUESTO */}
+              <div className="rounded-xl border bg-white shadow-sm">
+                <div className="border-b px-5 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="h-4 w-4 text-[#2698D1]" />
+                    <h2 className="font-bold text-[#0D0D0D] text-sm">Repuestos activos</h2>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${ocrsActivas.length > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {ocrsActivas.length}
+                  </span>
+                </div>
+
+                {ocrsVencidas.length > 0 && (
+                  <div className="flex items-center gap-2 border-b bg-red-50 px-5 py-3">
+                    <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
+                    <p className="text-xs text-red-600 font-bold">
+                      {ocrsVencidas.length} pedido{ocrsVencidas.length > 1 ? 's' : ''} vencido{ocrsVencidas.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-5">
+                  <div className="flex justify-between mb-4">
+                    <span className="text-xs text-gray-400">En tránsito</span>
+                    <span className="text-sm font-black text-[#0D0D0D]">{formatARS(montoEnTransito)}</span>
+                  </div>
+
+                  {ocrsRecientes.length === 0 ? (
+                    <p className="text-xs text-gray-400 text-center py-2">Sin órdenes</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {ocrsRecientes.map(ocr => {
+                        const vencida = ocr.fechaEstimadaEntrega && new Date(ocr.fechaEstimadaEntrega) < now && ocr.estado !== 'entregada_local' && ocr.estado !== 'cancelada';
+                        return (
+                          <Link key={ocr.id} href={`/proveedor/ordenes/${ocr.id}`}
+                            className="flex items-center justify-between py-2 border-b last:border-0 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-gray-400 font-mono">{ocr.id}</p>
+                              <p className="text-xs font-medium text-[#0D0D0D] truncate">OT {ocr.otId}</p>
+                            </div>
+                            <div className="flex items-center gap-2 ml-2 shrink-0">
+                              {vencida && <AlertTriangle className="h-3.5 w-3.5 text-red-400" />}
+                              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                                ocr.estado === 'entregada_local'      ? 'bg-green-100 text-green-700' :
+                                ocr.estado === 'despachada'           ? 'bg-purple-100 text-purple-700' :
+                                ocr.estado === 'confirmada_proveedor' ? 'bg-blue-100 text-blue-700' :
+                                'bg-gray-100 text-gray-500'
+                              }`}>
+                                {ocr.estado === 'confirmada_proveedor' ? 'Confirmada' :
+                                 ocr.estado === 'despachada' ? 'En camino' :
+                                 ocr.estado === 'entregada_local' ? 'Entregada' : ocr.estado}
+                              </span>
+                              <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
             </div>

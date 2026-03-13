@@ -1,19 +1,23 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge, formatARS, formatDate } from '@/components/shared/utils';
-import { getOTById, getTecnicoById, getRestauranteById, getEquipoById, getOCsByOT } from '@/data/mock';
+import {
+  getOTById, getTecnicoById, getRestauranteById, getEquipoById, getOCsByOT,
+  REPUESTOS_MKT, PROVEEDORES_MKT, PRODUCTOS_MKT, getOrdenesCompraRepuestoPorOT,
+} from '@/data/mock';
 import { RUBRO_LABELS } from '@/types/shuuri';
-import type { Rubro, EstadoOT } from '@/types/shuuri';
+import type { Rubro, EstadoOT, OrdenCompraRepuesto } from '@/types/shuuri';
 import {
   ArrowLeft, MapPin, Wrench, Package,
   CheckCircle2, Clock, AlertTriangle,
   ChevronRight, Camera, FileText,
   Phone, Building2, Play, Flag,
   DollarSign, Plus, Trash2, X,
+  ShoppingCart, Search, Truck, ChevronLeft, Loader2,
 } from 'lucide-react';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -205,6 +209,338 @@ function ModalCotizacion({ ot, onClose, onConfirm }: {
   );
 }
 
+// ─── MODAL SOLICITAR REPUESTO ─────────────────────────────────────────────────
+
+const TASA_USD_ARS = 1050;
+const COMISION_OCR_PCT = 15;
+
+type ItemSel = {
+  uid: string;
+  tipo: 'repuesto' | 'producto' | 'libre';
+  refId?: string;
+  nombre: string;
+  marca: string;
+  precioARS: number;
+  cantidad: number;
+  compatible: boolean;
+  rubro: string;
+  proveedorId?: string;
+};
+
+function SolicitarRepuestoModal({ ot, onClose, onConfirm }: {
+  ot: OT;
+  onClose: () => void;
+  onConfirm: (result: { items: ItemSel[]; proveedorId: string; subtotalARS: number; totalARS: number }) => void;
+}) {
+  const [step,       setStep]       = useState<1 | 2 | 3>(1);
+  const [buscar,     setBuscar]     = useState('');
+  const [selected,   setSelected]   = useState<ItemSel[]>([]);
+  const [modoLibre,  setModoLibre]  = useState(false);
+  const [libre,      setLibre]      = useState({ desc: '', qty: 1, precioARS: 0 });
+  const [proveedorId,setProveedorId]= useState('');
+  const [sending,    setSending]    = useState(false);
+
+  const q = buscar.toLowerCase();
+
+  const repFiltrados = useMemo(() =>
+    REPUESTOS_MKT.filter(r => !q || r.nombre.toLowerCase().includes(q) || r.marca.toLowerCase().includes(q)),
+    [q]);
+
+  const prodFiltrados = useMemo(() =>
+    PRODUCTOS_MKT.filter(p => !q || p.nombre.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q)).slice(0, 4),
+    [q]);
+
+  function isCompat(compatMarcas: string[], compatModelos: string[], compatActivos?: string[]) {
+    if (ot.activoId && compatActivos?.includes(ot.activoId)) return true;
+    if (ot.equipoMarca && compatMarcas.includes(ot.equipoMarca)) return true;
+    if (ot.equipoModelo && compatModelos.includes(ot.equipoModelo)) return true;
+    return false;
+  }
+
+  function addItem(item: ItemSel) {
+    setSelected(prev => {
+      const ex = prev.find(s => s.uid === item.uid);
+      if (ex) return prev.map(s => s.uid === item.uid ? { ...s, cantidad: s.cantidad + 1 } : s);
+      return [...prev, item];
+    });
+  }
+  function removeItem(uid: string) { setSelected(prev => prev.filter(s => s.uid !== uid)); }
+  function updateQty(uid: string, qty: number) {
+    if (qty < 1) return;
+    setSelected(prev => prev.map(s => s.uid === uid ? { ...s, cantidad: qty } : s));
+  }
+  function addLibre() {
+    if (!libre.desc.trim() || libre.precioARS <= 0) return;
+    addItem({ uid: `libre_${Date.now()}`, tipo: 'libre', nombre: libre.desc, marca: '—', precioARS: libre.precioARS, cantidad: libre.qty, compatible: false, rubro: '' });
+    setLibre({ desc: '', qty: 1, precioARS: 0 });
+    setModoLibre(false);
+  }
+
+  const rubrosSeleccionados = [...new Set(selected.map(s => s.rubro).filter(Boolean))];
+  const proveedoresFiltrados = useMemo(() =>
+    rubrosSeleccionados.length === 0
+      ? PROVEEDORES_MKT
+      : PROVEEDORES_MKT.filter(p => p.rubros.some(r => rubrosSeleccionados.includes(r))),
+    [rubrosSeleccionados.join(',')]);
+
+  const subtotalARS = selected.reduce((s, i) => s + i.cantidad * i.precioARS, 0);
+  const comisionARS = Math.round(subtotalARS * COMISION_OCR_PCT / 100);
+  const totalARS    = subtotalARS + comisionARS;
+
+  async function handleConfirm() {
+    setSending(true);
+    await new Promise<void>(r => setTimeout(r, 1500));
+    setSending(false);
+    onConfirm({ items: selected, proveedorId, subtotalARS, totalARS });
+  }
+
+  const STEP_LABELS = ['Identificar repuestos', 'Seleccionar proveedor', 'Confirmar'];
+
+  function ItemRow({ uid, nombre, marca, precio, stock, compat, onAdd }: { uid: string; nombre: string; marca: string; precio: number; stock: number; compat: boolean; onAdd: () => void }) {
+    const inList = selected.find(s => s.uid === uid);
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-gray-100 p-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-medium text-[#0D0D0D] truncate">{nombre}</p>
+            {compat && <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full shrink-0">Compatible</span>}
+          </div>
+          <p className="text-xs text-gray-400">{marca} · USD {precio}</p>
+          <span className={`inline-block mt-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${stock > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+            {stock > 0 ? `Stock: ${stock}` : 'Sin stock'}
+          </span>
+        </div>
+        {inList ? (
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={() => updateQty(uid, inList.cantidad - 1)} className="h-7 w-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm">−</button>
+            <span className="text-sm font-bold w-6 text-center">{inList.cantidad}</span>
+            <button onClick={() => updateQty(uid, inList.cantidad + 1)} className="h-7 w-7 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm">+</button>
+            <button onClick={() => removeItem(uid)} className="ml-1 h-7 w-7 rounded-lg border border-red-200 text-red-400 hover:bg-red-50 flex items-center justify-center"><X className="h-3 w-3" /></button>
+          </div>
+        ) : (
+          <button onClick={onAdd} className="shrink-0 flex items-center gap-1 rounded-lg bg-[#2698D1] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#2698D1]/90">
+            <Plus className="h-3.5 w-3.5" /> Agregar
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between border-b px-6 py-5">
+          <div>
+            <h3 className="font-black text-[#0D0D0D]">Solicitar repuesto</h3>
+            <p className="text-xs text-gray-400 mt-0.5">{ot.id} · {ot.equipoTipo} {ot.equipoMarca ?? ''}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-gray-100"><X className="h-4 w-4 text-gray-500" /></button>
+        </div>
+
+        {/* Steps */}
+        <div className="flex border-b bg-gray-50">
+          {STEP_LABELS.map((label, i) => (
+            <div key={i} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-bold border-b-2 transition-colors ${step === i + 1 ? 'border-[#2698D1] text-[#2698D1]' : step > i + 1 ? 'border-green-500 text-green-600' : 'border-transparent text-gray-400'}`}>
+              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-xs font-black ${step > i + 1 ? 'bg-green-100 text-green-600' : step === i + 1 ? 'bg-blue-100 text-[#2698D1]' : 'bg-gray-100 text-gray-400'}`}>
+                {step > i + 1 ? '✓' : i + 1}
+              </span>
+              <span className="hidden sm:inline">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+
+          {step === 1 && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar repuesto o producto…"
+                  className="w-full rounded-lg border border-gray-200 pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#2698D1]" />
+              </div>
+
+              {repFiltrados.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Repuestos</p>
+                  <div className="space-y-2">
+                    {repFiltrados.map(r => (
+                      <ItemRow key={r.id} uid={r.id} nombre={r.nombre} marca={r.marca} precio={r.precio} stock={r.stock}
+                        compat={isCompat(r.compatibleMarcas, r.compatibleModelos, r.compatibleActivosIds)}
+                        onAdd={() => addItem({ uid: r.id, tipo: 'repuesto', refId: r.id, nombre: r.nombre, marca: r.marca, precioARS: Math.round(r.precio * TASA_USD_ARS), cantidad: 1, compatible: isCompat(r.compatibleMarcas, r.compatibleModelos, r.compatibleActivosIds), rubro: r.rubro, proveedorId: r.proveedorId })} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {prodFiltrados.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Productos del catálogo</p>
+                  <div className="space-y-2">
+                    {prodFiltrados.map(p => {
+                      const uid = `prod_${p.id}`;
+                      const compat = !!(ot.activoId && p.compatibleConActivos?.includes(ot.activoId));
+                      return (
+                        <ItemRow key={p.id} uid={uid} nombre={p.nombre} marca={p.marca} precio={p.precio} stock={p.stock}
+                          compat={compat}
+                          onAdd={() => addItem({ uid, tipo: 'producto', refId: p.id, nombre: p.nombre, marca: p.marca, precioARS: Math.round(p.precio * TASA_USD_ARS), cantidad: 1, compatible: compat, rubro: p.rubro ?? '', proveedorId: p.proveedorId })} />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-dashed border-gray-300 p-4">
+                {modoLibre ? (
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold text-gray-500 uppercase">Ítem libre (sin catálogo)</p>
+                    <input value={libre.desc} onChange={e => setLibre(l => ({ ...l, desc: e.target.value }))} placeholder="Descripción del repuesto / material"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1]" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Cantidad</label>
+                        <input type="number" min={1} value={libre.qty} onChange={e => setLibre(l => ({ ...l, qty: Number(e.target.value) }))}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1]" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Precio est. ARS (referencial)</label>
+                        <input type="number" min={0} value={libre.precioARS || ''} onChange={e => setLibre(l => ({ ...l, precioARS: Number(e.target.value) }))} placeholder="0"
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1]" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={addLibre} className="flex-1 rounded-lg bg-[#2698D1] py-2 text-xs font-bold text-white hover:bg-[#2698D1]/90">Agregar ítem</button>
+                      <button onClick={() => setModoLibre(false)} className="px-4 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50">Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setModoLibre(true)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#2698D1] w-full justify-center py-1">
+                    <Plus className="h-4 w-4" /> Agregar ítem libre (sin catálogo)
+                  </button>
+                )}
+              </div>
+
+              {selected.length > 0 && (
+                <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
+                  <p className="text-xs font-bold text-[#2698D1] mb-2">{selected.length} ítem{selected.length > 1 ? 's' : ''} seleccionado{selected.length > 1 ? 's' : ''}</p>
+                  {selected.map(s => (
+                    <div key={s.uid} className="flex justify-between text-xs py-1 border-b border-blue-100 last:border-0">
+                      <span className="text-gray-600 truncate max-w-[60%]">{s.nombre} ×{s.cantidad}</span>
+                      <span className="font-bold text-gray-700">{formatARS(s.cantidad * s.precioARS)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <p className="text-xs text-gray-500">Seleccioná un proveedor para esta orden.</p>
+              {proveedoresFiltrados.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">Sin proveedores disponibles</p>
+              ) : (
+                <div className="space-y-3">
+                  {proveedoresFiltrados.map(p => {
+                    const sel = proveedorId === p.id;
+                    return (
+                      <button key={p.id} type="button" onClick={() => setProveedorId(p.id)}
+                        className={`w-full text-left rounded-xl border-2 p-4 transition-all ${sel ? 'border-[#2698D1] bg-blue-50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-bold text-[#0D0D0D] text-sm">{p.nombre}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {p.tiposSeller?.[0] ?? 'Distribuidor'}
+                              {p.tiempoEntregaHs ? ` · Entrega: ${p.tiempoEntregaHs}hs` : ''}
+                            </p>
+                            <p className="text-xs text-gray-400">Cubre: {p.rubros.slice(0, 2).map(r => RUBRO_LABELS[r as Rubro]).join(', ')}{p.rubros.length > 2 ? ` +${p.rubros.length - 2}` : ''}</p>
+                          </div>
+                          {sel ? <CheckCircle2 className="h-5 w-5 text-[#2698D1] shrink-0" /> : p.esShuuriPro ? <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PRO</span> : null}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div className="rounded-xl border border-green-200 bg-green-50 p-4 flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-green-700 leading-snug">
+                  <strong>Esta orden fue pre-aprobada</strong> porque la OT ya tiene autorización del restaurante.
+                  Se generará automáticamente al confirmar.
+                </p>
+              </div>
+
+              <div className="rounded-xl border overflow-hidden">
+                <div className="border-b bg-gray-50 px-4 py-3">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Ítems</p>
+                </div>
+                {selected.map(s => (
+                  <div key={s.uid} className="flex justify-between items-center px-4 py-3 border-b last:border-0 text-sm">
+                    <div>
+                      <p className="font-medium text-[#0D0D0D]">{s.nombre}</p>
+                      <p className="text-xs text-gray-400">{s.marca} · ×{s.cantidad}</p>
+                    </div>
+                    <p className="font-bold text-[#0D0D0D]">{formatARS(s.cantidad * s.precioARS)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-xl bg-gray-50 p-4 space-y-2">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Subtotal</span><span>{formatARS(subtotalARS)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Comisión SHUURI ({COMISION_OCR_PCT}%)</span><span>{formatARS(comisionARS)}</span>
+                </div>
+                <div className="flex justify-between font-black text-[#0D0D0D] border-t pt-2 mt-2">
+                  <span>Total ARS</span><span className="text-lg">{formatARS(totalARS)}</span>
+                </div>
+              </div>
+
+              {proveedorId && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 rounded-lg bg-gray-50 px-4 py-3">
+                  <Truck className="h-4 w-4 text-gray-400" />
+                  <span>Proveedor: <strong>{PROVEEDORES_MKT.find(p => p.id === proveedorId)?.nombre ?? proveedorId}</strong></span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="flex gap-3 border-t px-6 py-4">
+          {step > 1 && (
+            <button onClick={() => setStep(s => (s - 1) as 1 | 2 | 3)}
+              className="flex items-center gap-1 px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50">
+              <ChevronLeft className="h-4 w-4" /> Anterior
+            </button>
+          )}
+          <button onClick={onClose} className={`${step === 1 ? 'flex-1' : ''} rounded-lg border border-gray-200 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 px-4`}>
+            Cancelar
+          </button>
+          {step < 3 ? (
+            <button
+              onClick={() => { if (step === 1 && selected.length === 0) return; if (step === 2 && !proveedorId) return; setStep(s => (s + 1) as 1 | 2 | 3); }}
+              disabled={(step === 1 && selected.length === 0) || (step === 2 && !proveedorId)}
+              className="flex-1 rounded-xl bg-[#2698D1] py-2.5 text-sm font-bold text-white hover:bg-[#2698D1]/90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              Siguiente <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button onClick={handleConfirm} disabled={sending}
+              className="flex-1 rounded-xl bg-[#2698D1] py-2.5 text-sm font-bold text-white hover:bg-[#2698D1]/90 disabled:opacity-40 flex items-center justify-center gap-2">
+              {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando…</> : <>Confirmar pedido <ShoppingCart className="h-4 w-4" /></>}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function TecnicoOTDetalle() {
@@ -214,10 +550,12 @@ export default function TecnicoOTDetalle() {
   const ot           = getOTById(params.id as string);
   const tecnico      = getTecnicoById(tecnicoId);
 
-  const [estadoLocal,  setEstadoLocal]  = useState<string | null>(null);
-  const [showCotModal, setShowCotModal] = useState(false);
-  const [toast,        setToast]        = useState<string | null>(null);
-  const [cotLocal,     setCotLocal]     = useState<{ total: number; diagnostico: string } | null>(null);
+  const [estadoLocal,      setEstadoLocal]      = useState<string | null>(null);
+  const [showCotModal,     setShowCotModal]     = useState(false);
+  const [showRepModal,     setShowRepModal]     = useState(false);
+  const [toast,            setToast]            = useState<string | null>(null);
+  const [cotLocal,         setCotLocal]         = useState<{ total: number; diagnostico: string } | null>(null);
+  const [ocrCreada,        setOcrCreada]        = useState<OrdenCompraRepuesto | null>(null);
 
   if (!ot || !tecnico) {
     return (
@@ -230,10 +568,12 @@ export default function TecnicoOTDetalle() {
     );
   }
 
-  const restaurante = getRestauranteById(ot.restauranteId);
-  const equipo      = ot.equipoId ? getEquipoById(ot.equipoId) : null;
-  const ocs         = getOCsByOT(ot.id);
+  const restaurante  = getRestauranteById(ot.restauranteId);
+  const equipo       = ot.equipoId ? getEquipoById(ot.equipoId) : null;
+  const ocs          = getOCsByOT(ot.id);
   const estadoActual = (estadoLocal ?? ot.estado) as EstadoOT;
+  const ocrsDeOT     = [...getOrdenesCompraRepuestoPorOT(ot.id), ...(ocrCreada ? [ocrCreada] : [])];
+  const ocrActiva    = ocrsDeOT[ocrsDeOT.length - 1] ?? null;
 
   function showToast(msg: string) {
     setToast(msg);
@@ -380,7 +720,7 @@ export default function TecnicoOTDetalle() {
                 </div>
               )}
 
-              {/* Órdenes de compra */}
+              {/* Órdenes de compra (legacy) */}
               {ocs.length > 0 && (
                 <div className="rounded-xl border bg-white shadow-sm p-6">
                   <h3 className="font-bold text-[#0D0D0D] mb-4 flex items-center gap-2">
@@ -402,6 +742,69 @@ export default function TecnicoOTDetalle() {
                       ))}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Repuestos necesarios — visible en EN_DIAGNOSTICO */}
+              {(estadoActual as string) === 'EN_DIAGNOSTICO' && (
+                <div className="rounded-xl border bg-white shadow-sm p-6">
+                  <h3 className="font-bold text-[#0D0D0D] mb-4 flex items-center gap-2">
+                    <ShoppingCart className="h-4 w-4 text-[#2698D1]" />
+                    Repuestos necesarios
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Identificaste que se necesitan repuestos. Podés solicitarlos directamente desde el marketplace de SHUURI.
+                  </p>
+                  <button
+                    onClick={() => setShowRepModal(true)}
+                    className="w-full rounded-xl border-2 border-[#2698D1] text-[#2698D1] py-3 text-sm font-bold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Solicitar repuesto
+                  </button>
+                </div>
+              )}
+
+              {/* Pedido en curso — visible en REPUESTO_SOLICITADO */}
+              {(estadoActual as string) === 'REPUESTO_SOLICITADO' && ocrActiva && (
+                <div className="rounded-xl border bg-white shadow-sm p-6">
+                  <h3 className="font-bold text-[#0D0D0D] mb-4 flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-[#2698D1]" />
+                    Pedido en curso
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 flex items-center justify-between">
+                      <span className="text-xs text-gray-500">N° seguimiento</span>
+                      <span className="font-mono text-sm font-bold text-[#0D0D0D]">{ocrActiva.numeroSeguimiento ?? '—'}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl bg-gray-50 px-4 py-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Transportista</p>
+                        <p className="text-sm font-bold text-[#0D0D0D]">{ocrActiva.transportista ?? '—'}</p>
+                      </div>
+                      <div className="rounded-xl bg-gray-50 px-4 py-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Entrega estimada</p>
+                        <p className="text-sm font-bold text-[#0D0D0D]">
+                          {ocrActiva.fechaEstimadaEntrega ? formatDate(ocrActiva.fechaEstimadaEntrega) : '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3 rounded-xl border">
+                      <span className="text-xs text-gray-400">Estado</span>
+                      <span className={`text-xs font-bold rounded-full px-2.5 py-1 ${
+                        ocrActiva.estado === 'entregada_local' ? 'bg-green-100 text-green-700' :
+                        ocrActiva.estado === 'despachada' ? 'bg-purple-100 text-purple-700' :
+                        ocrActiva.estado === 'confirmada_proveedor' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>
+                        {ocrActiva.estado === 'confirmada_proveedor' ? 'Confirmado por proveedor' :
+                         ocrActiva.estado === 'despachada' ? 'En camino' :
+                         ocrActiva.estado === 'entregada_local' ? 'Entregado' :
+                         ocrActiva.estado}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">OCR {ocrActiva.id} · Total: {formatARS(ocrActiva.totalARS)}</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -508,6 +911,48 @@ export default function TecnicoOTDetalle() {
 
         </main>
       </div>
+
+      {/* MODAL SOLICITAR REPUESTO */}
+      {showRepModal && (
+        <SolicitarRepuestoModal
+          ot={ot}
+          onClose={() => setShowRepModal(false)}
+          onConfirm={({ items, proveedorId, subtotalARS, totalARS }) => {
+            const now = new Date().toISOString();
+            const nuevaOcr: OrdenCompraRepuesto = {
+              id: `ocr-${Date.now()}`,
+              otId: ot.id,
+              activoId: ot.activoId ?? '',
+              restauranteId: ot.restauranteId,
+              tecnicoId: tecnico.id,
+              proveedorId,
+              items: items.map(i => ({
+                repuestoId: i.tipo === 'repuesto' ? i.refId : undefined,
+                productoId: i.tipo === 'producto' ? i.refId : undefined,
+                descripcionLibre: i.tipo === 'libre' ? i.nombre : undefined,
+                cantidad: i.cantidad,
+                precioUnitarioARS: i.precioARS,
+                comisionShuuriPct: COMISION_OCR_PCT,
+                comisionShuuriARS: Math.round(i.cantidad * i.precioARS * COMISION_OCR_PCT / 100),
+                totalARS: Math.round(i.cantidad * i.precioARS * (1 + COMISION_OCR_PCT / 100)),
+              })),
+              subtotalARS,
+              totalComisionARS: Math.round(subtotalARS * COMISION_OCR_PCT / 100),
+              totalARS,
+              aprobadoAutomaticamente: true,
+              aprobadaEn: now,
+              estado: 'confirmada_proveedor',
+              creadaPor: 'tecnico',
+              creadaEn: now,
+              actualizadoEn: now,
+            };
+            setOcrCreada(nuevaOcr);
+            setEstadoLocal('REPUESTO_SOLICITADO');
+            setShowRepModal(false);
+            showToast('Pedido enviado al proveedor');
+          }}
+        />
+      )}
 
       {/* MODAL COTIZACIÓN */}
       {showCotModal && (
