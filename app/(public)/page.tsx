@@ -11,6 +11,14 @@ import {
 export const metadata: Metadata = {
   title: 'SHUURI | Servicios técnicos para gastronomía',
   description: 'Conectamos restaurantes con técnicos certificados y repuestos coordinados. Un solo sistema para coordinar, documentar y controlar todo el mantenimiento de tu equipamiento.',
+  openGraph: {
+    title: 'SHUURI | Servicios técnicos para gastronomía',
+    description: 'Conectamos restaurantes con técnicos certificados y repuestos coordinados.',
+    url: 'https://shuuri.com',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com',
+  },
 };
 
 // ─── SECCIÓN 1: HERO ──────────────────────────────────────────────────────────
@@ -64,7 +72,7 @@ function Hero() {
         </div>
 
         {/* Proof strip */}
-        <div className="mt-12 border-t border-gray-100 pt-8 flex flex-wrap justify-center gap-8 lg:gap-0">
+        <div className="mt-12 border-t border-gray-100 pt-8 grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0">
           {[
             { num: '110.000+', desc: 'establecimientos gastronómicos en Argentina' },
             { num: '475+',     desc: 'proveedores de equipamiento identificados'   },
@@ -73,10 +81,10 @@ function Hero() {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex flex-col items-center text-center px-8 lg:border-r lg:last:border-r-0 border-gray-200"
+              className="flex flex-col items-center text-center px-6 lg:border-r lg:last:border-r-0 border-gray-200"
             >
-              <span className="font-black text-2xl text-[#0D0D0D]">{item.num}</span>
-              <span className="text-sm text-gray-500 mt-1 max-w-[140px]">{item.desc}</span>
+              <span className="font-black text-3xl text-[#0D0D0D] tabular-nums">{item.num}</span>
+              <span className="text-sm text-gray-500 mt-1.5 max-w-[140px] leading-snug">{item.desc}</span>
             </div>
           ))}
         </div>
@@ -393,7 +401,7 @@ const TIERS = [
       { label: 'Usuarios ilimitados',               ok: true },
     ],
     cta:     'Hablar con el equipo',
-    ctaHref: 'https://wa.me/5491100000000',
+    ctaHref: 'https://wa.me/5491150148932',
     ctaCls:  'border border-gray-700 hover:border-gray-500 text-white',
   },
 ] as const;
@@ -404,6 +412,10 @@ function PreciosResumen() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center mb-16">
+          <span className="inline-flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+            Piloto activo en Buenos Aires
+          </span>
           <h2 className="font-black text-4xl text-[#0D0D0D] mb-4">
             Empezá gratis. Pagás cuando hay servicio.
           </h2>
@@ -630,8 +642,21 @@ function Numeros() {
 
 function CtaFinal() {
   return (
-    <section className="bg-[#0D0D0D] py-24">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <section className="relative bg-[#0D0D0D] py-24 overflow-hidden">
+      {/* Dot grid decorativo */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
+      {/* Glow azul central */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="h-96 w-96 rounded-full bg-[#2698D1]/10 blur-3xl" />
+      </div>
+
+      <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
         <h2 className="font-black text-5xl text-white leading-tight mb-6">
           Empezá hoy. Gratis.
@@ -644,7 +669,7 @@ function CtaFinal() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
           <Link
             href="/solicitar-tecnico"
-            className="inline-flex items-center justify-center bg-[#2698D1] hover:bg-[#2698D1]/90 text-white px-10 py-5 rounded-xl font-bold text-lg transition-colors"
+            className="inline-flex items-center justify-center bg-[#2698D1] hover:bg-[#2698D1]/90 text-white px-10 py-5 rounded-xl font-bold text-lg transition-colors shadow-lg shadow-[#2698D1]/25"
           >
             Solicitar técnico ahora
           </Link>
@@ -657,7 +682,7 @@ function CtaFinal() {
         </div>
 
         <a
-          href="https://wa.me/5491100000000"
+          href="https://wa.me/5491150148932"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block text-gray-500 hover:text-gray-300 text-sm mt-6 transition-colors"

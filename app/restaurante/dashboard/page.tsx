@@ -54,28 +54,46 @@ function downloadCSV(rows: string[][], filename: string) {
 
 // ─── KPI CARD ─────────────────────────────────────────────────────────────────
 
+const KPI_BG: Record<string, string> = {
+  'text-[#2698D1]': 'bg-[#2698D1]/10',
+  'text-green-600': 'bg-green-50',
+  'text-amber-500': 'bg-amber-50',
+  'text-red-500':   'bg-red-50',
+  'text-purple-600':'bg-purple-50',
+};
+
 function KpiCard({
   icon: Icon,
   label,
   value,
   sub,
   color = 'text-[#2698D1]',
+  trend,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
   sub?: string;
   color?: string;
+  trend?: { value: string; up: boolean };
 }) {
+  const bg = KPI_BG[color] ?? 'bg-gray-50';
   return (
-    <div className="rounded-2xl border bg-white p-5 shadow-sm flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <div className={`rounded-lg bg-gray-50 p-2 ${color}`}>
-          <Icon className="h-5 w-5" />
+    <div className="rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`rounded-lg ${bg} p-2 ${color}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          <span className="text-xs font-medium text-gray-500">{label}</span>
         </div>
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+        {trend && (
+          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${trend.up ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+            {trend.up ? '↑' : '↓'} {trend.value}
+          </span>
+        )}
       </div>
-      <p className="text-2xl font-bold text-gray-900 leading-tight">{value}</p>
+      <p className="text-2xl font-black text-[#0D0D0D] leading-tight">{value}</p>
       {sub && <p className="text-xs text-gray-400">{sub}</p>}
     </div>
   );

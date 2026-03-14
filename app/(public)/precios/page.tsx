@@ -11,6 +11,14 @@ export const metadata: Metadata = {
     'comisión servicio técnico',
     'cadena chica cadena grande',
   ],
+  openGraph: {
+    title: 'Precios — SHUURI',
+    description: 'Planes simples para restaurantes. Empezá gratis. Sin permanencia.',
+    url: 'https://shuuri.com/precios',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com/precios',
+  },
 };
 
 export default function PreciosPage() {

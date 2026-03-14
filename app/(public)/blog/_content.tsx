@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Clock, ArrowRight, Search, X } from 'lucide-react';
+import { Clock, ArrowRight, Search, X, Settings, BookOpen, Wrench, TrendingUp, Zap } from 'lucide-react';
 import { BLOG_POSTS, CATEGORIAS, type BlogPost } from '@/data/blog-mock';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -22,8 +22,43 @@ const CATEGORIA_COLORS: Record<string, string> = {
   SHUURI:       'bg-green-50 text-green-700',
 };
 
+const CATEGORIA_BG: Record<string, string> = {
+  Gestión:       'from-blue-50 to-[#2698D1]/10',
+  Guías:         'from-purple-50 to-purple-100',
+  Mantenimiento: 'from-amber-50 to-orange-100',
+  Industria:     'from-gray-50 to-gray-100',
+  SHUURI:        'from-green-50 to-emerald-100',
+};
+
+const CATEGORIA_ICON: Record<string, React.ElementType> = {
+  Gestión:       TrendingUp,
+  Guías:         BookOpen,
+  Mantenimiento: Wrench,
+  Industria:     Settings,
+  SHUURI:        Zap,
+};
+
+const CATEGORIA_ICON_COLOR: Record<string, string> = {
+  Gestión:       'text-[#2698D1]',
+  Guías:         'text-purple-400',
+  Mantenimiento: 'text-amber-400',
+  Industria:     'text-gray-400',
+  SHUURI:        'text-green-500',
+};
+
 function catColor(cat: string) {
   return CATEGORIA_COLORS[cat] ?? 'bg-gray-100 text-gray-600';
+}
+
+function ImagePlaceholder({ post, className }: { post: BlogPost; className: string }) {
+  const bg       = CATEGORIA_BG[post.categoria]  ?? 'from-gray-50 to-gray-100';
+  const Icon     = CATEGORIA_ICON[post.categoria] ?? BookOpen;
+  const iconCls  = CATEGORIA_ICON_COLOR[post.categoria] ?? 'text-gray-300';
+  return (
+    <div className={`bg-gradient-to-br ${bg} flex items-center justify-center ${className}`}>
+      <Icon className={`h-10 w-10 opacity-30 ${iconCls}`} />
+    </div>
+  );
 }
 
 // ─── FEATURED CARD ────────────────────────────────────────────────────────────
@@ -35,16 +70,16 @@ function FeaturedPost({ post }: { post: BlogPost }) {
       className="group grid md:grid-cols-2 gap-0 bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
       {/* Imagen */}
-      <div className="relative h-64 md:h-auto bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center min-h-[240px]">
-        <span className="px-8 text-center text-sm font-semibold text-gray-400 leading-relaxed">
-          {post.imageAlt}
-        </span>
-        <span className={`absolute top-5 left-5 rounded-full px-3 py-1 text-xs font-bold ${catColor(post.categoria)}`}>
-          {post.categoria}
-        </span>
-        <span className="absolute top-5 right-5 rounded-full px-3 py-1 text-xs font-bold bg-[#0D0D0D] text-white">
-          Destacado
-        </span>
+      <div className="relative min-h-[240px]">
+        <ImagePlaceholder post={post} className="h-64 md:h-full absolute inset-0 w-full" />
+        <div className="relative h-64 md:h-auto min-h-[240px] flex items-end p-5">
+          <span className={`rounded-full px-3 py-1 text-xs font-bold ${catColor(post.categoria)}`}>
+            {post.categoria}
+          </span>
+          <span className="ml-2 rounded-full px-3 py-1 text-xs font-bold bg-[#0D0D0D] text-white">
+            Destacado
+          </span>
+        </div>
       </div>
 
       {/* Contenido */}
@@ -78,13 +113,13 @@ function PostCard({ post }: { post: BlogPost }) {
       href={`/blog/${post.slug}`}
       className="group flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
-      <div className="relative h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-        <span className="px-6 text-center text-xs font-semibold text-gray-400 leading-relaxed">
-          {post.imageAlt}
-        </span>
-        <span className={`absolute top-4 left-4 rounded-full px-3 py-1 text-xs font-bold ${catColor(post.categoria)}`}>
-          {post.categoria}
-        </span>
+      <div className="relative h-44">
+        <ImagePlaceholder post={post} className="h-44 absolute inset-0 w-full" />
+        <div className="relative h-44 flex items-end p-4">
+          <span className={`rounded-full px-3 py-1 text-xs font-bold ${catColor(post.categoria)}`}>
+            {post.categoria}
+          </span>
+        </div>
       </div>
       <div className="flex flex-col flex-1 p-6">
         <h3 className="font-bold text-[#0D0D0D] text-base leading-snug mb-2 group-hover:text-[#2698D1] transition-colors line-clamp-2">

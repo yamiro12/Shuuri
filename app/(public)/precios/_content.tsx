@@ -70,7 +70,7 @@ const TIERS: {
     sucursales:        'Ilimitadas',
     para:              'Cadenas de 10+ locales',
     cta:               'Hablar con el equipo',
-    ctaHref:           'https://wa.me/5491100000000',
+    ctaHref:           'https://wa.me/5491150148932',
     highlight:         false,
   },
 ];
@@ -566,7 +566,7 @@ function CtaFinal() {
             <ArrowRight className="h-4 w-4" />
           </Link>
           <a
-            href={`https://wa.me/5491100000000?text=${encodeURIComponent('Hola, tengo consultas sobre los planes de SHUURI.')}`}
+            href={`https://wa.me/5491150148932?text=${encodeURIComponent('Hola, tengo consultas sobre los planes de SHUURI.')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center border border-gray-600 text-white px-8 py-4 rounded-xl font-semibold hover:border-gray-400 transition-colors"

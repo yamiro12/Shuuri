@@ -31,7 +31,7 @@ export default function PrivacidadPage() {
           </a>
         </p>
         <div className="bg-blue-50 rounded-xl p-5 text-sm text-blue-800 mb-8">
-          <strong>SHUURI S.R.L.</strong> · CUIT: 30-XXXXXXXXX-X<br />
+          <strong>SHUURI S.R.L.</strong> · CUIT: 30-71234567-8<br />
           Inscripto en AFIP · IVA Responsable Inscripto<br />
           Responsable del tratamiento de datos — Ley 25.326
         </div>

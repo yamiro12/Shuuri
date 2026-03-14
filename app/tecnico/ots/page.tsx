@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { LoadingSpinner, EmptyState } from '@/components/shared/states';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge, formatARS, formatDate } from '@/components/shared/utils';
@@ -114,8 +115,10 @@ export default function TecnicoOTs() {
   const tecnicoId    = searchParams.get('id') ?? 'T002';
   const tecnico      = TECNICOS.find(t => t.id === tecnicoId) ?? TECNICOS[1];
 
-  const [tab,    setTab]    = useState<TabFiltro>('activas');
-  const [buscar, setBuscar] = useState('');
+  const [tab,       setTab]       = useState<TabFiltro>('activas');
+  const [buscar,    setBuscar]    = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
   const todasOTs = OTS.filter(ot => ot.tecnicoId === tecnicoId);
 
@@ -234,13 +237,13 @@ export default function TecnicoOTs() {
           </div>
 
           {/* GRID OTs */}
-          {otsFiltradas.length === 0 ? (
-            <div className="rounded-xl border bg-white py-16 text-center">
-              <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-gray-200" />
-              <p className="font-bold text-gray-400">Sin OTs en esta vista</p>
-              <p className="text-xs text-gray-300 mt-1">
-                {buscar ? 'Intentá con otra búsqueda' : 'No hay OTs en este estado'}
-              </p>
+          {isLoading ? (
+            <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+              <LoadingSpinner />
+            </div>
+          ) : otsFiltradas.length === 0 ? (
+            <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+              <EmptyState icon={CheckCircle2} title="Sin OTs en esta vista" description={buscar ? 'Intentá con otra búsqueda' : 'No hay OTs en este estado'} />
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">

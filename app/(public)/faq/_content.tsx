@@ -187,7 +187,7 @@ const SECCIONES: {
       },
       {
         q: '¿Cómo puedo contactarlos?',
-        a: 'Por WhatsApp al +54 9 11 XXXX XXXX, por email a hola@shuuri.com.ar o desde el formulario de contacto en la web.',
+        a: 'Por WhatsApp al +54 9 11 5014-8932, por email a hola@shuuri.com.ar o desde el formulario de contacto en la web.',
       },
       {
         q: '¿Puedo integrar SHUURI con mi sistema de gestión?',
@@ -197,6 +197,41 @@ const SECCIONES: {
   },
 ];
 
+// ─── ACCORDION ITEM ───────────────────────────────────────────────────────────
+
+function AccordionItem({ item, isOpen, onToggle, index }: {
+  item:     FaqItem;
+  isOpen:   boolean;
+  onToggle: () => void;
+  index:    number;
+}) {
+  return (
+    <div className={`border rounded-xl overflow-hidden bg-white transition-colors duration-200 ${isOpen ? 'border-[#2698D1]/30 shadow-sm' : 'border-gray-100'}`}>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50/80 transition-colors"
+      >
+        <span className={`font-semibold text-sm pr-4 transition-colors duration-200 ${isOpen ? 'text-[#2698D1]' : 'text-[#0D0D0D]'}`}>
+          {item.q}
+        </span>
+        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-300 shrink-0 ${isOpen ? 'bg-[#2698D1] rotate-180' : 'bg-gray-100'}`}>
+          <ChevronDown className={`h-3.5 w-3.5 transition-colors duration-200 ${isOpen ? 'text-white' : 'text-gray-400'}`} />
+        </div>
+      </button>
+      {/* Animated panel */}
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ maxHeight: isOpen ? '400px' : '0px' }}
+      >
+        <div className="px-6 pb-5 pt-0">
+          <div className="w-8 h-0.5 bg-[#2698D1]/30 mb-3" />
+          <p className="text-sm text-gray-500 leading-relaxed">{item.a}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── ACCORDION ────────────────────────────────────────────────────────────────
 
 function Accordion({ items }: { items: FaqItem[] }) {
@@ -205,22 +240,13 @@ function Accordion({ items }: { items: FaqItem[] }) {
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
-        <div key={i} className="border border-gray-100 rounded-xl overflow-hidden bg-white">
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
-          >
-            <span className="font-semibold text-[#0D0D0D] text-sm pr-4">{item.q}</span>
-            <ChevronDown
-              className={`h-4 w-4 text-gray-400 shrink-0 transition-transform ${open === i ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {open === i && (
-            <div className="px-6 pb-5">
-              <p className="text-sm text-gray-500 leading-relaxed">{item.a}</p>
-            </div>
-          )}
-        </div>
+        <AccordionItem
+          key={i}
+          index={i}
+          item={item}
+          isOpen={open === i}
+          onToggle={() => setOpen(open === i ? null : i)}
+        />
       ))}
     </div>
   );
@@ -302,7 +328,7 @@ export default function FaqContent() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href={`https://wa.me/5491100000000?text=${encodeURIComponent('Hola, tengo una consulta sobre SHUURI.')}`}
+              href={`https://wa.me/5491150148932?text=${encodeURIComponent('Hola, tengo una consulta sobre SHUURI.')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 bg-[#2698D1] text-white font-bold px-6 py-3 rounded-xl text-sm hover:bg-[#1d7aab] transition-colors"

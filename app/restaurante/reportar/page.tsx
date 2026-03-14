@@ -13,6 +13,8 @@ import {
   Camera, ChevronDown, MapPin, Info,
   Sparkles, ClipboardList, Bot, User, History, Paperclip,
 } from 'lucide-react';
+import { getSugerenciasRepuesto } from '@/lib/repuestos-sugeridos';
+import type { RepuestoSugerido } from '@/lib/repuestos-sugeridos';
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +39,16 @@ interface FormData {
   contactoTel:    string;
   notas:          string;
 }
+
+// Shuuri Rubro → marketplace rubro string
+const RUBRO_MKT_MAP: Partial<Record<string, string>> = {
+  frio_comercial:         'refrigeracion',
+  calor_comercial:        'coccion',
+  gas_combustion:         'coccion',
+  maquinaria_preparacion: 'coccion',
+  lavado_comercial:       'lavado',
+  cafe_bebidas:           'cafeteria',
+};
 
 const FORM_INICIAL: FormData = {
   localId: '', equipoId: '', equipoTipo: '', equipoMarca: '',
@@ -156,6 +168,48 @@ function generarRespuestaBot(texto: string, equipoTipo: string): { respuesta: st
   };
 }
 
+// ─── REPUESTO CARD ───────────────────────────────────────────────────────────
+
+function RepuestoCard({
+  producto,
+  seleccionado,
+  onSelect,
+}: {
+  producto: RepuestoSugerido;
+  seleccionado: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      className={`relative w-full rounded-xl border-2 p-4 text-left transition-all ${
+        seleccionado
+          ? 'border-[#2698D1] bg-blue-50 ring-1 ring-[#2698D1]'
+          : 'border-gray-200 hover:border-gray-300 bg-white'
+      }`}
+    >
+      {seleccionado && (
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[#2698D1] flex items-center justify-center">
+          <CheckCircle2 className="h-3 w-3 text-white" />
+        </div>
+      )}
+      {producto._razonIA && (
+        <span className="mb-2 inline-flex items-center gap-1 text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+          <Sparkles className="h-3 w-3" /> IA
+        </span>
+      )}
+      <p className="font-bold text-sm text-[#0D0D0D] pr-6">{producto.nombre}</p>
+      <p className="text-xs text-gray-400 mt-0.5">{producto.marca}</p>
+      {producto._razonIA && (
+        <p className="text-xs text-gray-500 italic mt-1">{producto._razonIA}</p>
+      )}
+      <p className="mt-2 text-sm font-black text-[#2698D1]">
+        ${producto.precio_ars.toLocaleString('es-AR')}
+      </p>
+    </button>
+  );
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function ReportarFalla() {
@@ -175,6 +229,12 @@ export default function ReportarFalla() {
   const [enviado,    setEnviado]    = useState(false);
   const [enviando,   setEnviando]   = useState(false);
   const [otNuevaId,  setOtNuevaId]  = useState('');
+
+  // ── REPUESTOS ──
+  const [repuestosDB,          setRepuestosDB]          = useState<RepuestoSugerido[]>([]);
+  const [repuestosIA,          setRepuestosIA]          = useState<RepuestoSugerido[]>([]);
+  const [repuestosSeleccionados, setRepuestosSeleccionados] = useState<RepuestoSugerido[]>([]);
+  const [cargandoRepuestos,    setCargandoRepuestos]    = useState(false);
 
   // ── IA ──
   const [iaFase,          setIaFase]          = useState<'equipo' | 'chat'>('equipo');
@@ -221,6 +281,53 @@ export default function ReportarFalla() {
     setOtNuevaId(nuevoId);
     setEnviado(true);
   }
+
+  // ── REPUESTOS: carga y navegación ──
+  async function cargarRepuestos() {
+    if (cargandoRepuestos || repuestosDB.length > 0 || repuestosIA.length > 0) return;
+    setCargandoRepuestos(true);
+    const rubroMkt = RUBRO_MKT_MAP[form.rubro] ?? form.rubro;
+    const { db, ia } = await getSugerenciasRepuesto(rubroMkt, form.equipoMarca, form.descripcion);
+    setRepuestosDB(db);
+    setRepuestosIA(ia);
+    setCargandoRepuestos(false);
+  }
+
+  function handleIrMarketplace() {
+    const rubroMkt = RUBRO_MKT_MAP[form.rubro] ?? form.rubro;
+    const returnUrl = `/restaurante/reportar?id=${restauranteId}&repuestoAgregado=true`;
+    const params = new URLSearchParams({
+      otContext: 'true',
+      rubroOT: rubroMkt,
+      marcaOT: form.equipoMarca,
+      origen: returnUrl,
+    });
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('wizard-ot-state', JSON.stringify({ form, paso: 3 }));
+    }
+    router.push(`/restaurante/marketplace?${params.toString()}`);
+  }
+
+  // Restore wizard state when returning from marketplace
+  useEffect(() => {
+    const repuestoAgregado = searchParams.get('repuestoAgregado');
+    if (!repuestoAgregado || typeof window === 'undefined') return;
+    const repuestoRaw = sessionStorage.getItem('repuesto-seleccionado-ot');
+    const estadoRaw   = sessionStorage.getItem('wizard-ot-state');
+    if (repuestoRaw) {
+      const repuesto: RepuestoSugerido = JSON.parse(repuestoRaw);
+      setRepuestosSeleccionados([repuesto]);
+      sessionStorage.removeItem('repuesto-seleccionado-ot');
+    }
+    if (estadoRaw) {
+      const estado = JSON.parse(estadoRaw);
+      if (estado.form) setForm(estado.form);
+      sessionStorage.removeItem('wizard-ot-state');
+    }
+    setModo('form');
+    setPaso(3);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── IA: seleccionar equipo e iniciar chat ──
   function iniciarChatIA(equipoId: string) {
@@ -768,99 +875,95 @@ export default function ReportarFalla() {
                   <div className="p-8">
                     <h2 className="text-lg font-black text-[#0D0D0D] mb-1">¿Necesitás repuestos?</h2>
                     <p className="text-sm text-gray-400 mb-6">
-                      Si la falla requiere piezas, podemos solicitarlas al Marketplace SHUURI antes de la visita.
+                      Basándonos en el equipo y la falla descripta, sugerimos los siguientes repuestos.
                     </p>
 
-                    {/* Toggle principal */}
-                    <button
-                      onClick={() => set('repuestosNecesarios', !form.repuestosNecesarios)}
-                      className={`w-full rounded-xl border-2 p-5 text-left transition-all mb-5 ${
-                        form.repuestosNecesarios
-                          ? 'border-[#2698D1] bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${form.repuestosNecesarios ? 'bg-[#2698D1]/10' : 'bg-gray-100'}`}>
-                            <Package className={`h-5 w-5 ${form.repuestosNecesarios ? 'text-[#2698D1]' : 'text-gray-400'}`} />
-                          </div>
-                          <div>
-                            <p className={`font-bold text-sm ${form.repuestosNecesarios ? 'text-[#0D0D0D]' : 'text-gray-600'}`}>
-                              Sí, probablemente se necesiten repuestos
-                            </p>
-                            <p className="text-xs text-gray-400">El técnico llegará con los materiales necesarios</p>
-                          </div>
-                        </div>
-                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          form.repuestosNecesarios ? 'border-[#2698D1] bg-[#2698D1]' : 'border-gray-300'
-                        }`}>
-                          {form.repuestosNecesarios && <CheckCircle2 className="h-4 w-4 text-white" />}
-                        </div>
-                      </div>
-                    </button>
-
-                    {form.repuestosNecesarios && (
-                      <div className="space-y-4 animate-in fade-in duration-200">
-                        <div>
-                          <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
-                            ¿Qué repuesto/s creés que se necesitan?
-                          </label>
-                          <textarea
-                            value={form.repuestosDescripcion}
-                            onChange={e => set('repuestosDescripcion', e.target.value)}
-                            rows={3}
-                            placeholder="Ej: Compresor, filtro de aceite, correa de transmisión… (opcional)"
-                            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors resize-none"
-                          />
-                        </div>
-
-                        {/* Marketplace CTA */}
-                        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3 flex-1">
-                              <Package className="h-5 w-5 text-[#2698D1] shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-bold text-[#0D0D0D] mb-0.5">Solicitar al Marketplace SHUURI</p>
-                                <p className="text-xs text-gray-500">
-                                  SHUURI buscará el repuesto, lo cotizará y lo tendrá listo para cuando llegue el técnico.
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => set('repuestosSolicitudMarketplace', !form.repuestosSolicitudMarketplace)}
-                              className={`relative shrink-0 h-6 w-11 rounded-full transition-colors ${
-                                form.repuestosSolicitudMarketplace ? 'bg-[#2698D1]' : 'bg-gray-200'
-                              }`}
-                            >
-                              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                form.repuestosSolicitudMarketplace ? 'translate-x-5' : 'translate-x-0'
-                              }`} />
-                            </button>
-                          </div>
-                          {form.repuestosSolicitudMarketplace && (
-                            <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
-                              <p className="text-xs text-blue-700 font-medium">
-                                Se agregará solicitud de cotización al crear la OT.
-                              </p>
-                              <Link
-                                href={`/restaurante/marketplace?id=${restauranteId}`}
-                                className="text-xs font-bold text-[#2698D1] hover:underline flex items-center gap-1"
-                              >
-                                Ver catálogo
-                                <ArrowRight className="h-3 w-3" />
-                              </Link>
-                            </div>
-                          )}
-                        </div>
+                    {cargandoRepuestos && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="rounded-xl border border-gray-100 bg-gray-50 p-4 animate-pulse h-28" />
+                        ))}
                       </div>
                     )}
 
-                    {!form.repuestosNecesarios && (
-                      <p className="text-center text-sm text-gray-400 py-4">
-                        Si no sabés si se necesitan repuestos, está bien. El técnico lo evaluará en la visita.
-                      </p>
+                    {!cargandoRepuestos && (
+                      <>
+                        {repuestosDB.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
+                              Repuestos sugeridos
+                            </p>
+                            <div className="grid grid-cols-2 gap-3">
+                              {repuestosDB.map(p => (
+                                <RepuestoCard
+                                  key={p.id}
+                                  producto={p}
+                                  seleccionado={repuestosSeleccionados.some(r => r.id === p.id)}
+                                  onSelect={() =>
+                                    setRepuestosSeleccionados(prev =>
+                                      prev.some(r => r.id === p.id)
+                                        ? prev.filter(r => r.id !== p.id)
+                                        : [...prev, p]
+                                    )
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {repuestosIA.length > 0 && (
+                          <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="flex-1 h-px bg-purple-100" />
+                              <span className="text-xs font-bold text-purple-500 flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" /> Sugerencias IA
+                              </span>
+                              <div className="flex-1 h-px bg-purple-100" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              {repuestosIA.map(p => (
+                                <RepuestoCard
+                                  key={p.id}
+                                  producto={p}
+                                  seleccionado={repuestosSeleccionados.some(r => r.id === p.id)}
+                                  onSelect={() =>
+                                    setRepuestosSeleccionados(prev =>
+                                      prev.some(r => r.id === p.id)
+                                        ? prev.filter(r => r.id !== p.id)
+                                        : [...prev, p]
+                                    )
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {repuestosDB.length === 0 && repuestosIA.length === 0 && repuestosSeleccionados.length === 0 && (
+                          <p className="text-sm text-gray-400 text-center py-4">
+                            No encontramos repuestos específicos. El técnico evaluará en la visita.
+                          </p>
+                        )}
+
+                        <div className="mt-4 flex flex-col gap-2">
+                          <button
+                            onClick={handleIrMarketplace}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-[#2698D1] text-[#2698D1] px-5 py-3 text-sm font-bold hover:bg-[#2698D1]/5 transition-colors"
+                          >
+                            <Package className="h-4 w-4" />
+                            Buscar en Marketplace
+                          </button>
+                          {repuestosSeleccionados.length > 0 && (
+                            <div className="rounded-xl border border-green-200 bg-green-50 p-3 flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                              <p className="text-xs text-green-700 font-medium">
+                                {repuestosSeleccionados.length} repuesto{repuestosSeleccionados.length > 1 ? 's' : ''} seleccionado{repuestosSeleccionados.length > 1 ? 's' : ''}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
@@ -957,24 +1060,20 @@ export default function ReportarFalla() {
                         </div>
                         <p className="text-sm text-gray-600">{form.descripcion}</p>
                       </div>
-                      {form.repuestosNecesarios && (
+                      {repuestosSeleccionados.length > 0 && (
                         <div className="rounded-xl border bg-gray-50 p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Package className="h-3.5 w-3.5 text-[#2698D1]" />
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Repuestos</p>
-                            {form.repuestosSolicitudMarketplace && (
-                              <span className="text-xs font-bold text-[#2698D1] bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
-                                Marketplace
-                              </span>
-                            )}
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Repuestos seleccionados</p>
                           </div>
-                          {form.repuestosDescripcion
-                            ? <p className="text-xs text-gray-600">{form.repuestosDescripcion}</p>
-                            : <p className="text-xs text-gray-400 italic">El técnico evaluará los repuestos necesarios</p>
-                          }
-                          {form.repuestosSolicitudMarketplace && (
-                            <p className="text-xs text-[#2698D1] mt-1">Se solicitará cotización al Marketplace al crear la OT.</p>
-                          )}
+                          <div className="space-y-1">
+                            {repuestosSeleccionados.map(r => (
+                              <div key={r.id} className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600">{r.nombre}</span>
+                                <span className="font-bold text-[#2698D1]">${r.precio_ars.toLocaleString('es-AR')}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {(form.horarioAcceso || form.contactoNombre || form.notas) && (
@@ -1001,7 +1100,12 @@ export default function ReportarFalla() {
 
                   {paso < 5 ? (
                     <button
-                      onClick={() => puedeAvanzar() && setPaso((paso + 1) as Paso)}
+                      onClick={() => {
+                        if (!puedeAvanzar()) return;
+                        const next = (paso + 1) as Paso;
+                        setPaso(next);
+                        if (paso === 2) cargarRepuestos();
+                      }}
                       disabled={!puedeAvanzar()}
                       className="flex items-center gap-2 rounded-xl bg-[#2698D1] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#2698D1]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                     >

@@ -12,6 +12,14 @@ import FaqTecnicos from './_faq';
 export const metadata: Metadata = {
   title: 'SHUURI para Técnicos | Trabajo constante, cobro garantizado',
   description: 'Trabajo en tu zona, el repuesto llega antes que vos, cobrás el 70% quincenal. Sin cobrarle al cliente. Sin buscar repuestos.',
+  openGraph: {
+    title: 'SHUURI para Técnicos | Trabajo constante, cobro garantizado',
+    description: 'Trabajo en tu zona, el repuesto llega antes que vos, cobrás el 70% quincenal.',
+    url: 'https://shuuri.com/tecnicos',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com/tecnicos',
+  },
 };
 
 // ─── SECCIÓN 1: HERO ─────────────────────────────────────────────────────────

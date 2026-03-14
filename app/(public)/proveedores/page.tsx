@@ -22,6 +22,14 @@ export const metadata: Metadata = {
     'marketplace B2B gastronomía Argentina',
     'modelo mandato',
   ],
+  openGraph: {
+    title: 'Proveedores — Distribuí tus productos a través de SHUURI',
+    description: 'Canal de venta sin inversión para repuestos y equipos gastronómicos. Comisión fija, cobranza garantizada.',
+    url: 'https://shuuri.com/proveedores',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com/proveedores',
+  },
 };
 
 const GANANCIAS = [
@@ -351,7 +359,7 @@ export default function ProveedoresPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
-              href={`https://wa.me/5491100000000?text=${encodeURIComponent('Hola, quiero saber más sobre sumar mi catálogo como proveedor en SHUURI.')}`}
+              href={`https://wa.me/5491150148932?text=${encodeURIComponent('Hola, quiero saber más sobre sumar mi catálogo como proveedor en SHUURI.')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 border border-gray-700 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-800 transition-colors"

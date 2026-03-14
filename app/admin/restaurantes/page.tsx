@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { LoadingTable, EmptyState } from '@/components/shared/states';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -12,6 +13,8 @@ import type { TierCliente } from '@/types/shuuri';
 export default function AdminRestaurantes() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroTier, setFiltroTier] = useState<'todos' | 'FREEMIUM' | 'CADENA_CHICA' | 'CADENA_GRANDE'>('todos');
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
   const filtrados = RESTAURANTES.filter(r => {
     if (busqueda) {
@@ -109,12 +112,10 @@ export default function AdminRestaurantes() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">
-                      Sin resultados para la búsqueda
-                    </td>
-                  </tr>
+                {isLoading ? (
+                  <tr><td colSpan={8}><LoadingTable rows={5} cols={8} /></td></tr>
+                ) : filtrados.length === 0 ? (
+                  <tr><td colSpan={8}><EmptyState icon={Building2} title="Sin restaurantes" description="No hay restaurantes que coincidan con los filtros." /></td></tr>
                 ) : filtrados.map(r => {
                   const ots = getOTsByRestaurante(r.id);
                   const otsActivas = ots.filter(o => !['CERRADA_CONFORME','CERRADA_SIN_CONFORMIDAD','FACTURADA','LIQUIDADA','CANCELADA'].includes(o.estado));

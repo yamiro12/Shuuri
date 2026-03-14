@@ -11,6 +11,14 @@ export const metadata: Metadata = {
     'ayuda SHUURI',
     'cómo funciona SHUURI',
   ],
+  openGraph: {
+    title: 'Preguntas frecuentes — SHUURI',
+    description: 'Centro de ayuda. Todo lo que necesitás saber sobre SHUURI.',
+    url: 'https://shuuri.com/faq',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com/faq',
+  },
 };
 
 export default function FaqPage() {

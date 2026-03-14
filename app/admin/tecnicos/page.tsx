@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { LoadingTable, EmptyState } from '@/components/shared/states';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -26,6 +27,8 @@ export default function AdminTecnicos() {
   const [busqueda,    setBusqueda]    = useState('');
   const [filtroCert,  setFiltroCert]  = useState<'todos' | 'vigente' | 'por_vencer' | 'vencida'>('todos');
   const [filtroBloque, setFiltroBloque] = useState<'todos' | 'activo' | 'bloqueado'>('todos');
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
   const filtrados = TECNICOS.filter(t => {
     if (busqueda) {
@@ -117,12 +120,10 @@ export default function AdminTecnicos() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-400">
-                      Sin resultados para la búsqueda
-                    </td>
-                  </tr>
+                {isLoading ? (
+                  <tr><td colSpan={7}><LoadingTable rows={5} cols={7} /></td></tr>
+                ) : filtrados.length === 0 ? (
+                  <tr><td colSpan={7}><EmptyState icon={Wrench} title="Sin técnicos" description="No hay técnicos que coincidan con los filtros." /></td></tr>
                 ) : filtrados.map(t => (
                   <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4">

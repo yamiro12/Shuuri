@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { LoadingTable, EmptyState } from '@/components/shared/states';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { formatDate, formatARS } from '@/components/shared/utils';
@@ -178,6 +179,8 @@ export default function ProveedorOrdenes() {
   const [tabSeccion, setTabSeccion] = useState<TabSeccion>('ocs');
   const [tab,        setTab]        = useState<TabEstado>('todas');
   const [buscar,     setBuscar]     = useState('');
+  const [isLoading,  setIsLoading]  = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
   // ── OCS (legacy) ──────────────────────────────────────────────────────────
   const misOCs = OCS.filter(oc => oc.proveedorId === proveedorId);
@@ -296,11 +299,10 @@ export default function ProveedorOrdenes() {
                   <p className="hidden lg:block text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Creada</p>
                   <div />
                 </div>
-                {ocsFiltradas.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <Package className="mx-auto mb-3 h-10 w-10 text-gray-200" />
-                    <p className="font-bold text-gray-400">Sin órdenes en esta vista</p>
-                  </div>
+                {isLoading ? (
+                  <LoadingTable rows={4} cols={5} />
+                ) : ocsFiltradas.length === 0 ? (
+                  <EmptyState icon={Package} title="Sin órdenes en esta vista" description="No hay órdenes de compra que coincidan con los filtros." />
                 ) : (
                   ocsFiltradas.map(oc => <FilaOC key={oc.id} oc={oc} proveedorId={proveedorId} />)
                 )}
@@ -326,12 +328,10 @@ export default function ProveedorOrdenes() {
                   <p className="hidden lg:block text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Creada</p>
                   <div />
                 </div>
-                {ocrsFiltradas.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <ShoppingCart className="mx-auto mb-3 h-10 w-10 text-gray-200" />
-                    <p className="font-bold text-gray-400">Sin pedidos de repuesto</p>
-                    <p className="text-xs text-gray-400 mt-1">Los técnicos aún no han solicitado repuestos</p>
-                  </div>
+                {isLoading ? (
+                  <LoadingTable rows={4} cols={5} />
+                ) : ocrsFiltradas.length === 0 ? (
+                  <EmptyState icon={ShoppingCart} title="Sin pedidos de repuesto" description="Los técnicos aún no han solicitado repuestos." />
                 ) : (
                   ocrsFiltradas.map(ocr => <FilaOCR key={ocr.id} ocr={ocr} proveedorId={proveedorId} />)
                 )}

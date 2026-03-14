@@ -241,7 +241,7 @@ export default function AdminDashboard() {
               { label: 'Técnicos activos',     value: tecnicosActivos.length,  icon: Wrench,        color: 'text-green-600', bg: 'bg-green-50' },
               { label: 'Proveedores activos',  value: PROVEEDORES.length,      icon: Truck,         color: 'text-purple-600', bg: 'bg-purple-50' },
             ].map(kpi => (
-              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm p-5 flex items-center gap-4">
+              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 flex items-center gap-4">
                 <div className={`h-12 w-12 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
                   <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
                 </div>
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
               { label: 'ARR estimado',       value: formatARS(arrEstimadoARS),     icon: TrendingUp,    color: 'text-emerald-600', bg: 'bg-emerald-50' },
               { label: 'GMV del mes (ARS)',  value: formatARS(gmvMesARS),          icon: DollarSign,    color: 'text-rose-600',    bg: 'bg-rose-50' },
             ].map(kpi => (
-              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm p-5 flex items-center gap-4">
+              <div key={kpi.label} className="rounded-xl border bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 flex items-center gap-4">
                 <div className={`h-12 w-12 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
                   <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
                 </div>

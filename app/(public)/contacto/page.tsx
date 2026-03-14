@@ -182,7 +182,7 @@ function ContactForm() {
       <p className="text-sm text-center text-gray-400">
         O escribinos directo por WhatsApp{' '}
         <a
-          href="https://wa.me/5491100000000"
+          href="https://wa.me/5491150148932"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#2698D1] font-semibold hover:underline"
@@ -238,7 +238,7 @@ export default function ContactoPage() {
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">WhatsApp</p>
                   <a
-                    href="https://wa.me/5491100000000"
+                    href="https://wa.me/5491150148932"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"

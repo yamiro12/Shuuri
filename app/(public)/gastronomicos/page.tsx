@@ -13,6 +13,14 @@ export const metadata: Metadata = {
   title: 'SHUURI para Restaurantes | Servicio técnico coordinado para gastronomía',
   description: 'Técnicos certificados para tu cocina. Repuesto coordinado antes de la visita. Sin llamadas perdidas. Sin sorpresas en el presupuesto. Empezá gratis.',
   keywords: 'servicio tecnico restaurante, reparacion cocina industrial, tecnico heladera restaurante, mantenimiento equipo gastronomico',
+  openGraph: {
+    title: 'SHUURI para Restaurantes | Servicio técnico coordinado',
+    description: 'Técnicos certificados para tu cocina. Repuesto coordinado antes de la visita. Empezá gratis.',
+    url: 'https://shuuri.com/gastronomicos',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com/gastronomicos',
+  },
 };
 
 // ─── SECCIÓN 1: HERO ──────────────────────────────────────────────────────────
@@ -303,7 +311,7 @@ const TIERS = [
       { l: 'Preventivo programado',     ok: true },
       { l: 'Usuarios ilimitados',       ok: true },
     ],
-    cta: 'Hablar con el equipo', ctaHref: 'https://wa.me/5491100000000',
+    cta: 'Hablar con el equipo', ctaHref: 'https://wa.me/5491150148932',
     ctaCls: 'border border-gray-700 hover:border-gray-500 text-white',
   },
 ] as const;
@@ -421,7 +429,7 @@ function CtaFinal() {
           </Link>
         </div>
         <a
-          href="https://wa.me/5491100000000"
+          href="https://wa.me/5491150148932"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block text-gray-500 hover:text-gray-300 text-sm mt-5 transition-colors"

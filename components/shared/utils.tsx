@@ -26,7 +26,7 @@ const URGENCIA_CONFIG: Record<Urgencia, { label: string; color: string; dot: str
   BAJA:    { label: 'Baja',    dot: 'bg-gray-300',   color: 'bg-gray-50 text-gray-500 ring-gray-200/60' },
   MEDIA:   { label: 'Media',   dot: 'bg-yellow-400', color: 'bg-yellow-50 text-yellow-700 ring-yellow-200/60' },
   ALTA:    { label: 'Alta',    dot: 'bg-orange-400', color: 'bg-orange-50 text-orange-700 ring-orange-200/60' },
-  CRITICA: { label: 'Crítica', dot: 'bg-red-500',    color: 'bg-red-100 text-red-700 ring-red-300/60 font-bold' },
+  CRITICA: { label: 'Crítica', dot: 'bg-red-500 animate-pulse', color: 'bg-red-100 text-red-700 ring-red-300/60 font-bold' },
 };
 
 // ─── CERT CONFIG ──────────────────────────────────────────────────────────────

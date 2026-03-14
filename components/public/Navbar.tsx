@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Menu, X, ChevronDown,
   Package, Settings2, Leaf,
@@ -43,11 +44,27 @@ const NAV_LINKS: NavLink[] = [
 // ─── COMPONENTE ───────────────────────────────────────────────────────────────
 
 export default function Navbar() {
+  const pathname                          = usePathname();
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  function isActive(href: string) {
+    if (href === '/') return pathname === '/';
+    return pathname.startsWith(href);
+  }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+    <header className={`sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 transition-shadow duration-200 ${scrolled ? 'shadow-sm' : ''}`}>
       <div className="h-16 max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
 
         {/* ── Logo ── */}
@@ -71,7 +88,11 @@ export default function Navbar() {
                 <Link
                   href={link.href}
                   aria-label={link.label}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-[#0D0D0D] px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  className={`flex items-center gap-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                    isActive(link.href)
+                      ? 'text-[#2698D1] bg-[#2698D1]/8 font-semibold'
+                      : 'text-gray-600 hover:text-[#0D0D0D] hover:bg-gray-50'
+                  }`}
                 >
                   {link.label}
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -103,7 +124,11 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 aria-label={link.label}
-                className="text-sm font-medium text-gray-600 hover:text-[#0D0D0D] px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                  isActive(link.href)
+                    ? 'text-[#2698D1] bg-[#2698D1]/8 font-semibold'
+                    : 'text-gray-600 hover:text-[#0D0D0D] hover:bg-gray-50'
+                }`}
               >
                 {link.label}
               </Link>
@@ -152,16 +177,22 @@ export default function Navbar() {
             <div className="space-y-0.5 mb-4">
               {NAV_LINKS.map(link => {
                 const Icon = link.icon;
+                const active = isActive(link.href);
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     aria-label={link.label}
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                      active
+                        ? 'text-[#2698D1] bg-[#2698D1]/8 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
-                    <Icon className="h-4 w-4 text-gray-400" />
+                    <Icon className={`h-4 w-4 ${active ? 'text-[#2698D1]' : 'text-gray-400'}`} />
                     {link.label}
+                    {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#2698D1]" />}
                   </Link>
                 );
               })}

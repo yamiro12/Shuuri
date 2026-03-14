@@ -46,28 +46,46 @@ function getStart(p: Periodo): Date {
 
 // ─── KPI CARD ─────────────────────────────────────────────────────────────────
 
+const KPI_BG: Record<string, string> = {
+  'text-[#2698D1]': 'bg-[#2698D1]/10',
+  'text-green-600': 'bg-green-50',
+  'text-amber-500': 'bg-amber-50',
+  'text-red-500':   'bg-red-50',
+  'text-purple-600':'bg-purple-50',
+};
+
 function KpiCard({
   icon: Icon,
   label,
   value,
   sub,
   color = 'text-[#2698D1]',
+  trend,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
   sub?: string;
   color?: string;
+  trend?: { value: string; up: boolean };
 }) {
+  const bg = KPI_BG[color] ?? 'bg-gray-50';
   return (
-    <div className="rounded-2xl border bg-white p-5 shadow-sm flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <div className={`rounded-lg bg-gray-50 p-2 ${color}`}>
-          <Icon className="h-5 w-5" />
+    <div className="rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`rounded-lg ${bg} p-2 ${color}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          <span className="text-xs font-medium text-gray-500">{label}</span>
         </div>
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+        {trend && (
+          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${trend.up ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+            {trend.up ? '↑' : '↓'} {trend.value}
+          </span>
+        )}
       </div>
-      <p className="text-2xl font-bold text-gray-900 leading-tight">{value}</p>
+      <p className="text-2xl font-black text-[#0D0D0D] leading-tight">{value}</p>
       {sub && <p className="text-xs text-gray-400">{sub}</p>}
     </div>
   );
@@ -246,25 +264,37 @@ export default function TecnicoDashboardPage() {
 
           {/* Alert banner */}
           {(tecnico.certStatusGlobal === 'por_vencer' || tecnico.bloqueado) && (
-            <div className={`flex items-start gap-3 rounded-xl border p-4 ${
+            <div className={`flex items-start gap-4 rounded-xl border-l-4 p-4 shadow-sm ${
               tecnico.bloqueado
-                ? 'bg-red-50 border-red-200 text-red-800'
-                : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                ? 'bg-red-50 border-red-400 text-red-800'
+                : 'bg-yellow-50 border-yellow-400 text-yellow-800'
             }`}>
-              <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-              <div>
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tecnico.bloqueado ? 'bg-red-100' : 'bg-yellow-100'}`}>
+                <AlertTriangle className={`h-5 w-5 ${tecnico.bloqueado ? 'text-red-500' : 'text-yellow-500'}`} />
+              </div>
+              <div className="flex-1">
                 {tecnico.bloqueado ? (
                   <>
-                    <p className="font-semibold text-sm">Cuenta bloqueada</p>
-                    <p className="text-xs mt-0.5">Tu cuenta está bloqueada. Contactá a soporte de SHUURI para más información.</p>
+                    <p className="font-bold text-sm">Cuenta bloqueada</p>
+                    <p className="text-xs mt-0.5 opacity-80">Tu cuenta está bloqueada. Contactá a soporte de SHUURI para más información.</p>
                   </>
                 ) : (
                   <>
-                    <p className="font-semibold text-sm">Certificaciones por vencer</p>
-                    <p className="text-xs mt-0.5">Tenés certificaciones próximas a vencer. Renovalas para seguir operando normalmente.</p>
+                    <p className="font-bold text-sm">Certificaciones por vencer</p>
+                    <p className="text-xs mt-0.5 opacity-80">Tenés certificaciones próximas a vencer. Renovalas para seguir operando normalmente.</p>
                   </>
                 )}
               </div>
+              <Link
+                href="/tecnico/perfil"
+                className={`shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                  tecnico.bloqueado
+                    ? 'bg-red-100 hover:bg-red-200 text-red-700'
+                    : 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700'
+                }`}
+              >
+                Ver →
+              </Link>
             </div>
           )}
 

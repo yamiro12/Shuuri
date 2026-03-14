@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { LoadingTable, EmptyState } from '@/components/shared/states';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -351,6 +352,8 @@ export default function AdminOTs() {
 
   // Notificación toast
   const [toast, setToast] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -464,51 +467,106 @@ export default function AdminOTs() {
               <select
                 value={filtroEstado}
                 onChange={e => setFiltroEstado(e.target.value)}
-                className="appearance-none rounded-lg border bg-white px-3 py-2 pr-8 text-sm outline-none cursor-pointer"
+                className={`appearance-none rounded-lg border px-3 py-2 pr-8 text-sm outline-none cursor-pointer transition-colors ${
+                  filtroEstado
+                    ? 'border-[#2698D1] bg-[#2698D1]/5 text-[#2698D1] font-medium'
+                    : 'bg-white'
+                }`}
               >
                 <option value="">Todos los estados</option>
                 {TODOS_ESTADOS.map(e => (
                   <option key={e} value={e}>{e.replace(/_/g, ' ')}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
+              <ChevronDown className={`pointer-events-none absolute right-2 top-2.5 h-4 w-4 ${filtroEstado ? 'text-[#2698D1]' : 'text-gray-400'}`} />
             </div>
 
             <div className="relative">
               <select
                 value={filtroUrg}
                 onChange={e => setFiltroUrg(e.target.value)}
-                className="appearance-none rounded-lg border bg-white px-3 py-2 pr-8 text-sm outline-none cursor-pointer"
+                className={`appearance-none rounded-lg border px-3 py-2 pr-8 text-sm outline-none cursor-pointer transition-colors ${
+                  filtroUrg
+                    ? 'border-[#2698D1] bg-[#2698D1]/5 text-[#2698D1] font-medium'
+                    : 'bg-white'
+                }`}
               >
                 <option value="">Todas las urgencias</option>
                 {TODOS_URGENCIA.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
+              <ChevronDown className={`pointer-events-none absolute right-2 top-2.5 h-4 w-4 ${filtroUrg ? 'text-[#2698D1]' : 'text-gray-400'}`} />
             </div>
 
             <div className="relative">
               <select
                 value={filtroRubro}
                 onChange={e => setFiltroRubro(e.target.value)}
-                className="appearance-none rounded-lg border bg-white px-3 py-2 pr-8 text-sm outline-none cursor-pointer"
+                className={`appearance-none rounded-lg border px-3 py-2 pr-8 text-sm outline-none cursor-pointer transition-colors ${
+                  filtroRubro
+                    ? 'border-[#2698D1] bg-[#2698D1]/5 text-[#2698D1] font-medium'
+                    : 'bg-white'
+                }`}
               >
                 <option value="">Todos los rubros</option>
                 {Object.entries(RUBRO_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
+              <ChevronDown className={`pointer-events-none absolute right-2 top-2.5 h-4 w-4 ${filtroRubro ? 'text-[#2698D1]' : 'text-gray-400'}`} />
             </div>
-
-            {hayFiltros && (
-              <button
-                onClick={() => { setBusqueda(''); setFiltroEstado(''); setFiltroUrg(''); setFiltroRubro(''); }}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100"
-              >
-                <X className="h-3.5 w-3.5" /> Limpiar
-              </button>
-            )}
           </div>
+
+          {/* ACTIVE FILTER CHIPS */}
+          {hayFiltros && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {busqueda && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                  <Search className="h-3 w-3 text-gray-400" />
+                  &ldquo;{busqueda}&rdquo;
+                  <button onClick={() => setBusqueda('')} className="ml-0.5 rounded-full p-0.5 hover:bg-gray-200">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filtroEstado && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2698D1]/10 px-3 py-1 text-xs font-medium text-[#2698D1]">
+                  Estado: {filtroEstado.replace(/_/g, ' ')}
+                  <button onClick={() => setFiltroEstado('')} className="ml-0.5 rounded-full p-0.5 hover:bg-[#2698D1]/20">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filtroUrg && (
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                  filtroUrg === 'CRITICA' ? 'bg-red-100 text-red-700' :
+                  filtroUrg === 'ALTA'    ? 'bg-orange-100 text-orange-700' :
+                  filtroUrg === 'MEDIA'   ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-gray-100 text-gray-600'
+                }`}>
+                  Urgencia: {filtroUrg}
+                  <button onClick={() => setFiltroUrg('')} className="ml-0.5 rounded-full p-0.5 hover:bg-black/10">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filtroRubro && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
+                  {RUBRO_LABELS[filtroRubro as Rubro]}
+                  <button onClick={() => setFiltroRubro('')} className="ml-0.5 rounded-full p-0.5 hover:bg-purple-200">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {[busqueda, filtroEstado, filtroUrg, filtroRubro].filter(Boolean).length > 1 && (
+                <button
+                  onClick={() => { setBusqueda(''); setFiltroEstado(''); setFiltroUrg(''); setFiltroRubro(''); }}
+                  className="text-xs font-bold text-gray-400 underline underline-offset-2 hover:text-gray-600"
+                >
+                  Limpiar todo
+                </button>
+              )}
+            </div>
+          )}
 
           {/* TABLA */}
           <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
@@ -521,12 +579,10 @@ export default function AdminOTs() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filtradas.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-400 italic">
-                      Sin resultados para los filtros seleccionados.
-                    </td>
-                  </tr>
+                {isLoading ? (
+                  <tr><td colSpan={8}><LoadingTable rows={5} cols={8} /></td></tr>
+                ) : filtradas.length === 0 ? (
+                  <tr><td colSpan={8}><EmptyState icon={Zap} title="Sin órdenes" description="No hay OTs que coincidan con los filtros." /></td></tr>
                 ) : filtradas.map(ot => {
                   const restaurante   = getRestauranteById(ot.restauranteId);
                   const tecnico       = ot.tecnicoId ? getTecnicoById(ot.tecnicoId) : null;

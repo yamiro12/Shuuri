@@ -36,9 +36,18 @@ function PriceTag({ label, value, sub, color = 'gray' }: {
 }
 
 function TimelineDot({ active, done, warn }: { active?: boolean; done?: boolean; warn?: boolean }) {
-  if (done)   return <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"><CheckCircle2 size={10} className="text-white" /></div>;
-  if (active) return <div className="w-4 h-4 rounded-full bg-blue-500 ring-4 ring-blue-100 flex-shrink-0" />;
-  if (warn)   return <div className="w-4 h-4 rounded-full bg-amber-400 flex-shrink-0" />;
+  if (done)   return (
+    <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm shadow-green-200">
+      <CheckCircle2 size={10} className="text-white" />
+    </div>
+  );
+  if (active) return (
+    <div className="relative flex-shrink-0">
+      <div className="w-4 h-4 rounded-full bg-[#2698D1] ring-4 ring-[#2698D1]/20 shadow-sm shadow-[#2698D1]/30" />
+      <div className="absolute inset-0 rounded-full bg-[#2698D1]/40 animate-ping" />
+    </div>
+  );
+  if (warn)   return <div className="w-4 h-4 rounded-full bg-amber-400 flex-shrink-0 shadow-sm shadow-amber-200" />;
   return <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />;
 }
 
@@ -57,11 +66,13 @@ function TimelineStep({
     <div className={`flex gap-4 ${last ? '' : 'pb-6'}`}>
       <div className="flex flex-col items-center">
         <div className="mt-1">{dot}</div>
-        {!last && <div className="w-0.5 bg-gray-100 flex-1 mt-2" />}
+        {!last && (
+          <div className={`w-0.5 flex-1 mt-2 rounded-full transition-colors duration-300 ${done ? 'bg-green-200' : 'bg-gray-100'}`} />
+        )}
       </div>
-      <div className="flex-1 pb-1">
+      <div className={`flex-1 pb-1 rounded-lg transition-colors duration-200 ${active ? 'px-3 py-2 -mx-3 bg-[#2698D1]/4' : ''}`}>
         <div className="flex items-baseline gap-2">
-          <p className={`text-sm font-semibold ${done ? 'text-green-700' : active ? 'text-blue-700' : 'text-gray-400'}`}>
+          <p className={`text-sm font-semibold transition-colors duration-200 ${done ? 'text-green-700' : active ? 'text-[#2698D1]' : 'text-gray-400'}`}>
             {label}
           </p>
           {sub && <span className="text-xs text-gray-400">{sub}</span>}

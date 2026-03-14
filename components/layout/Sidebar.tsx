@@ -371,38 +371,37 @@ export default function Sidebar({ userRole, userName, actorId }: SidebarProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      title={collapsed ? item.label : undefined}
                       className={`
                         group relative flex items-center rounded-lg py-[7px] text-sm
-                        transition-colors duration-100 select-none
+                        transition-all duration-150 select-none
                         px-2.5
                         ${collapsed ? 'md:justify-center md:px-0' : 'justify-between'}
                         ${
                           active
-                            ? 'bg-white/[0.09] text-white'
+                            ? 'bg-[#2698D1]/[0.15] text-white'
                             : item.primary
                               ? 'text-[#2698D1] hover:bg-[#2698D1]/[0.12]'
-                              : 'text-gray-400 hover:bg-white/[0.05] hover:text-gray-100'
+                              : 'text-gray-400 hover:bg-white/[0.06] hover:text-gray-100'
                         }
                       `}
                     >
                       {/* Active left border */}
                       {active && (
-                        <span className="absolute left-0 top-1/2 h-[18px] w-0.5 -translate-y-1/2 rounded-r-full bg-[#2698D1]" />
+                        <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-[#2698D1] shadow-[0_0_6px_#2698D1]" />
                       )}
 
                       {/* Icon + label */}
                       <div className="flex items-center gap-2.5 min-w-0">
                         <item.icon
-                          className={`h-[15px] w-[15px] shrink-0 ${
+                          className={`h-[15px] w-[15px] shrink-0 transition-colors duration-150 ${
                             active         ? 'text-[#2698D1]' :
                             item.primary   ? 'text-[#2698D1]' :
-                            'text-gray-600 group-hover:text-gray-400'
+                            'text-gray-600 group-hover:text-gray-300'
                           }`}
                         />
                         <span className={`
-                          truncate text-[13px] leading-none
-                          ${active ? 'font-semibold' : 'font-medium'}
+                          truncate text-[13px] leading-none transition-colors duration-150
+                          ${active ? 'font-semibold text-white' : 'font-medium'}
                           ${collapsed ? 'md:hidden' : ''}
                         `}>
                           {item.label}
@@ -433,6 +432,13 @@ export default function Sidebar({ userRole, userName, actorId }: SidebarProps) {
                       {/* Collapsed badge dot (desktop only) */}
                       {item.badge && collapsed && (
                         <span className="absolute right-1.5 top-1.5 hidden md:block h-[7px] w-[7px] rounded-full bg-red-500 ring-1 ring-[#111111]" />
+                      )}
+
+                      {/* Collapsed tooltip (desktop only) */}
+                      {collapsed && (
+                        <span className="pointer-events-none absolute left-full ml-3 hidden md:group-hover:flex items-center whitespace-nowrap rounded-lg bg-[#1a1a1a] border border-white/[0.08] px-2.5 py-1.5 text-[12px] font-medium text-gray-200 shadow-xl z-50">
+                          {item.label}
+                        </span>
                       )}
                     </Link>
                   );

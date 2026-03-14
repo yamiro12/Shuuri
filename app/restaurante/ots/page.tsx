@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { LoadingTable, EmptyState } from '@/components/shared/states';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { EstadoBadge, UrgenciaBadge, formatARS, formatDate } from '@/components/shared/utils';
@@ -137,9 +138,11 @@ export default function RestauranteOTs() {
   const restauranteId  = searchParams.get('id') ?? 'R001';
   const restaurante    = RESTAURANTES.find(r => r.id === restauranteId) ?? RESTAURANTES[0];
 
-  const [tab,    setTab]    = useState<TabFiltro>('todas');
-  const [buscar, setBuscar] = useState('');
-  const [rubro,  setRubro]  = useState<string>('todos');
+  const [tab,       setTab]       = useState<TabFiltro>('todas');
+  const [buscar,    setBuscar]    = useState('');
+  const [rubro,     setRubro]     = useState<string>('todos');
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 300); return () => clearTimeout(t); }, []);
 
   const todasOTs = OTS.filter(ot => ot.restauranteId === restauranteId);
 
@@ -294,14 +297,10 @@ export default function RestauranteOTs() {
               <div />
             </div>
 
-            {otsFiltradas.length === 0 ? (
-              <div className="py-16 text-center">
-                <Wrench className="mx-auto mb-3 h-10 w-10 text-gray-200" />
-                <p className="font-bold text-gray-400">Sin OTs en esta vista</p>
-                <p className="text-xs text-gray-300 mt-1">
-                  {buscar ? 'Intentá con otra búsqueda' : 'Cambiá el filtro o reportá una nueva falla'}
-                </p>
-              </div>
+            {isLoading ? (
+              <LoadingTable rows={5} cols={5} />
+            ) : otsFiltradas.length === 0 ? (
+              <EmptyState icon={Wrench} title="Sin OTs en esta vista" description={buscar ? 'Intentá con otra búsqueda' : 'Cambiá el filtro o reportá una nueva falla'} />
             ) : (
               otsFiltradas.map(ot => (
                 <FilaOT key={ot.id} ot={ot} restauranteId={restauranteId} />

@@ -13,8 +13,41 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SHUURI — Plataforma de servicios para gastronomía",
-  description: "Gestioná mantenimiento, equipos y proveedores para tu restaurante.",
+  metadataBase: new URL('https://shuuri.com'),
+  title: {
+    default: 'SHUURI — Plataforma de servicios para gastronomía',
+    template: '%s | SHUURI',
+  },
+  description: 'Conectamos restaurantes con técnicos certificados y repuestos coordinados. Un solo sistema para coordinar, documentar y controlar todo el mantenimiento de tu equipamiento.',
+  keywords: ['servicios técnicos', 'gastronomía', 'restaurante', 'mantenimiento equipos', 'técnicos certificados'],
+  authors: [{ name: 'SHUURI' }],
+  creator: 'SHUURI',
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    url: 'https://shuuri.com',
+    siteName: 'SHUURI',
+    title: 'SHUURI — Plataforma de servicios para gastronomía',
+    description: 'Conectamos restaurantes con técnicos certificados y repuestos coordinados.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'SHUURI — Plataforma de servicios para gastronomía',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SHUURI — Plataforma de servicios para gastronomía',
+    description: 'Conectamos restaurantes con técnicos certificados y repuestos coordinados.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

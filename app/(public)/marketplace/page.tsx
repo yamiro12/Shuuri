@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { Search, Package, Truck, X, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Package, Truck, X, SlidersHorizontal, ChevronDown, ShoppingCart, Wrench, ArrowLeft } from 'lucide-react';
 import {
   MARKETPLACE_PRODUCTS, MP_CATEGORIAS, MP_RUBROS, MP_RUBRO_LABELS, MP_MARCAS,
   type MarketplaceProduct,
@@ -148,17 +149,37 @@ function SidebarFilters({ filters, setFilters }: {
 
 // ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
 
-function ProductCard({ p, onAddToCart }: { p: MarketplaceProduct; onAddToCart: (p: MarketplaceProduct) => void }) {
+function ProductCard({ p, onAddToCart, otMode = false, otContext = false, rubroOT = '', marcaOT = '' }: {
+  p:           MarketplaceProduct;
+  onAddToCart: (p: MarketplaceProduct) => void;
+  otMode?:     boolean;
+  otContext?:  boolean;
+  rubroOT?:    string;
+  marcaOT?:    string;
+}) {
+  const [added, setAdded] = useState(false);
+
+  function handleAdd() {
+    onAddToCart(p);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  }
+
+  const detailHref = otContext
+    ? `/marketplace/${p.slug}?otContext=true&rubro=${rubroOT}&marca=${marcaOT}`
+    : `/marketplace/${p.slug}`;
+
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-[#2698D1]/30 transition-all flex flex-col">
+    <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-[#2698D1]/25 hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
       {/* Imagen placeholder */}
-      <div className="relative bg-gray-100 h-48 flex items-center justify-center">
-        <Package className="h-12 w-12 text-gray-300" />
+      <div className="relative bg-gray-100 h-48 flex items-center justify-center overflow-hidden">
+        <Package className="h-12 w-12 text-gray-300 group-hover:scale-110 transition-transform duration-300" />
         <span className={`absolute top-2 right-2 text-[11px] font-bold text-white px-2 py-0.5 rounded-full ${
           p.disponibilidad === 'en_stock' ? 'bg-green-500' : 'bg-amber-500'
         }`}>
           {p.disponibilidad === 'en_stock' ? 'En stock' : 'Bajo pedido'}
         </span>
+        <div className="absolute inset-0 bg-[#2698D1]/0 group-hover:bg-[#2698D1]/5 transition-colors duration-200" />
       </div>
 
       {/* Cuerpo */}
@@ -179,16 +200,26 @@ function ProductCard({ p, onAddToCart }: { p: MarketplaceProduct; onAddToCart: (
         </p>
         <div className="flex gap-2 mt-auto">
           <Link
-            href={`/marketplace/${p.slug}`}
+            href={detailHref}
             className="flex-1 text-center border border-gray-200 text-gray-600 hover:border-[#2698D1] hover:text-[#2698D1] font-semibold text-xs px-3 py-2 rounded-lg transition-all"
           >
             Ver detalle
           </Link>
           <button
-            onClick={() => onAddToCart(p)}
-            className="flex-1 bg-[#2698D1]/10 hover:bg-[#2698D1] text-[#2698D1] hover:text-white font-semibold text-xs px-3 py-2 rounded-lg transition-all"
+            onClick={handleAdd}
+            className={`flex-1 font-semibold text-xs px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-1 ${
+              added
+                ? 'bg-green-500 text-white scale-95'
+                : 'bg-[#2698D1]/10 hover:bg-[#2698D1] text-[#2698D1] hover:text-white'
+            }`}
           >
-            + Carrito
+            {added ? (
+              '✓ Agregado'
+            ) : otMode ? (
+              <><Wrench className="h-3 w-3" /> Agregar a OT</>
+            ) : (
+              '+ Carrito'
+            )}
           </button>
         </div>
       </div>
@@ -263,7 +294,14 @@ function CheckoutModal({ cart, onClose }: { cart: CartItem[]; onClose: () => voi
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
-export default function MarketplacePage() {
+function MarketplaceInner() {
+  const searchParams = useSearchParams();
+  const router       = useRouter();
+
+  const otContext = searchParams.get('otContext') === 'true';
+  const rubroOT   = searchParams.get('rubro') ?? '';
+  const marcaOT   = searchParams.get('marca') ?? '';
+
   const [search,       setSearch]       = useState('');
   const [filters,      setFilters]      = useState<FiltersState>(FILTER_INIT);
   const [sort,         setSort]         = useState('relevancia');
@@ -271,6 +309,18 @@ export default function MarketplacePage() {
   const [bannerOpen,   setBannerOpen]   = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
+
+  // Pre-filtrar por rubro y marca en modo OT
+  useEffect(() => {
+    if (!otContext) return;
+    setFilters(f => ({
+      ...f,
+      rubros:     rubroOT ? [rubroOT] : f.rubros,
+      marcas:     marcaOT ? (MP_MARCAS.includes(marcaOT) ? [marcaOT] : f.marcas) : f.marcas,
+      categorias: ['Repuestos'],
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otContext, rubroOT, marcaOT]);
 
   // Filtrar + ordenar
   const productos = useMemo(() => {
@@ -290,6 +340,17 @@ export default function MarketplacePage() {
   }, [search, filters, sort]);
 
   function addToCart(p: MarketplaceProduct) {
+    if (otContext) {
+      // Modo OT: guardar en sessionStorage y volver al wizard
+      sessionStorage.setItem('repuesto-seleccionado-ot', JSON.stringify({
+        productoId: p.id,
+        nombre:     p.nombre,
+        precio:     p.precio_ars,
+        slug:       p.slug,
+      }));
+      router.push('/solicitar-tecnico?step=3&repuestoAgregado=true');
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(i => i.producto.id === p.id);
       if (existing) return prev.map(i => i.producto.id === p.id ? { ...i, cantidad: i.cantidad + 1 } : i);
@@ -298,18 +359,66 @@ export default function MarketplacePage() {
     setBannerOpen(true);
   }
 
-  const cartTotal = cart.reduce((s, i) => s + i.producto.precio_ars * i.cantidad, 0);
-  const cartCount = cart.reduce((s, i) => s + i.cantidad, 0);
+  const cartTotal   = cart.reduce((s, i) => s + i.producto.precio_ars * i.cantidad, 0);
+  const cartCount   = cart.reduce((s, i) => s + i.cantidad, 0);
+  const [cartBump,  setCartBump]  = useState(false);
+
+  // Bump animation when cart count changes
+  useEffect(() => {
+    if (cartCount === 0) return;
+    setCartBump(true);
+    const t = setTimeout(() => setCartBump(false), 400);
+    return () => clearTimeout(t);
+  }, [cartCount]);
+
+  // Active filter chips
+  const activeChips: { label: string; onRemove: () => void }[] = [
+    ...filters.categorias.map(c => ({ label: c, onRemove: () => setFilters(f => ({ ...f, categorias: f.categorias.filter(x => x !== c) })) })),
+    ...filters.rubros.map(r   => ({ label: MP_RUBRO_LABELS[r] ?? r, onRemove: () => setFilters(f => ({ ...f, rubros: f.rubros.filter(x => x !== r) })) })),
+    ...filters.marcas.map(m   => ({ label: m, onRemove: () => setFilters(f => ({ ...f, marcas: f.marcas.filter(x => x !== m) })) })),
+    ...(filters.disponibilidad !== 'todos' ? [{ label: filters.disponibilidad === 'en_stock' ? 'En stock' : 'Bajo pedido', onRemove: () => setFilters(f => ({ ...f, disponibilidad: 'todos' })) }] : []),
+    ...(filters.entrega !== 'todos' ? [{ label: `≤${filters.entrega}hs`, onRemove: () => setFilters(f => ({ ...f, entrega: 'todos' })) }] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
 
+      {/* Banner OT context */}
+      {otContext && (
+        <div className="bg-[#2698D1] text-white py-3 px-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Wrench className="h-4 w-4 shrink-0" />
+              <span>
+                Estás buscando repuesto para tu OT
+                {marcaOT && <> · Equipo: <strong>{marcaOT}</strong></>}
+                {rubroOT && <> · Rubro: <strong>{MP_RUBRO_LABELS[rubroOT] ?? rubroOT}</strong></>}
+              </span>
+            </div>
+            <button
+              onClick={() => router.push('/solicitar-tecnico?step=3')}
+              className="text-xs font-bold text-white underline underline-offset-2 shrink-0"
+            >
+              Volver al wizard ←
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header oscuro */}
       <div className="bg-[#0D0D0D] text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="font-black text-4xl mb-2">Marketplace SHUURI</h1>
+          <h1 className="font-black text-4xl mb-2">
+            {otContext
+              ? (marcaOT ? `Repuestos para ${marcaOT}${rubroOT ? ` — ${MP_RUBRO_LABELS[rubroOT] ?? rubroOT}` : ''}` : 'Repuestos para tu OT')
+              : 'Marketplace SHUURI'
+            }
+          </h1>
           <p className="text-gray-300 mb-6">
-            Repuestos, equipamiento e insumos para gastronomía. Con precio, disponibilidad y entrega coordinada.
+            {otContext
+              ? 'Seleccioná el repuesto que necesitás. Se agregará directamente a tu OT.'
+              : 'Repuestos, equipamiento e insumos para gastronomía. Con precio, disponibilidad y entrega coordinada.'
+            }
           </p>
           {/* Search */}
           <div className="relative max-w-2xl">
@@ -366,10 +475,36 @@ export default function MarketplacePage() {
           {/* Grid */}
           <div className="flex-1 min-w-0">
 
+            {/* Active filter chips */}
+            {activeChips.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {activeChips.map((chip, i) => (
+                  <span
+                    key={i}
+                    className="flex items-center gap-1.5 bg-[#2698D1]/10 text-[#2698D1] text-xs font-semibold px-3 py-1 rounded-full"
+                  >
+                    {chip.label}
+                    <button onClick={chip.onRemove} className="hover:text-[#2698D1]/60 transition-colors">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                {activeChips.length > 1 && (
+                  <button
+                    onClick={() => setFilters(FILTER_INIT)}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline"
+                  >
+                    Limpiar todo
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Top bar */}
             <div className="flex items-center justify-between mb-5">
               <p className="text-sm text-gray-500">
-                <strong className="text-[#0D0D0D]">{productos.length}</strong> resultados
+                <strong className="text-[#0D0D0D]">{productos.length}</strong> resultado{productos.length !== 1 ? 's' : ''}
+                {search && <span className="ml-1 text-gray-400">para "{search}"</span>}
               </p>
               <div className="relative">
                 <select
@@ -399,7 +534,15 @@ export default function MarketplacePage() {
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {productos.map(p => (
-                  <ProductCard key={p.id} p={p} onAddToCart={addToCart} />
+                  <ProductCard
+                    key={p.id}
+                    p={p}
+                    onAddToCart={addToCart}
+                    otMode={otContext}
+                    otContext={otContext}
+                    rubroOT={rubroOT}
+                    marcaOT={marcaOT}
+                  />
                 ))}
               </div>
             )}
@@ -409,18 +552,33 @@ export default function MarketplacePage() {
 
       {/* Cart banner sticky */}
       {cart.length > 0 && bannerOpen && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D0D0D] text-white px-4 py-4 shadow-2xl">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D0D0D] text-white px-4 py-4 shadow-2xl border-t border-gray-800">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <p className="text-sm font-medium">
-              <span className="font-bold">{cartCount} ítem{cartCount > 1 ? 's' : ''}</span> en tu carrito
-              {' · '}Total estimado: <span className="font-bold">$ {cartTotal.toLocaleString('es-AR')}</span>
-            </p>
+            <div className="flex items-center gap-3">
+              <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl bg-[#2698D1]/20 transition-transform duration-200 ${cartBump ? 'scale-125' : 'scale-100'}`}>
+                {otContext ? <Wrench className="h-5 w-5 text-[#2698D1]" /> : <ShoppingCart className="h-5 w-5 text-[#2698D1]" />}
+                <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#2698D1] text-[10px] font-black text-white">
+                  {cartCount}
+                </span>
+              </div>
+              <p className="text-sm font-medium">
+                {otContext ? (
+                  <span className="font-bold">1 repuesto seleccionado para tu OT</span>
+                ) : (
+                  <>
+                    <span className="font-bold">{cartCount} ítem{cartCount > 1 ? 's' : ''}</span>
+                    <span className="text-gray-400 mx-1.5">·</span>
+                    Total: <span className="font-black text-white">$ {cartTotal.toLocaleString('es-AR')}</span>
+                  </>
+                )}
+              </p>
+            </div>
             <div className="flex items-center gap-3 shrink-0">
               <button
-                onClick={() => setCheckoutOpen(true)}
-                className="bg-[#2698D1] hover:bg-[#2698D1]/90 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
+                onClick={() => otContext ? router.push('/solicitar-tecnico?step=3') : setCheckoutOpen(true)}
+                className="bg-[#2698D1] hover:bg-[#2698D1]/90 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-md shadow-[#2698D1]/30"
               >
-                Ver carrito y continuar →
+                {otContext ? 'Confirmar y volver al wizard →' : 'Finalizar compra →'}
               </button>
               <button
                 onClick={() => setBannerOpen(false)}
@@ -442,5 +600,17 @@ export default function MarketplacePage() {
         />
       )}
     </div>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-4 border-[#2698D1] border-t-transparent animate-spin" />
+      </div>
+    }>
+      <MarketplaceInner />
+    </Suspense>
   );
 }

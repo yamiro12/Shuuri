@@ -11,6 +11,14 @@ export const metadata: Metadata = {
     'gestión restaurantes',
     'mantenimiento preventivo gastronomía',
   ],
+  openGraph: {
+    title: 'Blog — SHUURI',
+    description: 'Guías y artículos sobre mantenimiento de cocinas industriales y gestión gastronómica en Argentina.',
+    url: 'https://shuuri.com/blog',
+  },
+  alternates: {
+    canonical: 'https://shuuri.com/blog',
+  },
 };
 
 export default function BlogPage() {

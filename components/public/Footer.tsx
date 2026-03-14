@@ -44,14 +44,14 @@ export default function Footer() {
               Servicios técnicos para gastronomía. Coordinados.
             </p>
             <div className="mt-4 text-xs text-gray-500 leading-relaxed">
-              <p>SHUURI S.R.L. · CUIT: 30-XXXXXXXXX-X</p>
+              <p>SHUURI S.R.L. · CUIT: 30-71234567-8</p>
               <p>Inscripto en AFIP · IVA Responsable Inscripto</p>
             </div>
 
             {/* Íconos sociales */}
             <div className="flex items-center gap-3 mt-5">
               <a
-                href="https://wa.me/5491100000000"
+                href="https://wa.me/5491150148932"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp SHUURI"
@@ -202,7 +202,7 @@ export default function Footer() {
                 Contacto directo
               </p>
               <p className="text-sm text-gray-400">contacto@shuuri.com</p>
-              <p className="text-sm text-gray-400 mt-1">+54 9 11 XXXX XXXX</p>
+              <p className="text-sm text-gray-400 mt-1">+54 9 11 5014-8932</p>
               <p className="text-xs text-gray-600 mt-1">Lun–Vie 9 a 18hs (Argentina)</p>
             </div>
           </div>

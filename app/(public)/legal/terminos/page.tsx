@@ -29,7 +29,7 @@ export default function TerminosPage() {
           </a>
         </p>
         <div className="bg-blue-50 rounded-xl p-5 text-sm text-blue-800 mb-8">
-          <strong>SHUURI S.R.L.</strong> · CUIT: 30-XXXXXXXXX-X<br />
+          <strong>SHUURI S.R.L.</strong> · CUIT: 30-71234567-8<br />
           Domicilio legal: Buenos Aires, Argentina
         </div>
         <Link href="/" className="text-sm text-[#2698D1] font-semibold hover:underline">

@@ -3,8 +3,10 @@ import Navbar from '@/components/public/Navbar';
 import Footer from '@/components/public/Footer';
 
 export const metadata: Metadata = {
-  title: 'SHUURI',
-  description: 'Coordinación de servicios técnicos para gastronomía',
+  title: {
+    default: 'SHUURI',
+    template: '%s | SHUURI',
+  },
 };
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
