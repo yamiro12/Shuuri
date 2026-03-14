@@ -231,8 +231,7 @@ function ProductCard({ p, onAddToCart, otMode = false, otContext = false, rubroO
 
 function CheckoutModal({ cart, onClose }: { cart: CartItem[]; onClose: () => void }) {
   const [step, setStep] = useState<'carrito' | 'registro'>('carrito');
-  const total = cart.reduce((s, i) => s + i.producto.precio_ars * i.cantidad, 0);
-  const comision = Math.round(total * 0.15);
+  const subtotal = cart.reduce((s, i) => s + i.producto.precio_ars * i.cantidad, 0);
 
   const summary = (
     <div className="space-y-2">
@@ -244,11 +243,20 @@ function CheckoutModal({ cart, onClose }: { cart: CartItem[]; onClose: () => voi
           </span>
         </div>
       ))}
-      <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between text-sm font-bold">
-        <span>Subtotal</span>
-        <span>$ {total.toLocaleString('es-AR')}</span>
+      <div className="border-t border-gray-200 pt-2 mt-2 space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Subtotal</span>
+          <span className="font-semibold">$ {subtotal.toLocaleString('es-AR')}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Envío</span>
+          <span className="text-gray-400">A calcular</span>
+        </div>
+        <div className="flex justify-between text-sm font-bold border-t border-gray-100 pt-1 mt-1">
+          <span>Total estimado</span>
+          <span>$ {subtotal.toLocaleString('es-AR')}</span>
+        </div>
       </div>
-      <p className="text-xs text-gray-400">+ comisión SHUURI: $ {comision.toLocaleString('es-AR')} (15%)</p>
     </div>
   );
 
@@ -302,13 +310,15 @@ function MarketplaceInner() {
   const rubroOT   = searchParams.get('rubro') ?? '';
   const marcaOT   = searchParams.get('marca') ?? '';
 
-  const [search,       setSearch]       = useState('');
-  const [filters,      setFilters]      = useState<FiltersState>(FILTER_INIT);
-  const [sort,         setSort]         = useState('relevancia');
-  const [cart,         setCart]         = useState<CartItem[]>([]);
-  const [bannerOpen,   setBannerOpen]   = useState(true);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [sidebarOpen,  setSidebarOpen]  = useState(false);
+  const [search,        setSearch]        = useState('');
+  const [filters,       setFilters]       = useState<FiltersState>(FILTER_INIT);
+  const [sort,          setSort]          = useState('relevancia');
+  const [cart,          setCart]          = useState<CartItem[]>([]);
+  const [bannerOpen,    setBannerOpen]    = useState(true);
+  const [checkoutOpen,  setCheckoutOpen]  = useState(false);
+  const [sidebarOpen,   setSidebarOpen]   = useState(false);
+  const [estaLogueado,  setEstaLogueado]  = useState(false);
+  const [gateProduct,   setGateProduct]   = useState<MarketplaceProduct | null>(null);
 
   // Pre-filtrar por rubro y marca en modo OT
   useEffect(() => {
@@ -339,9 +349,17 @@ function MarketplaceInner() {
     return list;
   }, [search, filters, sort]);
 
+  function agregarAlCarrito(p: MarketplaceProduct) {
+    setCart(prev => {
+      const existing = prev.find(i => i.producto.id === p.id);
+      if (existing) return prev.map(i => i.producto.id === p.id ? { ...i, cantidad: i.cantidad + 1 } : i);
+      return [...prev, { producto: p, cantidad: 1 }];
+    });
+    setBannerOpen(true);
+  }
+
   function addToCart(p: MarketplaceProduct) {
     if (otContext) {
-      // Modo OT: guardar en sessionStorage y volver al wizard
       sessionStorage.setItem('repuesto-seleccionado-ot', JSON.stringify({
         productoId: p.id,
         nombre:     p.nombre,
@@ -351,12 +369,11 @@ function MarketplaceInner() {
       router.push('/solicitar-tecnico?step=3&repuestoAgregado=true');
       return;
     }
-    setCart(prev => {
-      const existing = prev.find(i => i.producto.id === p.id);
-      if (existing) return prev.map(i => i.producto.id === p.id ? { ...i, cantidad: i.cantidad + 1 } : i);
-      return [...prev, { producto: p, cantidad: 1 }];
-    });
-    setBannerOpen(true);
+    if (!estaLogueado) {
+      setGateProduct(p);
+      return;
+    }
+    agregarAlCarrito(p);
   }
 
   const cartTotal   = cart.reduce((s, i) => s + i.producto.precio_ars * i.cantidad, 0);
@@ -597,6 +614,29 @@ function MarketplaceInner() {
         <CheckoutModal
           cart={cart}
           onClose={() => setCheckoutOpen(false)}
+        />
+      )}
+
+      {/* Gate de registro al agregar al carrito */}
+      {gateProduct && (
+        <RegisterGate
+          title="Creá tu cuenta para comprar"
+          subtitle="Es gratis y lleva 2 minutos. Accedés a precios B2B y envíos coordinados."
+          summary={
+            <div className="text-sm space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-600 line-clamp-1 flex-1 mr-2">{gateProduct.nombre}</span>
+                <span className="font-semibold">$ {gateProduct.precio_ars.toLocaleString('es-AR')}</span>
+              </div>
+            </div>
+          }
+          ctaLabel="Continuar"
+          onClose={() => setGateProduct(null)}
+          onSuccess={() => {
+            setEstaLogueado(true);
+            agregarAlCarrito(gateProduct);
+            setGateProduct(null);
+          }}
         />
       )}
     </div>

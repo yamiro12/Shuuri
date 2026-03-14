@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getSugerenciasRepuesto, type RepuestoSugerido } from '@/lib/repuestos-sugeridos';
 import type { MarketplaceProduct } from '@/data/marketplace-mock';
+import { MarcaSearch, ModeloSearch } from '@/components/shared/CatalogSearch';
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 
@@ -139,10 +140,23 @@ function ProgressBar({ step }: { step: number }) {
   );
 }
 
+// Mapping marketplace rubros → shuuri rubro (para filtrar el catálogo)
+const RUBRO_TO_SHUURI: Record<string, string> = {
+  coccion:       'calor_comercial',
+  refrigeracion: 'frio_comercial',
+  lavado:        'lavado_comercial',
+  cafeteria:     'cafe_bebidas',
+  maq_hielo:     'frio_comercial',
+  climatizacion: 'climatizacion_hvac',
+  tecnologia:    'pos_it',
+};
+
 // ─── STEP 1: EQUIPO ───────────────────────────────────────────────────────────
 
 function Step1({ form, setForm }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>> }) {
+  const [marcaId, setMarcaId] = useState('');
   const inputCls = "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-[#0D0D0D] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2698D1]/30 focus:border-[#2698D1] transition-colors";
+  const rubroShuuri = RUBRO_TO_SHUURI[form.rubro] as string | undefined;
   return (
     <div className="space-y-6">
       <div>
@@ -154,7 +168,7 @@ function Step1({ form, setForm }: { form: FormState; setForm: React.Dispatch<Rea
               <button
                 key={id}
                 type="button"
-                onClick={() => setForm(p => ({ ...p, rubro: id }))}
+                onClick={() => setForm(p => ({ ...p, rubro: id, marca: '', modelo: '' }))}
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center cursor-pointer transition-all duration-150 ${
                   selected
                     ? 'border-[#2698D1] bg-[#2698D1]/8 text-[#2698D1] shadow-sm shadow-[#2698D1]/15 scale-[1.03]'
@@ -170,20 +184,25 @@ function Step1({ form, setForm }: { form: FormState; setForm: React.Dispatch<Rea
       </div>
       <div>
         <label className="block text-sm font-semibold text-[#0D0D0D] mb-1.5">Marca del equipo *</label>
-        <input
+        <MarcaSearch
           value={form.marca}
-          onChange={e => setForm(p => ({ ...p, marca: e.target.value }))}
-          placeholder="Ej: Rational, Fagor, Winterhalter"
-          className={inputCls}
+          rubro={rubroShuuri}
+          onChange={(nombre, id) => {
+            setMarcaId(id);
+            setForm(p => ({ ...p, marca: nombre, modelo: '' }));
+          }}
+          placeholder="Buscar marca…"
+          inputCls={inputCls}
         />
       </div>
       <div>
         <label className="block text-sm font-semibold text-[#0D0D0D] mb-1.5">Modelo (opcional)</label>
-        <input
+        <ModeloSearch
           value={form.modelo}
-          onChange={e => setForm(p => ({ ...p, modelo: e.target.value }))}
-          placeholder="Ej: SCC61, CG-941"
-          className={inputCls}
+          marcaId={marcaId || undefined}
+          onChange={v => setForm(p => ({ ...p, modelo: v }))}
+          placeholder="Buscar modelo…"
+          inputCls={inputCls}
         />
       </div>
       <div>

@@ -260,6 +260,8 @@ function ProductDetailContent({ slug }: { slug: string }) {
   const [cantidad,     setCantidad]     = useState(1);
   const [tab,          setTab]          = useState<'descripcion' | 'especificaciones' | 'valoraciones'>('descripcion');
   const [showGate,     setShowGate]     = useState(false);
+  const [gateMode,     setGateMode]     = useState<'cart' | 'now'>('cart');
+  const [estaLogueado, setEstaLogueado] = useState(false);
   const [addedToCart,  setAddedToCart]  = useState(false);
   const [showModal,    setShowModal]    = useState(false);
   const [utilesState,  setUtilesState]  = useState<Record<string, number>>({});
@@ -317,11 +319,18 @@ function ProductDetailContent({ slug }: { slug: string }) {
         <span className="text-gray-600 flex-1 mr-2 line-clamp-1">{product.nombre}</span>
         <span className="font-semibold shrink-0">x{cantidad}</span>
       </div>
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-500">Subtotal</span>
+        <span className="font-semibold">$ {total.toLocaleString('es-AR')}</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-500">Envío</span>
+        <span className="text-gray-400">A calcular</span>
+      </div>
       <div className="flex justify-between font-bold border-t border-gray-200 pt-1.5">
-        <span>Total</span>
+        <span>Total estimado</span>
         <span>$ {total.toLocaleString('es-AR')}</span>
       </div>
-      <p className="text-xs text-gray-400">+ comisión SHUURI 15%</p>
     </div>
   );
 
@@ -454,7 +463,7 @@ function ProductDetailContent({ slug }: { slug: string }) {
               </div>
             )}
 
-            {/* BOTÓN PRINCIPAL */}
+            {/* BOTONES PRINCIPALES */}
             {otContext ? (
               <button
                 onClick={handleAgregarOT}
@@ -463,30 +472,35 @@ function ProductDetailContent({ slug }: { slug: string }) {
                 <Wrench className="h-5 w-5" />
                 Agregar a mi OT
               </button>
-            ) : addedToCart ? (
-              <div className="flex items-center gap-2 bg-green-50 text-green-700 font-bold px-6 py-4 rounded-xl mb-4">
-                <CheckCircle2 className="h-5 w-5" />
-                ¡Agregado! Continuá comprando o finalizá.
-              </div>
             ) : (
-              <button
-                onClick={() => setShowGate(true)}
-                className="w-full bg-[#2698D1] hover:bg-[#2698D1]/90 text-white py-4 rounded-xl font-bold text-lg transition-colors mb-4 flex items-center justify-center gap-2"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Agregar al carrito
-              </button>
-            )}
-
-            {/* Nota de cuenta — solo si no es OT context */}
-            {!otContext && (
-              <div className="bg-blue-50 rounded-xl p-4">
-                <p className="text-sm text-blue-800 leading-relaxed">
-                  Para completar tu compra necesitás una cuenta SHUURI. Es gratis y tarda 2 minutos.
-                </p>
-                <Link href="/registro" className="inline-block mt-2 text-sm font-bold text-[#2698D1] hover:underline">
-                  Crear cuenta gratis →
-                </Link>
+              <div className="space-y-3 mb-4">
+                {addedToCart ? (
+                  <div className="flex items-center gap-2 bg-green-50 text-green-700 font-bold px-6 py-4 rounded-xl">
+                    <CheckCircle2 className="h-5 w-5" />
+                    ¡Agregado al carrito!
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (estaLogueado) { router.push('/marketplace/checkout'); }
+                      else { setGateMode('now'); setShowGate(true); }
+                    }}
+                    className="w-full bg-[#2698D1] hover:bg-[#2698D1]/90 text-white py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    Comprar ahora
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (estaLogueado) { setAddedToCart(true); }
+                    else { setGateMode('cart'); setShowGate(true); }
+                  }}
+                  className="w-full border-2 border-[#0D0D0D] text-[#0D0D0D] hover:bg-gray-50 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Agregar al carrito
+                </button>
               </div>
             )}
           </div>
@@ -696,15 +710,19 @@ function ProductDetailContent({ slug }: { slug: string }) {
       {/* REGISTER GATE (normal flow) */}
       {showGate && (
         <RegisterGate
-          title="Agregar al carrito"
-          subtitle="Necesitás cuenta SHUURI para comprar. Es gratis."
+          title={gateMode === 'now' ? 'Comprar ahora' : 'Agregar al carrito'}
+          subtitle="Creá tu cuenta para comprar. Es gratis y lleva 2 minutos. Accedés a precios B2B y envíos coordinados."
           summary={summary}
-          ctaLabel="Confirmar y agregar"
+          ctaLabel={gateMode === 'now' ? 'Continuar con la compra' : 'Confirmar y agregar'}
           onClose={() => setShowGate(false)}
           onSuccess={() => {
-            console.log('[Marketplace Detail] MOCK | producto:', product.nombre, '| cantidad:', cantidad);
+            setEstaLogueado(true);
             setShowGate(false);
-            setAddedToCart(true);
+            if (gateMode === 'now') {
+              router.push('/marketplace/checkout');
+            } else {
+              setAddedToCart(true);
+            }
           }}
         />
       )}

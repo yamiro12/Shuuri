@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getSugerenciasRepuesto } from '@/lib/repuestos-sugeridos';
 import type { RepuestoSugerido } from '@/lib/repuestos-sugeridos';
+import { MarcaSearch, ModeloSearch, ActivoSelect } from '@/components/shared/CatalogSearch';
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 
@@ -229,6 +230,9 @@ export default function ReportarFalla() {
   const [enviado,    setEnviado]    = useState(false);
   const [enviando,   setEnviando]   = useState(false);
   const [otNuevaId,  setOtNuevaId]  = useState('');
+
+  // ── MARCA ID para autocomplete modelo ──
+  const [marcaIdEquipo, setMarcaIdEquipo] = useState('');
 
   // ── REPUESTOS ──
   const [repuestosDB,          setRepuestosDB]          = useState<RepuestoSugerido[]>([]);
@@ -746,30 +750,33 @@ export default function ReportarFalla() {
                         <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
                           Tipo de equipo <span className="text-red-400">*</span>
                         </label>
-                        <input
+                        <ActivoSelect
                           value={form.equipoTipo}
-                          onChange={e => set('equipoTipo', e.target.value)}
-                          placeholder="Ej: Cámara frigorífica, Cafetera, Horno..."
-                          className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                          onChange={v => set('equipoTipo', v)}
+                          rubro={form.rubro || undefined}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Marca</label>
-                          <input
+                          <MarcaSearch
                             value={form.equipoMarca}
-                            onChange={e => set('equipoMarca', e.target.value)}
-                            placeholder="Ej: Frider, Rational..."
-                            className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                            rubro={form.rubro || undefined}
+                            onChange={(nombre, id) => {
+                              set('equipoMarca', nombre);
+                              setMarcaIdEquipo(id);
+                              set('equipoModelo', '');
+                            }}
+                            placeholder="Buscar marca…"
                           />
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Modelo</label>
-                          <input
+                          <ModeloSearch
                             value={form.equipoModelo}
-                            onChange={e => set('equipoModelo', e.target.value)}
-                            placeholder="Opcional"
-                            className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                            marcaId={marcaIdEquipo || undefined}
+                            onChange={v => set('equipoModelo', v)}
+                            placeholder="Buscar modelo…"
                           />
                         </div>
                       </div>

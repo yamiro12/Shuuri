@@ -13,6 +13,7 @@ import {
 import { EQUIPOS, getOTsByRestaurante, RESTAURANTES } from '@/data/mock';
 import { RUBRO_LABELS, TODOS_LOS_RUBROS } from '@/types/shuuri';
 import type { Equipo, Rubro } from '@/types/shuuri';
+import { MarcaSearch, ModeloSearch, ActivoSelect } from '@/components/shared/CatalogSearch';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 
@@ -73,7 +74,7 @@ function formatDate(iso?: string) {
   return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-const EQUIPO_VACIO = { tipo: '', marca: '', modelo: '', rubro: 'frio_comercial' as Rubro };
+const EQUIPO_VACIO = { tipo: '', marca: '', modelo: '', rubro: 'frio_comercial' as Rubro, marcaId: '' };
 type Vista = 'grid' | 'lista' | 'rubro';
 
 // ─── CARD GRID ────────────────────────────────────────────────────────────────
@@ -470,30 +471,44 @@ export default function EquiposPage() {
               <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              {[
-                { label: 'Tipo de equipo *', key: 'tipo',   placeholder: 'Ej: Cámara frigorífica' },
-                { label: 'Marca *',          key: 'marca',  placeholder: 'Ej: Frider' },
-                { label: 'Modelo',           key: 'modelo', placeholder: 'Ej: CF-300' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5">{f.label}</label>
-                  <input
-                    value={nuevoEquipo[f.key as keyof typeof nuevoEquipo] as string}
-                    onChange={e => setNuevoEquipo(p => ({ ...p, [f.key]: e.target.value }))}
-                    placeholder={f.placeholder}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors"
-                  />
-                </div>
-              ))}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-1.5">Rubro</label>
                 <select
                   value={nuevoEquipo.rubro}
-                  onChange={e => setNuevoEquipo(p => ({ ...p, rubro: e.target.value as Rubro }))}
+                  onChange={e => setNuevoEquipo(p => ({ ...p, rubro: e.target.value as Rubro, tipo: '', marca: '', modelo: '', marcaId: '' }))}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors bg-white"
                 >
                   {TODOS_LOS_RUBROS.map(r => <option key={r} value={r}>{RUBRO_LABELS[r]}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Tipo de equipo *</label>
+                <ActivoSelect
+                  value={nuevoEquipo.tipo}
+                  onChange={v => setNuevoEquipo(p => ({ ...p, tipo: v }))}
+                  rubro={nuevoEquipo.rubro}
+                  inputCls="w-full appearance-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Marca *</label>
+                <MarcaSearch
+                  value={nuevoEquipo.marca}
+                  rubro={nuevoEquipo.rubro}
+                  onChange={(nombre, id) => setNuevoEquipo(p => ({ ...p, marca: nombre, marcaId: id, modelo: '' }))}
+                  placeholder="Buscar marca…"
+                  inputCls="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">Modelo</label>
+                <ModeloSearch
+                  value={nuevoEquipo.modelo}
+                  marcaId={nuevoEquipo.marcaId || undefined}
+                  onChange={v => setNuevoEquipo(p => ({ ...p, modelo: v }))}
+                  placeholder="Buscar modelo…"
+                  inputCls="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                />
               </div>
             </div>
             <div className="flex gap-3 border-t px-6 py-4">
