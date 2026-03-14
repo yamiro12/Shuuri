@@ -35,7 +35,10 @@ interface FormData {
   repuestosNecesarios:          boolean;
   repuestosDescripcion:         string;
   repuestosSolicitudMarketplace: boolean;
-  horarioAcceso:  string;
+  fechaVisita:    string;
+  horaInicio:     string;
+  horaFin:        string;
+  diasDisponibles: string[];
   contactoNombre: string;
   contactoTel:    string;
   notas:          string;
@@ -51,11 +54,15 @@ const RUBRO_MKT_MAP: Partial<Record<string, string>> = {
   cafe_bebidas:           'cafeteria',
 };
 
+const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
 const FORM_INICIAL: FormData = {
   localId: '', equipoId: '', equipoTipo: '', equipoMarca: '',
   equipoModelo: '', rubro: '', descripcion: '', urgencia: '',
   repuestosNecesarios: false, repuestosDescripcion: '', repuestosSolicitudMarketplace: false,
-  horarioAcceso: '', contactoNombre: '', contactoTel: '', notas: '',
+  fechaVisita: '', horaInicio: '', horaFin: '',
+  diasDisponibles: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'],
+  contactoNombre: '', contactoTel: '', notas: '',
 };
 
 interface MensajeChat {
@@ -981,18 +988,85 @@ export default function ReportarFalla() {
                     <h2 className="text-lg font-black text-[#0D0D0D] mb-1">Acceso y contacto</h2>
                     <p className="text-sm text-gray-400 mb-6">Para coordinar la visita del técnico</p>
 
-                    <div className="space-y-4">
+                    <div className="space-y-5">
+
+                      {/* Fecha preferida */}
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
-                          Horario preferido de visita
+                          Fecha preferida para la visita
                         </label>
                         <input
-                          value={form.horarioAcceso}
-                          onChange={e => set('horarioAcceso', e.target.value)}
-                          placeholder={restaurante.legajo?.horarioPreferido ?? 'Ej: Lunes a jueves 9:00 - 12:00'}
+                          type="date"
+                          value={form.fechaVisita}
+                          min={new Date().toISOString().split('T')[0]}
+                          max="2027-12-31"
+                          onChange={e => set('fechaVisita', e.target.value)}
                           className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors"
                         />
                       </div>
+
+                      {/* Días disponibles */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                          Días disponibles para recibir al técnico
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {DIAS_SEMANA.map(dia => {
+                            const activo = form.diasDisponibles.includes(dia);
+                            return (
+                              <button
+                                key={dia}
+                                type="button"
+                                onClick={() =>
+                                  set('diasDisponibles',
+                                    activo
+                                      ? form.diasDisponibles.filter(d => d !== dia)
+                                      : [...form.diasDisponibles, dia]
+                                  )
+                                }
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                                  activo
+                                    ? 'bg-[#2698D1] text-white'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                }`}
+                              >
+                                {dia}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Horario (hora inicio – hora fin) */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                          Franja horaria preferida
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs text-gray-400 mb-1">Desde</p>
+                            <input
+                              type="time"
+                              step="900"
+                              value={form.horaInicio}
+                              onChange={e => set('horaInicio', e.target.value)}
+                              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 mb-1">Hasta</p>
+                            <input
+                              type="time"
+                              step="900"
+                              value={form.horaFin}
+                              onChange={e => set('horaFin', e.target.value)}
+                              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contacto */}
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
@@ -1017,6 +1091,7 @@ export default function ReportarFalla() {
                           />
                         </div>
                       </div>
+
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
                           Notas adicionales para el técnico
@@ -1029,6 +1104,7 @@ export default function ReportarFalla() {
                           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#2698D1] transition-colors resize-none"
                         />
                       </div>
+
                       <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 flex gap-3">
                         <Info className="h-4 w-4 text-[#2698D1] shrink-0 mt-0.5" />
                         <p className="text-xs text-gray-600">
@@ -1083,10 +1159,24 @@ export default function ReportarFalla() {
                           </div>
                         </div>
                       )}
-                      {(form.horarioAcceso || form.contactoNombre || form.notas) && (
+                      {(form.fechaVisita || form.diasDisponibles.length > 0 || form.horaInicio || form.contactoNombre || form.notas) && (
                         <div className="rounded-xl border bg-gray-50 p-4">
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Acceso</p>
-                          {form.horarioAcceso && <p className="text-xs text-gray-600 mb-0.5">⏰ {form.horarioAcceso}</p>}
+                          {form.fechaVisita && (
+                            <p className="text-xs text-gray-600 mb-0.5">
+                              📅 {new Date(form.fechaVisita + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                            </p>
+                          )}
+                          {form.diasDisponibles.length > 0 && (
+                            <p className="text-xs text-gray-600 mb-0.5">
+                              📆 {form.diasDisponibles.join(' · ')}
+                            </p>
+                          )}
+                          {(form.horaInicio || form.horaFin) && (
+                            <p className="text-xs text-gray-600 mb-0.5">
+                              🕐 {form.horaInicio || '—'} → {form.horaFin || '—'}
+                            </p>
+                          )}
                           {form.contactoNombre && <p className="text-xs text-gray-600 mb-0.5">👤 {form.contactoNombre}{form.contactoTel ? ` — ${form.contactoTel}` : ''}</p>}
                           {form.notas && <p className="text-xs text-gray-500 mt-1 italic">{form.notas}</p>}
                         </div>
