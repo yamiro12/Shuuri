@@ -51,12 +51,12 @@ export default function RestaurantePerfil() {
     nombre:   restaurante.nombre,
     direccion: restaurante.direccion,
     telefono: restaurante.telefono,
-    email:    restaurante.email ?? '',
-    contacto: restaurante.legajo?.nombreContacto ?? '',
-    cargo:    restaurante.legajo?.cargoContacto ?? '',
+    email:    '',
+    contacto: restaurante.legajo?.contactoPrincipalNombre ?? '',
+    cargo:    restaurante.legajo?.contactoPrincipalCargo ?? '',
     cuit:     restaurante.legajo?.cuit ?? '',
     horario:  restaurante.legajo?.horarioPreferido ?? '',
-    notas:    restaurante.legajo?.notasAcceso ?? '',
+    notas:    '',
   });
 
   function handleSave() {
@@ -71,12 +71,12 @@ export default function RestaurantePerfil() {
       nombre:   restaurante.nombre,
       direccion: restaurante.direccion,
       telefono: restaurante.telefono,
-      email:    restaurante.email ?? '',
-      contacto: restaurante.legajo?.nombreContacto ?? '',
-      cargo:    restaurante.legajo?.cargoContacto ?? '',
+      email:    '',
+      contacto: restaurante.legajo?.contactoPrincipalNombre ?? '',
+      cargo:    restaurante.legajo?.contactoPrincipalCargo ?? '',
       cuit:     restaurante.legajo?.cuit ?? '',
       horario:  restaurante.legajo?.horarioPreferido ?? '',
-      notas:    restaurante.legajo?.notasAcceso ?? '',
+      notas:    '',
     });
   }
 
@@ -107,7 +107,7 @@ export default function RestaurantePerfil() {
               </div>
               <div>
                 <h1 className="text-2xl font-black text-[#0D0D0D]">{restaurante.nombre}</h1>
-                <p className="text-sm text-gray-400">{restaurante.id} · {restaurante.tipo ?? 'Gastronomía'}</p>
+                <p className="text-sm text-gray-400">{restaurante.id} · {'Gastronomía'}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">Activo</span>
                   {restaurante.legajo?.plan && (

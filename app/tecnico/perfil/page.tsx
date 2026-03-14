@@ -321,7 +321,7 @@ export default function TecnicoPerfil() {
               {seccion === 'tipo' && (
                 <div className="space-y-4">
                   <h2 className="font-black text-[#0D0D0D]">Tipo de alta</h2>
-                  <Sel label="¿Cómo operás?" value={data.tipoAlta} editando={editando} onChange={set('tipoAlta')}
+                  <Sel label="¿Cómo operás?" value={data.tipoAlta ?? ''} editando={editando} onChange={set('tipoAlta')}
                     opciones={['Técnico independiente (trabajo solo)', 'Empresa técnica (tengo técnicos a cargo)', 'Empresa que subcontrata técnicos para terceros']} />
                 </div>
               )}
@@ -331,13 +331,13 @@ export default function TecnicoPerfil() {
                 <div className="space-y-4">
                   <h2 className="font-black text-[#0D0D0D]">Datos fiscales</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <Campo label="Nombre completo o razón social" value={data.nombreORazonSocial} editando={editando} onChange={set('nombreORazonSocial')} />
-                    <Campo label="Nombre comercial (si difiere)" value={data.nombreComercial} editando={editando} onChange={set('nombreComercial')} />
-                    <Campo label="CUIT" value={data.cuit} editando={editando} onChange={set('cuit')} placeholder="20-00000000-0" />
-                    <Sel label="Condición IVA" value={data.condicionIVA} editando={editando} onChange={set('condicionIVA')}
+                    <Campo label="Nombre completo o razón social" value={data.nombreORazonSocial ?? ''} editando={editando} onChange={set('nombreORazonSocial')} />
+                    <Campo label="Nombre comercial (si difiere)" value={data.nombreComercial ?? ''} editando={editando} onChange={set('nombreComercial')} />
+                    <Campo label="CUIT" value={data.cuit ?? ''} editando={editando} onChange={set('cuit')} placeholder="20-00000000-0" />
+                    <Sel label="Condición IVA" value={data.condicionIVA ?? ''} editando={editando} onChange={set('condicionIVA')}
                       opciones={['Responsable Inscripto', 'Monotributista', 'Exento']} />
                   </div>
-                  <Campo label="Domicilio fiscal" value={data.domicilioFiscal} editando={editando} onChange={set('domicilioFiscal')} tipo="textarea" />
+                  <Campo label="Domicilio fiscal" value={data.domicilioFiscal ?? ''} editando={editando} onChange={set('domicilioFiscal')} tipo="textarea" />
                 </div>
               )}
 
@@ -345,7 +345,7 @@ export default function TecnicoPerfil() {
               {seccion === 'cobertura' && (
                 <div className="space-y-4">
                   <h2 className="font-black text-[#0D0D0D]">Cobertura y capacidad</h2>
-                  <ChipsMulti label="Zona de cobertura" values={data.zonaCobertura} editando={editando} opciones={ZONAS}
+                  <ChipsMulti label="Zona de cobertura" values={data.zonaCobertura ?? []} editando={editando} opciones={ZONAS}
                     onChange={v => setData(prev => ({ ...prev, zonaCobertura: v }))} />
                   <div>
                     <label className="mb-1 block text-xs font-bold text-gray-500">Rubros</label>
@@ -353,37 +353,37 @@ export default function TecnicoPerfil() {
                       {editando ? TODOS_LOS_RUBROS.map(r => (
                         <button key={r} type="button"
                           onClick={() => {
-                            const curr = data.rubros;
+                            const curr = data.rubros ?? [];
                             setData(prev => ({
                               ...prev,
                               rubros: curr.includes(r) ? curr.filter(x => x !== r) : [...curr, r],
                             }));
                           }}
                           className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            data.rubros.includes(r) ? 'bg-[#2698D1] border-[#2698D1] text-white' : 'border-gray-300 text-gray-600 hover:border-[#2698D1]'
+                            (data.rubros ?? []).includes(r) ? 'bg-[#2698D1] border-[#2698D1] text-white' : 'border-gray-300 text-gray-600 hover:border-[#2698D1]'
                           }`}>
                           {RUBRO_LABELS[r]}
                         </button>
-                      )) : data.rubros.map(r => (
+                      )) : (data.rubros ?? []).map(r => (
                         <span key={r} className="rounded-full bg-blue-50 border border-[#2698D1] px-3 py-1 text-xs font-medium text-[#2698D1]">
                           {RUBRO_LABELS[r]}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <Campo label="Marcas certificadas o especializadas" value={data.marcasCertificadas} editando={editando}
+                  <Campo label="Marcas certificadas o especializadas" value={data.marcasCertificadas ?? ''} editando={editando}
                     onChange={set('marcasCertificadas')} tipo="textarea" placeholder="Ej: Rational, Winterhalter, True..." />
-                  <Sel label="¿Tenés certificaciones oficiales de marca?" value={data.tieneCertificacionesOficiales} editando={editando}
+                  <Sel label="¿Tenés certificaciones oficiales de marca?" value={data.tieneCertificacionesOficiales ?? ''} editando={editando}
                     onChange={set('tieneCertificacionesOficiales')}
                     opciones={['Sí, una o varias', 'No pero tengo experiencia comprobable', 'Estoy en proceso de certificación']} />
                   {data.tieneCertificacionesOficiales === 'Sí, una o varias' && (
-                    <Campo label="Detalle de certificaciones" value={data.detalleCertificaciones} editando={editando}
+                    <Campo label="Detalle de certificaciones" value={data.detalleCertificaciones ?? ''} editando={editando}
                       onChange={set('detalleCertificaciones')} tipo="textarea" placeholder="Marca y tipo de certificación" />
                   )}
-                  <ChipsMulti label="Disponibilidad horaria" values={data.disponibilidadHoraria} editando={editando}
+                  <ChipsMulti label="Disponibilidad horaria" values={data.disponibilidadHoraria ?? []} editando={editando}
                     opciones={['Lunes a Viernes horario comercial', 'Sábados', 'Domingos y feriados', 'Nocturno', '24/7']}
                     onChange={v => setData(prev => ({ ...prev, disponibilidadHoraria: v }))} />
-                  <Campo label="Servicios por día (aprox)" value={data.serviciosPorDia} editando={editando} onChange={set('serviciosPorDia')} />
+                  <Campo label="Servicios por día (aprox)" value={data.serviciosPorDia ?? ''} editando={editando} onChange={set('serviciosPorDia')} />
                 </div>
               )}
 
@@ -608,13 +608,13 @@ export default function TecnicoPerfil() {
                   <h2 className="font-black text-[#0D0D0D]">Equipo de trabajo</h2>
                   <p className="text-xs text-gray-400">Solo si sos empresa técnica o subcontratista</p>
                   <div className="grid grid-cols-2 gap-4">
-                    <Campo label="Cantidad de técnicos en el equipo" value={data.cantidadTecnicos} editando={editando}
+                    <Campo label="Cantidad de técnicos en el equipo" value={data.cantidadTecnicos ?? ''} editando={editando}
                       onChange={set('cantidadTecnicos')} placeholder="Dejar vacío si sos independiente" />
-                    <Sel label="Relación laboral" value={data.relacionLaboral} editando={editando} onChange={set('relacionLaboral')}
+                    <Sel label="Relación laboral" value={data.relacionLaboral ?? ''} editando={editando} onChange={set('relacionLaboral')}
                       opciones={['Relación de dependencia', 'Monotributistas', 'Ambos', 'No aplica, soy independiente']} />
-                    <Sel label="Vehículos propios" value={data.vehiculos} editando={editando} onChange={set('vehiculos')}
+                    <Sel label="Vehículos propios" value={data.vehiculos ?? ''} editando={editando} onChange={set('vehiculos')}
                       opciones={['Sí, todos con vehículo', 'Algunos', 'No, usan transporte público', 'No aplica, soy independiente']} />
-                    <Sel label="Herramientas" value={data.herramientas} editando={editando} onChange={set('herramientas')}
+                    <Sel label="Herramientas" value={data.herramientas ?? ''} editando={editando} onChange={set('herramientas')}
                       opciones={['La empresa provee todo', 'Cada técnico tiene las suyas', 'Mixto', 'No aplica, soy independiente']} />
                   </div>
                 </div>
@@ -624,20 +624,20 @@ export default function TecnicoPerfil() {
               {seccion === 'experiencia' && (
                 <div className="space-y-4">
                   <h2 className="font-black text-[#0D0D0D]">Experiencia</h2>
-                  <Sel label="Años de experiencia" value={data.anosExperiencia} editando={editando} onChange={set('anosExperiencia')}
+                  <Sel label="Años de experiencia" value={data.anosExperiencia ?? ''} editando={editando} onChange={set('anosExperiencia')}
                     opciones={['Menos de 2', '2 a 5', '5 a 10', 'Más de 10']} />
-                  <Campo label="Clientes actuales principales" value={data.clientesActuales} editando={editando}
+                  <Campo label="Clientes actuales principales" value={data.clientesActuales ?? ''} editando={editando}
                     onChange={set('clientesActuales')} tipo="textarea" placeholder="Restaurantes, hoteles, cadenas..." />
-                  <Sel label="¿Trabajás como subcontratista?" value={data.trabajaSubcontratista} editando={editando}
+                  <Sel label="¿Trabajás como subcontratista?" value={data.trabajaSubcontratista ?? ''} editando={editando}
                     onChange={set('trabajaSubcontratista')}
                     opciones={['Sí, soy service oficial de marca', 'Sí, trabajo para empresas que me asignan trabajos', 'No, trabajo directo con cliente final']} />
-                  {data.trabajaSubcontratista.startsWith('Sí') && (
-                    <Campo label="¿Para quién?" value={data.paraQuien} editando={editando} onChange={set('paraQuien')} tipo="textarea" />
+                  {(data.trabajaSubcontratista ?? '').startsWith('Sí') && (
+                    <Campo label="¿Para quién?" value={data.paraQuien ?? ''} editando={editando} onChange={set('paraQuien')} tipo="textarea" />
                   )}
                   <div className="grid grid-cols-2 gap-4">
-                    <Sel label="Seguro de responsabilidad civil" value={data.seguroRC} editando={editando} onChange={set('seguroRC')}
+                    <Sel label="Seguro de responsabilidad civil" value={data.seguroRC ?? ''} editando={editando} onChange={set('seguroRC')}
                       opciones={['Sí, vigente', 'No', 'En trámite']} />
-                    <Sel label="Matafuego y EPP" value={data.matafuegoEPP} editando={editando} onChange={set('matafuegoEPP')}
+                    <Sel label="Matafuego y EPP" value={data.matafuegoEPP ?? ''} editando={editando} onChange={set('matafuegoEPP')}
                       opciones={['Sí, completo', 'Parcial', 'No']} />
                   </div>
                 </div>
@@ -648,13 +648,13 @@ export default function TecnicoPerfil() {
                 <div className="space-y-4">
                   <h2 className="font-black text-[#0D0D0D]">Contacto</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <Campo label="Nombre del contacto principal" value={data.contactoNombre} editando={editando} onChange={set('contactoNombre')} />
-                    <Campo label="Cargo (si es empresa)" value={data.contactoCargo} editando={editando} onChange={set('contactoCargo')}
+                    <Campo label="Nombre del contacto principal" value={data.contactoNombre ?? ''} editando={editando} onChange={set('contactoNombre')} />
+                    <Campo label="Cargo (si es empresa)" value={data.contactoCargo ?? ''} editando={editando} onChange={set('contactoCargo')}
                       placeholder="Ej: Dueño, Coordinador" />
-                    <Campo label="Teléfono / WhatsApp" value={data.contactoTel} editando={editando} onChange={set('contactoTel')} />
-                    <Campo label="Email" value={data.contactoEmail} editando={editando} onChange={set('contactoEmail')} />
+                    <Campo label="Teléfono / WhatsApp" value={data.contactoTel ?? ''} editando={editando} onChange={set('contactoTel')} />
+                    <Campo label="Email" value={data.contactoEmail ?? ''} editando={editando} onChange={set('contactoEmail')} />
                   </div>
-                  <Campo label="Contacto para asignación de OTs (si es empresa)" value={data.contactoOTs} editando={editando}
+                  <Campo label="Contacto para asignación de OTs (si es empresa)" value={data.contactoOTs ?? ''} editando={editando}
                     onChange={set('contactoOTs')} placeholder="Nombre y teléfono de quien recibe las OTs" />
                 </div>
               )}
@@ -664,16 +664,16 @@ export default function TecnicoPerfil() {
                 <div className="space-y-4">
                   <h2 className="font-black text-[#0D0D0D]">Facturación y cobros</h2>
                   <p className="text-xs text-gray-400">SHUURI cobra al cliente final y te liquida el 70% del servicio</p>
-                  <Campo label="Email para recibir liquidaciones" value={data.emailLiquidaciones} editando={editando} onChange={set('emailLiquidaciones')} />
-                  <Campo label="CVU / CBU (22 dígitos)" value={data.cbu} editando={editando} onChange={set('cbu')} placeholder="0000000000000000000000" />
+                  <Campo label="Email para recibir liquidaciones" value={data.emailLiquidaciones ?? ''} editando={editando} onChange={set('emailLiquidaciones')} />
+                  <Campo label="CVU / CBU (22 dígitos)" value={data.cbu ?? ''} editando={editando} onChange={set('cbu')} placeholder="0000000000000000000000" />
                   <div className="grid grid-cols-2 gap-4">
-                    <Campo label="Alias CVU/CBU" value={data.aliasCbu} editando={editando} onChange={set('aliasCbu')} />
-                    <Campo label="Banco o billetera" value={data.bancoOBilletera} editando={editando} onChange={set('bancoOBilletera')} />
+                    <Campo label="Alias CVU/CBU" value={data.aliasCbu ?? ''} editando={editando} onChange={set('aliasCbu')} />
+                    <Campo label="Banco o billetera" value={data.bancoOBilletera ?? ''} editando={editando} onChange={set('bancoOBilletera')} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Sel label="Tipo de factura a SHUURI" value={data.tipoFactura} editando={editando} onChange={set('tipoFactura')}
+                    <Sel label="Tipo de factura a SHUURI" value={data.tipoFactura ?? ''} editando={editando} onChange={set('tipoFactura')}
                       opciones={['Sí, Factura A', 'Sí, Factura B', 'Sí, Factura C', 'Necesito coordinar']} />
-                    <Sel label="Plazo de liquidación" value={data.plazoLiquidacion} editando={editando} onChange={set('plazoLiquidacion')}
+                    <Sel label="Plazo de liquidación" value={data.plazoLiquidacion ?? ''} editando={editando} onChange={set('plazoLiquidacion')}
                       opciones={['Quincenal', 'Mensual', 'A definir con SHUURI']} />
                   </div>
                 </div>

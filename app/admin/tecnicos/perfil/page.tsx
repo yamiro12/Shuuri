@@ -3,8 +3,17 @@ import React, { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { TECNICOS } from '@/data/mock';
-import type { Rubro, LegajoTecnico } from '@/types/shuuri';
+import type { Rubro } from '@/types/shuuri';
 import { RUBRO_LABELS } from '@/types/shuuri';
+
+type FormAdminTecnico = {
+  nombreCompleto: string; cuil: string; domicilio: string;
+  telefono: string; email: string; tipoServicio: string;
+  rubrosEspecializacion: string; zonaCobertura: string;
+  disponibilidadHoraria: string; movilidad: string;
+  cbu: string; aliasCbu: string; bancoOBilletera: string;
+  condicionFiscal: string; tipoFactura: string; emailLiquidaciones: string;
+};
 import { User, Shield, CreditCard, Save, Edit3, CheckCircle, AlertTriangle } from 'lucide-react';
 
 function Campo({ label, value, editando, onChange, mono = false, placeholder = '' }: {
@@ -37,7 +46,7 @@ export default function AdminTecnicoPerfilPage() {
   const [toast,    setToast]    = useState<string | null>(null);
   const [tab,      setTab]      = useState<'datos' | 'rubros' | 'pagos'>('datos');
 
-  const [form, setForm] = useState<LegajoTecnico>({
+  const [form, setForm] = useState<FormAdminTecnico>({
     nombreCompleto:    tecnico.nombre ?? '',
     cuil:              '',
     domicilio:         '',
@@ -56,7 +65,7 @@ export default function AdminTecnicoPerfilPage() {
     emailLiquidaciones: tecnico.email ?? '',
   });
 
-  function f(key: keyof LegajoTecnico) {
+  function f(key: keyof FormAdminTecnico) {
     return (v: string) => setForm(prev => ({ ...prev, [key]: v }));
   }
 
