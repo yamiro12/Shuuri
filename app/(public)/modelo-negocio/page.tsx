@@ -1,266 +1,333 @@
-import { Utensils, Wrench, Package } from 'lucide-react';
-import Link from 'next/link';
+import type { Metadata } from "next"
 
-export const metadata = {
-  title: 'Modelo de Negocio | SHUURI',
-  description: 'Marketplace B2B2B de servicios técnicos para gastronomía. 6 streams de ingreso. Modelo transaccional + SaaS recurrente.',
-};
-
-const ACTORES = [
-  {
-    Icon: Utensils,
-    nombre: 'Gastronómicos',
-    desc: 'Restaurantes, bares, hoteles, cafeterías. El que paga por el servicio y necesita que su cocina no pare.',
-    numero: '110.000+',
-    label: 'establecimientos en Argentina',
-    color: 'bg-blue-50 text-blue-600',
-  },
-  {
-    Icon: Wrench,
-    nombre: 'Técnicos',
-    desc: 'Independientes y empresas técnicas con certificación. Cobran el 70% del servicio, liquidación quincenal.',
-    numero: '~20.000',
-    label: 'técnicos potenciales en AMBA',
-    color: 'bg-teal-50 text-teal-600',
-  },
-  {
-    Icon: Package,
-    nombre: 'Proveedores',
-    desc: 'Fabricantes, distribuidores e importadores. Canal de venta de repuestos coordinado con entrega confirmada.',
-    numero: '475',
-    label: 'proveedores identificados en Argentina',
-    color: 'bg-amber-50 text-amber-600',
-  },
-];
-
-const STREAMS = [
-  {
-    n: '1',
-    nombre: 'Comisión por OT coordinada',
-    desc: '30% freemium · 25% cadena chica · 20% cadena grande. Escala con el volumen de tickets.',
-    badge: 'Stream principal',
-    badgeCls: 'bg-blue-100 text-blue-700',
-  },
-  {
-    n: '2',
-    nombre: 'Suscripción mensual por local',
-    desc: 'USD 75/local/mes cadena chica · USD 100/local/mes cadena grande. Recurrente predecible.',
-    badge: 'Recurrente SaaS',
-    badgeCls: 'bg-green-100 text-green-700',
-  },
-  {
-    n: '3',
-    nombre: 'Comisión marketplace repuestos',
-    desc: '15% sobre el valor de cada orden de compra. Escala automáticamente con el volumen de OTs.',
-    badge: 'Multiplicador',
-    badgeCls: 'bg-teal-100 text-teal-700',
-  },
-  {
-    n: '4',
-    nombre: 'Comisión marketplace insumos',
-    desc: '10% sobre venta de productos e insumos. Sin OT requerida, canal de venta adicional.',
-    badge: 'Canal adicional',
-    badgeCls: 'bg-amber-100 text-amber-700',
-  },
-  {
-    n: '5',
-    nombre: 'ShuuriPro — proveedores premium',
-    desc: 'USD 1.600/mes. Comisión 0%, API abierta, visibilidad prioritaria. Para distribuidores y fabricantes grandes.',
-    badge: 'B2B SaaS',
-    badgeCls: 'bg-purple-100 text-purple-700',
-  },
-  {
-    n: '6',
-    nombre: 'SaaS grandes cadenas',
-    desc: 'Suscripción fija por activo gestionado. Para cadenas de 10+ locales con flota de equipos.',
-    badge: 'Enterprise',
-    badgeCls: 'bg-gray-200 text-gray-700',
-  },
-];
-
-const MOAT = [
-  {
-    titulo: 'Compliance regulatorio como barrera de entrada',
-    desc: 'Bloqueo absoluto si el técnico no tiene certificación vigente. No puede replicarse sin el sistema de validación.',
-  },
-  {
-    titulo: 'Historial de activos genera lock-in',
-    desc: 'Cada OT suma datos al historial del equipo. El cliente no quiere perder ese registro al cambiar de plataforma.',
-  },
-  {
-    titulo: 'Modelo mandato resuelve la fiscalidad argentina',
-    desc: 'SHUURI actúa como agente comercial autorizado. Resuelve la complejidad fiscal que hace inviable el modelo reseller.',
-  },
-  {
-    titulo: 'Red de técnicos certificados verificados',
-    desc: 'Construir y verificar la red técnica lleva tiempo. Es una barrera operacional real para nuevos entrantes.',
-  },
-];
-
-const FLYWHEEL = [
-  'Más restaurantes',
-  'Más OTs',
-  'Mejor score técnicos',
-  'Más catálogo proveedores',
-  'Mejor marketplace',
-];
+export const metadata: Metadata = {
+  title: "Modelo de Negocio | SHUURI",
+  description:
+    "Marketplace B2B2B que coordina servicios técnicos entre restaurantes, técnicos certificados y proveedores de repuestos. Tres actores. Un sistema.",
+}
 
 export default function ModeloNegocioPage() {
   return (
-    <main className="bg-white min-h-screen">
-
-      {/* HERO */}
-      <section className="py-16 border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h1 className="text-4xl lg:text-5xl font-black text-[#0D0D0D] mb-4">
-            Un mercado de USD 500M. Un sistema que nadie armó todavía.
+    <main className="min-h-screen bg-white">
+      {/* ── HERO ── */}
+      <section className="border-b border-gray-100 bg-white px-6 py-20 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-4xl">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-[#2698D1]">
+            Modelo de negocio
+          </p>
+          <h1 className="mb-6 text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
+            Un mercado de USD 500M.
+            <br />
+            Un sistema que nadie armó todavía.
           </h1>
-          <p className="text-lg text-gray-500 max-w-2xl leading-relaxed">
-            Marketplace B2B2B que coordina servicios técnicos entre restaurantes, técnicos certificados y proveedores de repuestos.
-            Tres actores. Un sistema. Modelo transaccional con capa SaaS.
+          <p className="max-w-2xl text-xl text-gray-500 leading-relaxed">
+            Marketplace B2B2B que coordina servicios técnicos entre restaurantes, técnicos
+            certificados y proveedores de repuestos. Tres actores. Un sistema. Modelo
+            transaccional con capa SaaS.
           </p>
         </div>
       </section>
 
-      {/* LOS TRES ACTORES */}
-      <section className="py-16">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h2 className="text-2xl font-black text-[#0D0D0D] mb-8">Los tres actores</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {ACTORES.map(a => (
-              <div key={a.nombre} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <div className={`inline-flex p-3 rounded-xl mb-4 ${a.color}`}>
-                  <a.Icon className="h-6 w-6" />
-                </div>
-                <p className="font-bold text-[#0D0D0D] mb-2">{a.nombre}</p>
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">{a.desc}</p>
-                <p className="font-black text-3xl text-[#2698D1]">{a.numero}</p>
-                <p className="text-xs text-gray-400 mt-1">{a.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6 STREAMS */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h2 className="text-2xl font-black text-[#0D0D0D] mb-8">6 streams de ingreso</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {STREAMS.map(s => (
-              <div key={s.n} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-2xl font-black text-gray-100">{s.n}</span>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.badgeCls}`}>{s.badge}</span>
-                </div>
-                <p className="font-bold text-[#0D0D0D] text-sm mb-2">{s.nombre}</p>
-                <p className="text-gray-500 text-xs leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TIERS */}
-      <section className="py-16">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h2 className="text-2xl font-black text-[#0D0D0D] mb-2">Tiers para gastronómicos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      {/* ── LOS TRES ACTORES ── */}
+      <section className="px-6 py-20 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-12 text-2xl font-bold text-gray-900">Los tres actores</h2>
+          <div className="grid gap-6 md:grid-cols-3">
             {[
-              { tier: 'Freemium',     precio: 'USD 0 / mes',         comision: '30%', desc: 'Para probar la plataforma.',          cls: 'border-gray-200' },
-              { tier: 'Cadena Chica', precio: 'USD 75 / local / mes', comision: '25%', desc: 'Para cadenas de 2–9 locales.',        cls: 'border-[#2698D1]' },
-              { tier: 'Cadena Grande',precio: 'USD 100 / local / mes',comision: '20%', desc: 'Para cadenas de 10+ locales.',        cls: 'border-gray-200' },
-            ].map(t => (
-              <div key={t.tier} className={`rounded-2xl border-2 ${t.cls} bg-white shadow-sm p-6`}>
-                <p className="font-black text-[#0D0D0D] text-lg mb-1">{t.tier}</p>
-                <p className="text-[#2698D1] font-bold text-xl mb-1">{t.precio}</p>
-                <p className="text-gray-500 text-sm mb-3">{t.desc}</p>
-                <p className="text-xs text-gray-400">Comisión por OT: <span className="font-bold text-gray-700">{t.comision}</span></p>
+              {
+                label: "Gastronómicos",
+                desc: "Restaurantes, bares, hoteles, cafeterías. El que paga por el servicio y necesita que su cocina no pare.",
+                stat: "110.000+",
+                sub: "establecimientos en Argentina",
+              },
+              {
+                label: "Técnicos",
+                desc: "Independientes y empresas técnicas con certificación. Cobran el 70% del servicio, liquidación quincenal.",
+                stat: "~20.000",
+                sub: "técnicos potenciales en AMBA",
+              },
+              {
+                label: "Proveedores",
+                desc: "Fabricantes, distribuidores e importadores. Canal de venta de repuestos coordinado con entrega confirmada.",
+                stat: "475",
+                sub: "proveedores identificados en Argentina",
+              },
+            ].map((a) => (
+              <div key={a.label} className="rounded-2xl border border-gray-100 bg-gray-50 p-8">
+                <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[#2698D1]">
+                  {a.label}
+                </p>
+                <p className="mb-6 text-gray-600 leading-relaxed">{a.desc}</p>
+                <p className="text-3xl font-bold text-gray-900">{a.stat}</p>
+                <p className="mt-1 text-sm text-gray-400">{a.sub}</p>
               </div>
             ))}
-          </div>
-          <div className="mt-4">
-            <Link href="/precios" className="text-sm text-[#2698D1] hover:underline font-medium">
-              Ver comparativa completa →
-            </Link>
           </div>
         </div>
       </section>
 
-      {/* FLYWHEEL */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h2 className="text-2xl font-black text-[#0D0D0D] mb-8">El flywheel</h2>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {FLYWHEEL.map((nodo, i) => (
-                <div key={nodo} className="flex items-center gap-2">
-                  <span className="bg-[#EBF5FB] text-[#2698D1] font-semibold text-sm px-4 py-2 rounded-full border border-[#2698D1]/20">
-                    {nodo}
-                  </span>
-                  {i < FLYWHEEL.length - 1 && <span className="text-gray-400 font-bold">→</span>}
-                </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 font-bold">→</span>
-                <span className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full">
-                  vuelve al inicio ↩
+      {/* ── 6 STREAMS ── */}
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-12 text-2xl font-bold text-gray-900">6 streams de ingreso</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              {
+                n: "1",
+                tag: "Stream principal",
+                title: "Comisión por OT coordinada",
+                desc: "30% freemium · 25% cadena chica · 20% cadena grande. Escala con el volumen de tickets.",
+              },
+              {
+                n: "2",
+                tag: "Recurrente SaaS",
+                title: "Suscripción mensual por local",
+                desc: "USD 75/local/mes cadena chica · USD 100/local/mes cadena grande. Recurrente predecible.",
+              },
+              {
+                n: "3",
+                tag: "Multiplicador",
+                title: "Comisión marketplace repuestos",
+                desc: "15% sobre el valor de cada orden de compra. Escala automáticamente con el volumen de OTs.",
+              },
+              {
+                n: "4",
+                tag: "Canal adicional",
+                title: "Comisión marketplace insumos",
+                desc: "10% sobre venta de productos e insumos. Sin OT requerida, canal de venta adicional.",
+              },
+              {
+                n: "5",
+                tag: "B2B SaaS",
+                title: "ShuuriPro — proveedores premium",
+                desc: "USD 1.600/mes. Comisión 0%, API abierta, visibilidad prioritaria. Para distribuidores y fabricantes grandes.",
+              },
+              {
+                n: "6",
+                tag: "Enterprise",
+                title: "SaaS grandes cadenas",
+                desc: "Suscripción fija por activo gestionado. Para cadenas de 10+ locales con flota de equipos.",
+              },
+            ].map((s) => (
+              <div key={s.n} className="flex gap-5 rounded-2xl border border-gray-100 bg-white p-6">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#0D0D0D] text-sm font-bold text-white">
+                  {s.n}
                 </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* MOAT */}
-      <section className="py-16">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h2 className="text-2xl font-black text-[#0D0D0D] mb-8">Por qué es difícil de replicar</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {MOAT.map(m => (
-              <div key={m.titulo} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <p className="font-bold text-[#0D0D0D] mb-2">{m.titulo}</p>
-                <p className="text-gray-500 text-sm leading-relaxed">{m.desc}</p>
+                <div>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    {s.tag}
+                  </p>
+                  <p className="mb-2 font-semibold text-gray-900">{s.title}</p>
+                  <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* STACK */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4 lg:px-8">
-          <h2 className="text-2xl font-black text-[#0D0D0D] mb-2">Arquitectura tecnológica</h2>
-          <p className="text-gray-500 text-sm mb-8">
-            SHUURI corre sobre Fracttal como CMMS y Odoo como ERP, integrados por el middleware Crombie y el motor propio de asignación IA.
+      {/* ── TIERS ── */}
+      <section className="px-6 py-20 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-12 text-2xl font-bold text-gray-900">Tiers para gastronómicos</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                tier: "Freemium",
+                price: "USD 0 / mes",
+                com: "30%",
+                desc: "Para probar la plataforma.",
+                highlight: false,
+              },
+              {
+                tier: "Cadena Chica",
+                price: "USD 75 / local / mes",
+                com: "25%",
+                desc: "Para cadenas de 2–9 locales.",
+                highlight: true,
+              },
+              {
+                tier: "Cadena Grande",
+                price: "USD 100 / local / mes",
+                com: "20%",
+                desc: "Para cadenas de 10+ locales.",
+                highlight: false,
+              },
+            ].map((t) => (
+              <div
+                key={t.tier}
+                className={`rounded-2xl p-8 ${
+                  t.highlight
+                    ? "bg-[#0D0D0D] text-white"
+                    : "border border-gray-100 bg-white text-gray-900"
+                }`}
+              >
+                <p
+                  className={`mb-2 text-sm font-semibold uppercase tracking-widest ${
+                    t.highlight ? "text-[#2698D1]" : "text-gray-400"
+                  }`}
+                >
+                  {t.tier}
+                </p>
+                <p className={`mb-1 text-xl font-bold ${t.highlight ? "text-white" : ""}`}>
+                  {t.price}
+                </p>
+                <p
+                  className={`mb-4 text-sm ${t.highlight ? "text-gray-400" : "text-gray-400"}`}
+                >
+                  {t.desc}
+                </p>
+                <p
+                  className={`text-sm font-medium ${
+                    t.highlight ? "text-gray-300" : "text-gray-500"
+                  }`}
+                >
+                  Comisión por OT: <span className="font-bold">{t.com}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-sm text-gray-400">
+            <a href="/precios" className="text-[#2698D1] hover:underline">
+              Ver comparativa completa →
+            </a>
           </p>
-          <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-4 flex-wrap justify-center">
-                <div className="bg-white border border-gray-200 rounded-xl px-5 py-3 font-semibold text-sm text-[#0D0D0D] shadow-sm">
-                  Fracttal CMMS
-                </div>
-                <span className="text-gray-400 font-mono text-lg">←→</span>
-                <div className="bg-[#EBF5FB] border border-[#2698D1]/30 rounded-xl px-5 py-3 font-semibold text-sm text-[#2698D1] shadow-sm">
-                  Motor SHUURI
-                </div>
-                <span className="text-gray-400 font-mono text-lg">←→</span>
-                <div className="bg-white border border-gray-200 rounded-xl px-5 py-3 font-semibold text-sm text-[#0D0D0D] shadow-sm">
-                  Odoo ERP
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-gray-400 font-mono">↑</span>
-                <div className="bg-white border border-gray-200 rounded-xl px-5 py-3 font-semibold text-sm text-[#0D0D0D] shadow-sm">
-                  Apps (Next.js)
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 text-center mt-2">Crombie actúa como middleware entre Fracttal, Odoo y el Motor SHUURI</p>
-            </div>
+        </div>
+      </section>
+
+      {/* ── FLYWHEEL ── */}
+      <section className="border-t border-gray-100 bg-gray-50 px-6 py-20 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="mb-12 text-2xl font-bold text-gray-900">El flywheel</h2>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-medium text-gray-700">
+            {[
+              "Más restaurantes",
+              "→",
+              "Más OTs",
+              "→",
+              "Mejor score técnicos",
+              "→",
+              "Más catálogo proveedores",
+              "→",
+              "Mejor marketplace",
+            ].map((item, i) =>
+              item === "→" ? (
+                <span key={i} className="text-[#2698D1] text-xl font-bold">
+                  →
+                </span>
+              ) : (
+                <span
+                  key={i}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm"
+                >
+                  {item}
+                </span>
+              )
+            )}
+            <span className="mt-2 w-full text-center text-xs text-gray-400">
+              → vuelve al inicio ↩
+            </span>
           </div>
         </div>
       </section>
 
+      {/* ── POR QUÉ ES DIFÍCIL DE REPLICAR ── */}
+      <section className="px-6 py-20 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-12 text-2xl font-bold text-gray-900">Por qué es difícil de replicar</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {[
+              {
+                title: "Compliance regulatorio como barrera de entrada",
+                desc: "Bloqueo absoluto si el técnico no tiene certificación vigente. No puede replicarse sin el sistema de validación.",
+              },
+              {
+                title: "Historial de activos genera lock-in",
+                desc: "Cada OT suma datos al historial del equipo. El cliente no quiere perder ese registro al cambiar de plataforma.",
+              },
+              {
+                title: "Modelo mandato resuelve la fiscalidad argentina",
+                desc: "SHUURI actúa como agente comercial autorizado. Resuelve la complejidad fiscal que hace inviable el modelo reseller.",
+              },
+              {
+                title: "Red de técnicos certificados verificados",
+                desc: "Construir y verificar la red técnica lleva tiempo. Es una barrera operacional real para nuevos entrantes.",
+              },
+            ].map((b) => (
+              <div key={b.title} className="rounded-2xl border border-gray-100 bg-gray-50 p-6">
+                <p className="mb-2 font-semibold text-gray-900">{b.title}</p>
+                <p className="text-sm text-gray-500 leading-relaxed">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── ARQUITECTURA TECNOLÓGICA ── */}
+      <section className="border-t border-gray-100 bg-[#0D0D0D] px-6 py-20 text-white md:px-12 lg:px-24">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-4 text-2xl font-bold">Arquitectura tecnológica</h2>
+          <p className="mb-12 text-gray-400 leading-relaxed max-w-2xl">
+            SHUURI corre sobre un motor OT propio desarrollado por Duotach, integrado con Odoo como
+            ERP y las apps de Álamo SRL. Sin dependencias de terceros para la lógica core del negocio.
+          </p>
+
+          {/* Stack diagram */}
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-3 text-sm font-mono">
+            {[
+              { label: "Motor OT", sub: "Duotach", color: "bg-[#2698D1]" },
+              { label: "←→", color: "" },
+              { label: "Odoo ERP", sub: "Facturación", color: "bg-gray-700" },
+              { label: "←→", color: "" },
+              { label: "Apps", sub: "Next.js / Álamo", color: "bg-gray-700" },
+            ].map((item, i) =>
+              item.label === "←→" ? (
+                <span key={i} className="text-gray-500 text-lg">
+                  ←→
+                </span>
+              ) : (
+                <div
+                  key={i}
+                  className={`rounded-lg px-5 py-3 text-center ${item.color}`}
+                >
+                  <p className="font-semibold text-white">{item.label}</p>
+                  {item.sub && (
+                    <p className="text-xs text-gray-300 mt-0.5">{item.sub}</p>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+
+          {/* Stack table */}
+          <div className="rounded-2xl border border-gray-800 overflow-hidden">
+            {[
+              { layer: "Motor OT propio", tech: "Duotach", desc: "Motor de órdenes de trabajo — activo intelectual de SHUURI" },
+              { layer: "ERP", tech: "Odoo Enterprise", desc: "Facturación, clientes, proveedores, comisiones" },
+              { layer: "Apps gastronómico + técnico", tech: "Next.js + TypeScript / Álamo SRL", desc: "Paneles y apps móvil — desarrollo por hitos" },
+              { layer: "Infraestructura", tech: "AWS + Vercel", desc: "~USD 200/mes estimado en MVP" },
+              { layer: "IA / asignación", tech: "Anthropic Claude API", desc: "Matching técnico-OT, clasificación equipos, soporte automático" },
+            ].map((row, i) => (
+              <div
+                key={row.layer}
+                className={`flex flex-col gap-1 px-6 py-4 md:flex-row md:items-center md:gap-6 ${
+                  i % 2 === 0 ? "bg-gray-900" : "bg-gray-800"
+                }`}
+              >
+                <p className="w-48 text-xs font-semibold uppercase tracking-wider text-gray-400 flex-shrink-0">
+                  {row.layer}
+                </p>
+                <p className="font-semibold text-white">{row.tech}</p>
+                <p className="text-sm text-gray-400 md:ml-auto">{row.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-6 text-xs text-gray-600 text-center">
+            Sin Crombie · Sin Fracttal · Motor OT es activo propio de SHUURI desde M1
+          </p>
+        </div>
+      </section>
     </main>
-  );
+  )
 }
